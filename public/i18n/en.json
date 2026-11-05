@@ -136,7 +136,7 @@
   "admin.pcComboHint": "Option “Render audio and video together on the PC / Mac” (Generate form): whatever the duration, audio is rendered on the node (Windows NVIDIA PC or Apple Silicon Mac) then the long video is encoded there immediately, without waiting for the CT; the single ZIP (video, mix MP3 + WAV, tracks, MIDI, samples) is ready to download at the end. If the node drops, the CT resumes (audio or video) and the status says so.",
   "admin.hist": "Where recent renders ran",
   "admin.ai": "AI PC (Ollama)",
-  "admin.aiHint": "Powers the art director (Generate → “Describe the mood”) and trend watch. Without a reachable AI PC: local suggestions.",
+  "admin.aiHint": "Art director and, as fallback, trend watch. If unreachable: local suggestions.",
   "admin.aiUrl": "Ollama address",
   "admin.aiModel": "Model",
   "admin.aiTimeout": "Max response time (s)",
@@ -207,5 +207,13 @@
   "admin.kind.video": "Video",
   "admin.h.done": "done",
   "admin.h.err": "failed",
-  "admin.h.fb": "fell back to CT"
+  "admin.h.fb": "fell back to CT",
+  "admin.aiDirector": "Art director",
+  "admin.aiWatch": "Trend watch (dedicated model)",
+  "admin.aiWatchHint": "Optional URL (else director’s). Prefer a dedicated model. If empty: fall back to the director, with a notice.",
+  "admin.watchUrl": "Watch Ollama URL",
+  "admin.watchModel": "Watch model",
+  "admin.testDirector": "Test director",
+  "admin.testWatch": "Test watch",
+  "admin.trendsHint": "Autonomous crawl of public metadata, summarised by the watch model. Nothing is applied automatically."
 }

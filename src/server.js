@@ -19,7 +19,7 @@ import { listMedia, getMedia, removeMedia, saveUpload, ACCEPT } from './media.js
 import { fileNames, slugify } from './naming.js';
 import { splitPlan, splitAvailability, zipEntries, zipStream, SPLIT_MODES, SPLIT_MIN_SECONDS, pieceBase, crc32 } from './split.js';
 import { SplitQueue, readManifest, splitDir, splitOptions } from './splitqueue.js';
-import { RenderNodes } from './nodes.js';
+import { RenderNodes, normAiUrl } from './nodes.js';
 import { ensureSamples, ensureVerified } from './nodeaudio.js';
 import { getBrand, setBrand, brandText, DEFAULT_BRAND, BRAND_MAX } from './brand.js';
 import { resolveParams, LIMITS, ADVANCED } from './engine/composer.js';
@@ -682,17 +682,18 @@ app.post('/api/admin/nodes/:id/verify', awrap(async (req, res) => {
   catch (e) { res.status(409).json({ ok: false, error: String(e.message).slice(0, 300), verify: st.verify || null }); }
 }));
 app.post('/api/admin/discover', awrap(async (req, res) => res.json({ found: await renderNodes.discover() })));
-app.get('/api/admin/ai', (req, res) => res.json(renderNodes.s.ai));
+app.get('/api/admin/ai', (req, res) => res.json({ ...renderNodes.s.ai, watch: renderNodes.watchAiView() }));
 // v1.9.0 : directeur artistique — « Décris l'ambiance » → réglages validés (IA Ollama, sinon proposition locale)
 // v1.9.0 : veille tendances (métadonnées publiques ; propositions appliquées seulement par bouton)
-app.get('/api/admin/trends', (req, res) => res.json({ settings: trends.view(), report: trends.latest() }));
+app.get('/api/admin/trends', (req, res) => res.json({ settings: trends.view(), report: trends.latest(), history: trends.history(), watchAi: renderNodes.watchAiView() }));
 app.put('/api/admin/trends', (req, res) => res.json(trends.update(req.body || {})));
 app.post('/api/admin/trends/run', (req, res) => {
-  if (trends.sourceOf() === 'none') return res.status(409).json({ error: 'Aucune source : renseigne une clé YouTube Data API, des flux RSS ou active la recherche YouTube publique.' });
-  const was = trends.isRunning(); trends.run(() => renderNodes.s.ai).catch((e) => console.error('[veille]', e.message));
+  if (trends.sourceOf() === 'none') return res.status(409).json({ error: 'Aucune source : ajoute des flux RSS (défaut fourni), active le crawl, la découverte DuckDuckGo, la recherche YouTube publique, ou une clé API.' });
+  const was = trends.isRunning();
+  trends.run(() => renderNodes.resolveWatchAi()).catch((e) => console.error('[veille]', e.message));
   res.status(202).json({ running: true, already: was });
 });
-trends.start(() => renderNodes.s.ai);
+trends.start(() => renderNodes.resolveWatchAi());
 // v1.15.0 : contexte du directeur artistique (profil de goût + dernière veille), chacun activé dans Admin
 const directorCtx = (style, s) => director.context(style, { s, report: trends.latest() });
 app.post('/api/ai/suggest', awrap(async (req, res) => res.json(await aiSuggest(renderNodes.s.ai, req.body || {}, (style) => directorCtx(style)))));
@@ -720,8 +721,26 @@ app.post('/api/admin/director/preview', awrap(async (req, res) => {
   }
   res.json(out);
 }));
-app.put('/api/admin/ai', (req, res) => res.json(renderNodes.setAI(req.body || {})));
-app.post('/api/admin/ai/test', awrap(async (req, res) => res.json(await renderNodes.testAI(req.body || {}))));
+app.put('/api/admin/ai', (req, res) => {
+  const b = req.body || {};
+  const ai = renderNodes.setAI({ url: b.url, model: b.model, timeout: b.timeout });
+  const watch = (b.watchUrl !== undefined || b.watchModel !== undefined)
+    ? renderNodes.setWatchAI({ url: b.watchUrl, model: b.watchModel })
+    : renderNodes.watchAiView();
+  res.json({ ...ai, watch });
+});
+app.put('/api/admin/ai/watch', (req, res) => res.json(renderNodes.setWatchAI(req.body || {})));
+app.post('/api/admin/ai/test', awrap(async (req, res) => {
+  const b = req.body || {};
+  if (b.role === 'watch') {
+    const w = renderNodes.resolveWatchAi();
+    const url = b.url !== undefined ? b.url : (w.configured.url || w.url);
+    const model = b.model !== undefined && b.model !== '' ? b.model : w.model;
+    const r = await renderNodes.testAI({ url, model });
+    return res.json({ ...r, role: 'watch', notice: w.notice, effectiveModel: model, effectiveUrl: normAiUrl(url) || w.url });
+  }
+  res.json({ ...(await renderNodes.testAI(b)), role: 'director' });
+}));
 
 // v1.10.0 : fiches de style (pages /styles et /styles/:id), texte tiré de docs/STYLES.md
 const STYLE_IDS = () => STYLE_ORDER.filter((id) => STYLES[id]);

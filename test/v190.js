@@ -132,7 +132,7 @@ if (!process.argv.includes('--no-api')) {
   const calls = []; let mode = 'ok';
   const reply = (body) => {
     const sys = body.messages?.[0]?.content || body.system || '';
-    if (/analyste musical/.test(sys)) return { summary: 'Les mix longs à 124 BPM en la mineur dominent ; basses filtrées et grain disco.', suggestions: [{ mood: 'nocturne', adv: { energy: 999, vintage: 70, nope: 1 }, why: 'Grain disco très présent.' }, { adv: { leadPatch: 'zz' } }] };
+    if (/analyste musical|tendances musicales/.test(sys)) return { summary: 'Les mix longs à 124 BPM en la mineur dominent ; basses filtrées et grain disco.', suggestions: [{ mood: 'nocturne', adv: { energy: 999, vintage: 70, nope: 1 }, why: 'Grain disco très présent.' }, { adv: { leadPatch: 'zz' } }] };
     return { style: 'frenchtouch', mood: 'nocturne', key: 'F#', scale: 'dorian', bpm: 400, adv: { energy: 85, ftStyle: 'edbanger', vintage: 140, bogus: 3 }, explanation: 'Basse saturée, filtre ouvert, 126 BPM.',
       title_fr: 'Néons sur la Seine', title_en: 'Neon on the Seine', description_fr: 'Une nuit électrique, basse sale et filtres qui s’ouvrent, à 126 BPM.', description_en: 'An electric night of gritty bass and opening filters.', tags: ['french touch', 'electro', '126 bpm', 'nuit'],
       plan: [{ minutes: 20, energy: 30, sub: 'classic' }, { minutes: 40, energy: 90, sub: 'edbanger', note: 'montée' }] };
@@ -209,7 +209,8 @@ if (!process.argv.includes('--no-api')) {
       `morceau : titres FR + EN, description et tags IA dans les infos YouTube (${t.status})`);
     // C : veille tendances
     let v = (await api('/api/admin/trends')).j;
-    check(v.settings.source === 'none' && v.settings.enabled && v.settings.intervalDays === 7 && v.report === null && (await post('/api/admin/trends/run', {})).s === 409, 'veille : hebdomadaire par défaut, « aucune source » signalée, lancement refusé sans source');
+    check(v.settings.enabled && v.settings.intervalDays === 7 && v.report === null && (v.settings.crawl === true || v.settings.source !== 'undefined'), 'veille : hebdomadaire, crawl actif par défaut (v1.19)');
+    check((await put('/api/admin/trends', { crawl: false, discover: false, html: false, feeds: '', ytKey: '' })).j.source === 'none' && (await post('/api/admin/trends/run', {})).s === 409, 'veille : sans aucune source → 409');
     check((await put('/api/admin/trends', { ytKey: 'pas une clé' })).s === 400 && (await put('/api/admin/trends', { intervalDays: 0 })).s === 400, 'veille : réglages invalides refusés');
     v = (await put('/api/admin/trends', { ytKey: 'AIzaTESTKEY_0123456789abcdef', styles: ['frenchtouch', 'house'], intervalDays: 3 })).j;
     check(v.source === 'youtube-api' && v.hasKey && v.keyTail === 'cdef' && !JSON.stringify(v).includes('AIzaTEST') && v.nextRun, 'clé YouTube : enregistrée, jamais renvoyée en clair');
@@ -220,14 +221,14 @@ if (!process.argv.includes('--no-api')) {
     check(ft.summary && !NO_TEMPO.test(ft.summary) && ft.suggestions.length === 1 && ft.suggestions[0].adv.energy === 100 && ft.suggestions[0].adv.vintage === 70 && !('nope' in ft.suggestions[0].adv) && ft.suggestions[0].mood === 'nocturne',
       'résumé IA par style, propositions validées / bornées (rien n’est appliqué)');
     check(v.settings.lastRun && Date.parse(v.settings.nextRun) - Date.parse(v.settings.lastRun) > 2.9 * 86400e3, 'prochaine veille planifiée selon la fréquence');
-    await put('/api/admin/trends', { ytKey: '', feeds: `lofi http://127.0.0.1:${yp}/feed.rss`, styles: ['lofi'] }); await put('/api/admin/ai', { url: '' });
+    await put('/api/admin/trends', { ytKey: '', feeds: `lofi http://127.0.0.1:${yp}/feed.rss`, styles: ['lofi'], allowPrivateSources: true, crawl: true, discover: false, html: false }); await put('/api/admin/ai', { url: '' });
     await post('/api/admin/trends/run', {});
     v = await wait(async () => { const x = (await api('/api/admin/trends')).j; return !x.settings.running && x.report?.source === 'rss' && x; });
     check(v.report.analysis.includes('locale') && v.report.styles.lofi.digest.count === 2 && /rainy/.test(v.report.styles.lofi.summary), 'sans clé : flux RSS, analyse locale sans IA');
     // UI
     const html = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8'), app = fs.readFileSync(path.join(ROOT, 'public/js/app.js'), 'utf8'), adm = fs.readFileSync(path.join(ROOT, 'public/admin.html'), 'utf8') + fs.readFileSync(path.join(ROOT, 'public/js/admin.js'), 'utf8');
     check(html.includes('Décris l’ambiance') && html.includes('id="aiGo"') && html.includes('Réinitialiser ce style') && !html.includes('adv-force') && app.includes('/api/ai/suggest') && app.includes('aiPlan') && app.includes('aiMeta'), 'interface : « Décris l’ambiance » + « Proposer », sans cases « Forcer »');
-    check(adm.includes('Lancer maintenant') && adm.includes('aiTimeout') && adm.includes('data-apply') && adm.includes('st.advTweaks'), 'Admin : veille (fréquence, sources, lancer, appliquer) et délai IA');
+    check((adm.includes('Lancer maintenant') || adm.includes('Lancer la veille')) && adm.includes('aiTimeout') && adm.includes('data-apply') && adm.includes('st.advTweaks'), 'Admin : veille (fréquence, sources, lancer, appliquer) et délai IA');
     const spec = (await api('/api/openapi.json')).j, js = JSON.stringify(spec);
     check(String(spec.info.version).split('.').map(Number).reduce((a, x) => a * 1000 + x, 0) >= 1009000 && js.includes('/api/ai/suggest') && js.includes('/api/admin/trends') && js.includes('/api/advanced/defaults') && js.includes('aiPlan'), `openapi ${spec.info.version} : nouvelles routes documentées`);
   } catch (e) { check(false, 'API : ' + e.message); console.log(log.slice(-1500)); }

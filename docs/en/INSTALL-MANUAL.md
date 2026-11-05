@@ -88,3 +88,8 @@ systemctl status soundtube
 curl -s http://127.0.0.1:8080/api/health
 npm test   # from the app directory if you keep sources/tests
 ```
+
+## Trend watch & AI
+
+No API key is required for the default RSS crawl. Optional: YouTube Data API key, DuckDuckGo discovery toggle, separate Ollama model for watch under Admin → AI. See `SAMPLES-LICENSES.md` for the sample bank; see Operations for crawler security.
+

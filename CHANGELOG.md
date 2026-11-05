@@ -1,3 +1,16 @@
+## 1.19.0 — 2026-11-05
+
+### Added
+- Dedicated Ollama settings for trend watch (URL optional, model from `/api/tags`, Test button, fall back to director with notice)
+- Autonomous public crawl: default RSS sources, optional DuckDuckGo HTML discovery (off by default), YouTube HTML complement
+- SSRF protections (block private/loopback/link-local unless explicitly listed + Admin override), robots.txt, rate limit, cache, size/timeout caps
+- Watch history in Admin; watch LLM prompt fenced as untrusted data; temperature 0.4 (director unchanged at 0.7)
+- `test/v1190.js`
+
+### Unchanged
+- Art-director prompt and behaviour (byte-identical path)
+- Audio engine fingerprint `696de0f4125a`
+
 # Changelog — soundtube
 
 All notable releases. Personal hostnames, private IPs, library exports and tokens are omitted.

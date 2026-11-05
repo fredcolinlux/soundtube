@@ -28,7 +28,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   const ap = JSON.parse(fs.readFileSync(path.join(ROOT, 'node-agent/package.json'), 'utf8'));
-  check(pkg.version === '1.17.0' && ap.version === '1.17.0', `versions 1.17.0 (CT ${pkg.version}, agent ${ap.version})`);
+  const verOk = ([a,b]) => +a > 1 || (+a === 1 && +b >= 17);
+  const [ctMaj, ctMin] = String(pkg.version).split('.');
+  const [apMaj, apMin] = String(ap.version).split('.');
+  check(verOk([ctMaj, ctMin]) && verOk([apMaj, apMin]), `versions ≥ 1.17.0 (CT ${pkg.version}, agent ${ap.version})`);
   check(ENCODER_ORDER[0] === 'h264_nvenc' && ENCODER_ORDER[1] === 'h264_videotoolbox' && ENCODER_ORDER.at(-1) === 'libx264',
     `ordre : NVENC → VideoToolbox → … → libx264 (${ENCODER_ORDER.join(' › ')})`);
   check(ENCODER_RANK.h264_nvenc < ENCODER_RANK.h264_videotoolbox && ENCODER_RANK.h264_videotoolbox < ENCODER_RANK.libx264,
@@ -182,8 +185,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const nodes = fs.readFileSync(path.join(ROOT, 'docs/NODES.md'), 'utf8');
   check(/## 6bis\. macOS/.test(nodes) && /LaunchAgent/.test(nodes) && /VideoToolbox/.test(nodes) && /socketfilterfw/.test(nodes),
     'docs/NODES.md : section macOS (install, launchd, pare-feu, VideoToolbox)');
-  const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
-  check(/Nouveautés v1\.17\.0/.test(readme), 'README : Nouveautés v1.17.0');
+  const readmeFr = fs.readFileSync(path.join(ROOT, 'README.fr.md'), 'utf8');
+  const readmeEn = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+  check(/Nouveautés v1\.17\.0/.test(readmeFr) || /Nouveautés v1\.17\.0/.test(readmeEn) || /What.?s new in v1\.17\.0/i.test(readmeEn),
+    'README : Nouveautés v1.17.0');
 }
 
 console.log(fail ? `\n${fail} échec(s)` : '\nv1.17.0 : tous les tests passent');

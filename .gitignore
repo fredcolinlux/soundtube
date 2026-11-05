@@ -1,3 +1,6 @@
 node_modules/
 data/
 *.log
+
+# Non-redistributable (CC BY-NC)
+assets/samples/jrhodes/

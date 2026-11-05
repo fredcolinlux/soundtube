@@ -57,4 +57,17 @@ Do not confuse the two when debugging “wrong language” reports.
 
 ## Samples
 
+## Trend watch (v1.19)
+
+Admin → **PC IA**: separate **Watch** Ollama URL (optional) + model (from `/api/tags`). Empty model → fall back to the director model with a visible notice. Separate **Test watch** button. Watch calls use a generic summariser prompt and `temperature: 0.4`; the art-director path stays unchanged (`temperature: 0.7`).
+
+Admin → **Trend watch**:
+- Default RSS list (Reddit music subs, Bandcamp Daily, …) + per-style keywords; **Reset defaults**
+- Toggles: scheduled run, crawl listed sources, optional YouTube HTML search, optional DuckDuckGo discovery (**off** by default), allow private IPs **only** for explicitly listed feed URLs
+- Manual **Run watch** + interval (1–60 days); history of runs, sources, errors
+- Results feed the director only when **Director context → Latest trends** is on
+
+Crawler: http(s) only, DNS SSRF block (loopback/private/link-local), robots.txt, polite UA + rate gap, timeout, size cap, disk cache. HTML stripped to text; fenced as untrusted in the LLM prompt. No audio download, no logins.
+
+
 Presence: `assets/samples/manifest.json` and `samples: true` on `/api/health`. Memory cache: `SOUNDTUBE_SAMPLE_CACHE_MB`. Licences: [SAMPLES-LICENSES.md](../../SAMPLES-LICENSES.md).

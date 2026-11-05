@@ -107,7 +107,7 @@ ou sur la page du style) :
 * **Mix** réverbération 0,62, chorus 0,5, pas de sidechain.
 
 ## Synthwave (outrun / dreamwave)
-* **Moteur 1.9 : plus sombre, côté synth-pop 80s (Exemple Synth)** — 100-116 BPM, mineur / phrygien / harmonique,
+* **Moteur 1.9 : plus sombre, côté synth-pop 80s (Depeche Mode)** — 100-116 BPM, mineur / phrygien / harmonique,
   nappe sombre, basse 80s liée, lead analogique, arpèges 80s, batterie plus métallique (saturation 1,4), réverbe 0,5.
 * **Tempo** outrun 100-118, dreamwave 80-100 ; swing quasi nul.
 * **Batterie** rétro 80s (gated), **TR-707**, TR-808.

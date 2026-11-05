@@ -6,7 +6,7 @@ bass, drums, intro / verse / chorus / bridge / outro) then **synthesised in real
 
 | | |
 |---|---|
-| **Version** | **1.18.0** |
+| **Version** | **1.19.0** |
 | **UI languages** | French and English (header **FR \| EN** switch) |
 | **Licence** | See `LICENSE` (all rights reserved) |
 | **Engine default** | 21 (harmony-aware); fingerprint `696de0f4125a` |
@@ -22,8 +22,8 @@ bass, drums, intro / verse / chorus / bridge / outro) then **synthesised in real
 The control tower (**CT**) is meant to run **as root** (typical Proxmox LXC). Do **not** wrap the installer in `sudo` when you are already root:
 
 ```bash
-tar -xzf soundtube-1.18.0-standalone.tar.gz
-cd soundtube-1.18.0
+tar -xzf soundtube-1.19.0-standalone.tar.gz
+cd soundtube-1.19.0
 ./install.sh --port 8080
 # equivalent: ./deploy/install.sh --port 8080
 ```
@@ -34,8 +34,8 @@ UI language is independent of YouTube title / description / tag language.
 
 Standalone packages also ship render agents under `dist/`:
 
-- `dist/soundtube-node-agent-1.18.0-windows.zip`
-- `dist/soundtube-node-agent-1.18.0-macos.zip`
+- `dist/soundtube-node-agent-1.19.0-windows.zip`
+- `dist/soundtube-node-agent-1.19.0-macos.zip`
 
 ## Features
 
@@ -49,6 +49,21 @@ Standalone packages also ship render agents under `dist/`:
 - Lightweight i18n (JSON locales, no heavy framework)
 
 
+
+## What's new in v1.19.0
+
+- Separate Admin Ollama settings for trend watch (optional URL, model from `/api/tags`, Test button, fall back to director with a notice)
+- Autonomous public RSS crawl (optional DuckDuckGo HTML discovery off by default); SSRF-safe; fenced untrusted content in the watch prompt
+- Director path unchanged; engine fingerprint `696de0f4125a`
+
+## What's new in v1.18.0
+
+- UI i18n French / English; English manuals under `docs/en/`
+
+## Nouveautés v1.17.0 — macOS Apple Silicon render node
+
+Historical note (French heading kept for release-test compatibility): official macOS arm64 agent with VideoToolbox; see [docs/NODES.md](docs/NODES.md) § 6bis and [README.fr.md](README.fr.md).
+
 ## Sample bank
 
 The public repository ships `assets/samples/` (FLAC, ~120 MB, CC0 + Salamander **CC BY 3.0**).  
@@ -56,7 +71,11 @@ Licences and attributions: [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md).
 **Not included:** `jrhodes/` (jRhodes3d, CC BY-NC 4.0) — Rhodes falls back to synthesis.  
 `./install.sh` installs the bank under `/opt/soundtube/app/assets/samples`; `GET /api/health` → `samples: true`.
 
-## i18n (v1.18.0)
+
+## Trend watch (v1.19.0)
+
+Separate Ollama **watch model** (falls back to the director) and autonomous RSS crawl (optional DuckDuckGo, SSRF-safe). See [docs/en/OPERATIONS.md](docs/en/OPERATIONS.md).
+## i18n (v1.19.0)
 
 | Piece | Path / API |
 |---|---|

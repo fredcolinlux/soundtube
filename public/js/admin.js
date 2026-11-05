@@ -110,13 +110,53 @@ $('#discoverBtn').addEventListener('click', async () => {
 });
 $('#discovered').addEventListener('click', async (e) => { const b = e.target.closest('button[data-url]'); if (!b) return; try { render(await api('POST', '/api/admin/nodes', { url: b.dataset.url, name: b.dataset.name })); b.replaceWith(Object.assign(document.createElement('span'), { className: 'hint', textContent: 'ajouté' })); } catch (err) { toast(err.message); } });
 
-// PC IA
-(async () => { try { const a = await api('GET', '/api/admin/ai'); $('#aiUrl').value = a.url || ''; $('#aiModel').value = a.model || ''; $('#aiTimeout').value = a.timeout || 120; } catch {} })();
-$('#aiSave').addEventListener('click', async () => { try { const a = await api('PUT', '/api/admin/ai', { url: $('#aiUrl').value.trim(), model: $('#aiModel').value.trim(), timeout: +$('#aiTimeout').value || 120 }); $('#aiModel').value = a.model; toast('Réglages IA enregistrés.'); } catch (e) { toast(e.message); } });
+// PC IA (directeur) + modèle veille dédié (v1.19)
+function fillModels(listId, models) {
+  const dl = $(listId); if (!dl) return;
+  dl.innerHTML = (models || []).map((m) => `<option value="${esc(m)}">`).join('');
+}
+function paintWatch(w) {
+  if (!w) return;
+  if (document.activeElement !== $('#watchUrl')) $('#watchUrl').value = w.url || '';
+  if (document.activeElement !== $('#watchModel')) $('#watchModel').value = w.model || '';
+  const note = w.notice || (w.usingDirectorModel ? 'Repli sur le modèle du directeur.' : '');
+  $('#watchMsg').textContent = note || (w.effective ? `Effectif : ${w.effective.model || '—'} @ ${w.effective.url || '—'}` : '');
+  $('#watchMsg').className = 'hint' + (note ? ' warn' : '');
+}
+(async () => {
+  try {
+    const a = await api('GET', '/api/admin/ai');
+    $('#aiUrl').value = a.url || ''; $('#aiModel').value = a.model || ''; $('#aiTimeout').value = a.timeout || 120;
+    paintWatch(a.watch);
+  } catch {}
+})();
+$('#aiSave').addEventListener('click', async () => {
+  try {
+    const a = await api('PUT', '/api/admin/ai', {
+      url: $('#aiUrl').value.trim(), model: $('#aiModel').value.trim(), timeout: +$('#aiTimeout').value || 120,
+      watchUrl: $('#watchUrl').value.trim(), watchModel: $('#watchModel').value.trim(),
+    });
+    $('#aiModel').value = a.model; paintWatch(a.watch); toast('Réglages IA enregistrés.');
+  } catch (e) { toast(e.message); }
+});
 $('#aiTest').addEventListener('click', async () => {
   $('#aiMsg').textContent = 'Test…';
-  try { const r = await api('POST', '/api/admin/ai/test', { url: $('#aiUrl').value.trim(), model: $('#aiModel').value.trim() }); $('#aiMsg').textContent = r.ok ? `${r.message} (${r.latency} ms${r.version ? ', Ollama ' + r.version : ''})` : r.error; $('#aiMsg').className = 'hint ' + (r.ok ? (r.hasModel ? 'ok' : 'warn') : 'bad'); }
-  catch (e) { $('#aiMsg').textContent = e.message; }
+  try {
+    const r = await api('POST', '/api/admin/ai/test', { url: $('#aiUrl').value.trim(), model: $('#aiModel').value.trim(), role: 'director' });
+    $('#aiMsg').textContent = r.ok ? `${r.message} (${r.latency} ms${r.version ? ', Ollama ' + r.version : ''})` : r.error;
+    $('#aiMsg').className = 'hint ' + (r.ok ? (r.hasModel ? 'ok' : 'warn') : 'bad');
+    if (r.models) fillModels('#aiModelsList', r.models);
+  } catch (e) { $('#aiMsg').textContent = e.message; }
+});
+$('#watchTest').addEventListener('click', async () => {
+  $('#watchMsg').textContent = 'Test…';
+  try {
+    const r = await api('POST', '/api/admin/ai/test', { url: $('#watchUrl').value.trim(), model: $('#watchModel').value.trim(), role: 'watch' });
+    const extra = r.notice ? ' — ' + r.notice : '';
+    $('#watchMsg').textContent = r.ok ? `${r.message} (${r.latency} ms)${extra}` : (r.error || '') + extra;
+    $('#watchMsg').className = 'hint ' + (r.ok ? (r.hasModel ? 'ok' : 'warn') : 'bad');
+    if (r.models) fillModels('#watchModelsList', r.models);
+  } catch (e) { $('#watchMsg').textContent = e.message; }
 });
 for (const el of document.querySelectorAll('input[type=text]')) { el.addEventListener('focus', () => (editing = false)); }
 load(); setInterval(load, 4000);
@@ -128,6 +168,7 @@ const fmtDate = (s) => (s ? new Date(s).toLocaleString('fr-FR', { dateStyle: 'me
 function renderTrends({ settings: s, report: r }) {
   TR = { s, r };
   $('#trEvery').value = s.intervalDays; $('#trPer').value = s.perStyle; $('#trOn').checked = s.enabled; $('#trHtml').checked = s.html;
+  if ($('#trCrawl')) $('#trCrawl').checked = s.crawl !== false; if ($('#trDiscover')) $('#trDiscover').checked = !!s.discover; if ($('#trPrivate')) $('#trPrivate').checked = !!s.allowPrivateSources;
   if (document.activeElement !== $('#trFeeds')) $('#trFeeds').value = s.feeds || '';
   $('#trKeyDel').hidden = !s.hasKey;
   $('#trKey').placeholder = s.hasKey ? `clé enregistrée (…${s.keyTail}) — vide = garder` : 'AIza…';
@@ -147,10 +188,17 @@ function renderTrends({ settings: s, report: r }) {
   }).join('');
   $('#trReport').innerHTML = `<p class="hint">Rapport du ${fmtDate(r.at)} (${esc(r.reason)}) · source : ${esc(r.sourceLabel)} · analyse : ${esc(r.analysis)}</p>${r.source === 'none' ? '<p class="warn">Aucune source : rien n’a été analysé.</p>' : ''}<div class="tr-grid">${cards}</div>`;
 }
-async function loadTrends() { try { renderTrends(await api('GET', '/api/admin/trends')); } catch (e) { $('#trMsg').textContent = e.message; } }
+async function loadTrends() { try { const v = await api('GET', '/api/admin/trends'); renderTrends(v); paintWatch(v.watchAi); if ($('#trHistory')) {
+    const h = v.history || [];
+    $('#trHistory').innerHTML = h.length ? ('Historique : ' + h.slice(0, 8).map((x) => `${esc(x.at || x.file)} · ${esc(x.sourceLabel || x.source || '')}${x.errors?.length ? ' · ' + x.errors.length + ' err.' : ''}`).join(' · ')) : '';
+  } } catch (e) { $('#trMsg').textContent = e.message; } }
+$('#trFeedsReset')?.addEventListener('click', async () => {
+  try { const v = await api('PUT', '/api/admin/trends', { resetFeeds: true }); $('#trFeeds').value = v.feeds || v.settings?.feeds || ''; toast('Sources par défaut restaurées.'); loadTrends(); }
+  catch (e) { toast(e.message); }
+});
 $('#trStyles').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) c.classList.toggle('on'); });
 $('#trSave').addEventListener('click', async () => {
-  const b = { enabled: $('#trOn').checked, intervalDays: +$('#trEvery').value, perStyle: +$('#trPer').value, html: $('#trHtml').checked, feeds: $('#trFeeds').value, styles: [...document.querySelectorAll('#trStyles .chip.on')].map((c) => c.dataset.id) };
+  const b = { enabled: $('#trOn').checked, intervalDays: +$('#trEvery').value, perStyle: +$('#trPer').value, html: $('#trHtml').checked, crawl: $('#trCrawl')?.checked !== false, discover: !!$('#trDiscover')?.checked, allowPrivateSources: !!$('#trPrivate')?.checked, feeds: $('#trFeeds').value, styles: [...document.querySelectorAll('#trStyles .chip.on')].map((c) => c.dataset.id) };
   if ($('#trKey').value.trim()) b.ytKey = $('#trKey').value.trim();
   try { await api('PUT', '/api/admin/trends', b); $('#trKey').value = ''; toast('Veille enregistrée.'); loadTrends(); } catch (e) { toast(e.message); }
 });

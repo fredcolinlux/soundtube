@@ -1,4 +1,4 @@
-# Documentation index — soundtube 1.18.0
+# Documentation index — soundtube 1.19.0
 
 | Topic | Français | English |
 |---|---|---|
@@ -15,6 +15,7 @@
 | Art director context | [DIRECTEUR.md](DIRECTEUR.md) | [en/DIRECTOR.md](en/DIRECTOR.md) |
 | HTTP API | [API.md](API.md) | [en/API.md](en/API.md) |
 | Sample bank licences | [../SAMPLES-LICENSES.md](../SAMPLES-LICENSES.md) + [CREDITS.md](../assets/samples/CREDITS.md) | same |
+| Trend watch / Veille | [EXPLOITATION.md](EXPLOITATION.md) (FR) | [en/OPERATIONS.md](en/OPERATIONS.md) |
 | Changelog | [../CHANGELOG.md](../CHANGELOG.md) | same |
 
 Live OpenAPI UI while the server runs: **`/docs`** · machine-readable: **`/api/openapi.json`**.

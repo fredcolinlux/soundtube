@@ -19,6 +19,8 @@ export const DEFAULT_AUDIO_MIN_SEC = 900;
 
 export const DISCOVERY_PORT = 47811;
 export const DEFAULT_AI = { url: '', model: 'qwen3:14b', timeout: 120 };
+/** Veille : URL/modèle vides = repli sur le PC IA directeur (jamais de nom de modèle imposé ici). */
+export const DEFAULT_WATCH_AI = { url: '', model: '' };
 const LOCAL_MODES = ['fallback', 'parallel'];
 
 export function normUrl(u) {
@@ -79,7 +81,7 @@ export class RenderNodes {
     const nodes = Array.isArray(s.nodes) ? s.nodes.filter((n) => n && normUrl(n.url)).map((n) => ({ id: n.id || crypto.randomBytes(4).toString('hex'), url: normUrl(n.url), name: String(n.name || '').slice(0, 60), enabled: n.enabled !== false, token: String(n.token || ''), audio: n.audio !== false })) : [];
     // première installation : nœuds donnés par SOUNDTUBE_RENDER_NODES (URL séparées par des virgules)
     if (!s.nodes && process.env.SOUNDTUBE_RENDER_NODES) for (const u of process.env.SOUNDTUBE_RENDER_NODES.split(',')) { const url = normUrl(u); if (url && !nodes.some((n) => n.url === url)) nodes.push({ id: crypto.randomBytes(4).toString('hex'), url, name: '', enabled: true, token: '' }); }
-    return { nodes, forceUrl: normUrl(s.forceUrl) || null, localMode: LOCAL_MODES.includes(s.localMode) ? s.localMode : 'fallback', ai: { ...DEFAULT_AI, ...(s.ai || {}) },
+    return { nodes, forceUrl: normUrl(s.forceUrl) || null, localMode: LOCAL_MODES.includes(s.localMode) ? s.localMode : 'fallback', ai: { ...DEFAULT_AI, ...(s.ai || {}) }, watchAi: { ...DEFAULT_WATCH_AI, ...(s.watchAi || {}) },
       audioMinSec: Number.isFinite(+s.audioMinSec) && +s.audioMinSec >= 60 ? Math.round(+s.audioMinSec) : DEFAULT_AUDIO_MIN_SEC };
   }
   save() { if (!this.file) return; const tmp = this.file + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(this.s, null, 1)); fs.renameSync(tmp, this.file); }
@@ -283,6 +285,34 @@ export class RenderNodes {
     if (model !== undefined) { const m = String(model || '').trim(); if (m && !/^[\w.:/-]{1,80}$/.test(m)) throw err('Nom de modèle invalide'); this.s.ai.model = m || DEFAULT_AI.model; }
     this.save(); return this.s.ai;
   }
+
+  setWatchAI({ url, model } = {}) {
+    if (!this.s.watchAi) this.s.watchAi = { ...DEFAULT_WATCH_AI };
+    if (url !== undefined) { if (url && !normAiUrl(url)) throw err('URL Ollama veille invalide'); this.s.watchAi.url = url ? normAiUrl(url) : ''; }
+    if (model !== undefined) { const m = String(model || '').trim(); if (m && !/^[\w.:/-]{1,80}$/.test(m)) throw err('Nom de modèle veille invalide'); this.s.watchAi.model = m; }
+    this.save(); return this.watchAiView();
+  }
+  /** Résolution effective pour la veille : URL/modèle propres, sinon repli directeur + notice. */
+  resolveWatchAi() {
+    const d = this.s.ai || DEFAULT_AI, w = this.s.watchAi || DEFAULT_WATCH_AI;
+    const url = normAiUrl(w.url) || normAiUrl(d.url) || '';
+    const model = (w.model && String(w.model).trim()) || d.model || DEFAULT_AI.model;
+    const fallbackModel = !(w.model && String(w.model).trim()) && !!(d.model || DEFAULT_AI.model);
+    const fallbackUrl = !normAiUrl(w.url) && !!normAiUrl(d.url);
+    return {
+      url, model, timeout: d.timeout || DEFAULT_AI.timeout,
+      usingDirectorUrl: fallbackUrl, usingDirectorModel: fallbackModel,
+      notice: (fallbackUrl || fallbackModel)
+        ? ('Repli sur le PC IA directeur' + (fallbackModel ? ` (modèle « ${model} »)` : '') + (fallbackUrl ? ' (même URL)' : '') + '.')
+        : null,
+      configured: { url: w.url || '', model: w.model || '' },
+    };
+  }
+  watchAiView() {
+    const r = this.resolveWatchAi();
+    return { url: this.s.watchAi?.url || '', model: this.s.watchAi?.model || '', effective: { url: r.url, model: r.model }, notice: r.notice, usingDirectorUrl: r.usingDirectorUrl, usingDirectorModel: r.usingDirectorModel };
+  }
+
   async testAI({ url, model } = {}) {
     const u = normAiUrl(url || this.s.ai.url), m = model || this.s.ai.model;
     if (!u) return { ok: false, error: 'Aucune URL renseignée' };
