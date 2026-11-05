@@ -54,3 +54,7 @@ Miniature / fond animé, mise en page, loudness, textes FR+EN, publication OAuth
 ## 5. Mobile
 
 Sous ~390 px la barre se replie ; le sélecteur de langue reste visible.
+
+## Banque d'échantillons
+
+Pianos, cordes, batterie acoustique, etc. depuis `assets/samples/` (voir [SAMPLES-LICENSES.md](../SAMPLES-LICENSES.md)). Le Rhodes échantillonné (jRhodes, CC BY-NC) n'est pas dans le dépôt public : synthèse à la place. Le piano Salamander ajoute automatiquement le crédit CC BY dans les descriptions YouTube.

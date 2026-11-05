@@ -92,6 +92,14 @@ if [[ -f package-lock.json ]]; then npm ci --omit=dev --loglevel=error || npm in
 if node -e "require('better-sqlite3')" 2>/dev/null; then log "Stockage : SQLite (better-sqlite3)"; else log "better-sqlite3 indisponible : repli automatique sur stockage JSON"; fi
 chown -R root:root $APP_DIR
 
+if [[ -f $APP_DIR/assets/samples/manifest.json ]]; then
+  n=$(find "$APP_DIR/assets/samples" -type f -name '*.flac' 2>/dev/null | wc -l | tr -d ' ')
+  log "Banque d'échantillons : $n fichiers FLAC (voir SAMPLES-LICENSES.md)"
+else
+  log "Attention : assets/samples/manifest.json absent — instruments acoustiques en synthèse seule"
+fi
+
+
 log "Service systemd"
 sed "s#@NODE@#$NODE_BIN#" "$SRC_DIR/deploy/soundtube.service" > $UNIT
 if [[ -d /run/systemd/system && -z ${SOUNDTUBE_UNIT:-} ]]; then

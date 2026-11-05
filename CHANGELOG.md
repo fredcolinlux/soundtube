@@ -2,6 +2,13 @@
 
 All notable releases. Personal hostnames, private IPs, library exports and tokens are omitted.
 
+
+## 1.18.0 (docs / samples follow-up)
+
+### Added
+- Public redistributable `assets/samples/` (CC0 + Salamander CC BY 3.0); `SAMPLES-LICENSES.md`
+- `jrhodes/` (CC BY-NC) **not** shipped in the public tree
+
 ## 1.18.0 — 2026-11-05
 
 ### Added

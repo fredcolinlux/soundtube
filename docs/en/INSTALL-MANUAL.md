@@ -74,6 +74,13 @@ chmod +x install-macos.sh uninstall-macos.sh
 Default: user LaunchAgent (no elevation). `--system`: LaunchDaemon.  
 Details: [NODES.md](NODES.md).
 
+
+## Sample bank
+
+The public tree ships `assets/samples/` (~120 MB of FLAC). Licences: [SAMPLES-LICENSES.md](../../SAMPLES-LICENSES.md) (CC0 Versilian / Karoryfer / Virtuosity; Salamander **CC BY 3.0** — Alexander Holm, attribution required; **jRhodes3d excluded** as CC BY-NC).
+
+After `./install.sh`, files live in `/opt/soundtube/app/assets/samples`. Optional override: `SOUNDTUBE_SAMPLES`. Check: `curl -s localhost:8080/api/health` → `samples: true`.
+
 ## Verify
 
 ```bash

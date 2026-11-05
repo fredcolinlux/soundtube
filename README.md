@@ -48,6 +48,14 @@ Standalone packages also ship render agents under `dist/`:
 - Admin: nodes, routing, AI PC, YouTube channels, media library, director context
 - Lightweight i18n (JSON locales, no heavy framework)
 
+
+## Sample bank
+
+The public repository ships `assets/samples/` (FLAC, ~120 MB, CC0 + Salamander **CC BY 3.0**).  
+Licences and attributions: [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md).  
+**Not included:** `jrhodes/` (jRhodes3d, CC BY-NC 4.0) — Rhodes falls back to synthesis.  
+`./install.sh` installs the bank under `/opt/soundtube/app/assets/samples`; `GET /api/health` → `samples: true`.
+
 ## i18n (v1.18.0)
 
 | Piece | Path / API |

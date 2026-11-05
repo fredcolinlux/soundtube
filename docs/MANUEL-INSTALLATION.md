@@ -43,6 +43,13 @@ Détails : [NODES.md](NODES.md).
 `./install-macos.sh` (LaunchAgent sans élévation par défaut ; `--system` pour LaunchDaemon).  
 Détails : [NODES.md](NODES.md).
 
+
+## Banque d'échantillons
+
+Le paquet / dépôt public fournit `assets/samples/` (environ 120 Mo de FLAC). Licences : [SAMPLES-LICENSES.md](../SAMPLES-LICENSES.md) (CC0 Versilian / Karoryfer / Virtuosity ; Salamander **CC BY 3.0** — Alexander Holm, attribution requise ; **jRhodes3d exclu** car CC BY-NC).
+
+Après `./install.sh`, les fichiers sont dans `/opt/soundtube/app/assets/samples`. Variable optionnelle : `SOUNDTUBE_SAMPLES`. Vérification : `curl -s localhost:8080/api/health | grep samples`.
+
 ## Vérifier
 
 ```bash

@@ -32,6 +32,8 @@ Unpack `dist/soundtube-node-agent-1.18.0-windows.zip` or `…-macos.zip`, run th
 
 **Admin → AI PC (Ollama)** → URL like `http://192.168.1.50:11434` + model name → **Test connection**.
 
+The `assets/samples/` bank is installed with the CT (licences: [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md)).
+
 ## Next
 
 - [docs/en/USER-MANUAL.md](docs/en/USER-MANUAL.md)
