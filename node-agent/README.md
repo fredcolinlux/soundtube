@@ -1,4 +1,4 @@
-# soundtube-node 1.17.0 — agent de rendu musique + vidéo
+# soundtube-node 1.18.0 — agent de rendu musique + vidéo
 
 Petit serveur Node.js (**aucune dépendance npm**) qui reçoit les rendus de soundtube depuis le CT :
 
@@ -12,11 +12,11 @@ Petit serveur Node.js (**aucune dépendance npm**) qui reçoit les rendus de sou
 
 ## Windows 11 (NVIDIA)
 
-1. Décompressez `soundtube-node-agent-1.17.0-windows.zip`.
+1. Décompressez `soundtube-node-agent-1.18.0-windows.zip`.
 2. PowerShell **en administrateur** :
 
 ```powershell
-cd $env:USERPROFILE\Downloads\soundtube-node-agent-1.17.0
+cd $env:USERPROFILE\Downloads\soundtube-node-agent-1.18.0
 Set-ExecutionPolicy -Scope Process Bypass -Force
 .\install-windows.ps1
 # ou : .\install-windows.ps1 -GenerateToken -AudioSlots 2
@@ -28,11 +28,11 @@ Désinstallation : `.\uninstall-windows.ps1`.
 
 ## macOS Apple Silicon (Mac mini M4…)
 
-1. Décompressez `soundtube-node-agent-1.17.0-macos.zip`.
+1. Décompressez `soundtube-node-agent-1.18.0-macos.zip`.
 2. Terminal :
 
 ```bash
-cd ~/Downloads/soundtube-node-agent-1.17.0
+cd ~/Downloads/soundtube-node-agent-1.18.0
 chmod +x install-macos.sh uninstall-macos.sh
 ./install-macos.sh
 # ou : ./install-macos.sh --generate-token --audio-slots 2

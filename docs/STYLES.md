@@ -1,4 +1,4 @@
-# soundtube — les styles (moteur 20, v1.11.0)
+# soundtube — les styles (moteur 21, v1.18.0)
 
 Ce document décrit, style par style, ce que soundtube joue **par défaut** : tempo, groove, batterie, harmonie,
 arrangement, instruments et mixage. Toutes les valeurs sont des *points de départ* : la graine tire au sort
@@ -38,6 +38,14 @@ pianos, cordes, Rhodes, batteries acoustiques). Les noms de modèles (TR-606, DX
 * Les références (Chinese Man, Scratch Bandits Crew, L'Entourloop, Bonobo, DJ Koze) désignent des **techniques** :
   boom-bap poussiéreux, swing appuyé, stabs de cuivres, scratchs. Les scratchs et les cuivres sont **synthétisés**
   (aucun échantillon, aucune voix) ; aucune mélodie ou grille existante n'est reproduite.
+
+
+## Moteur 21 (v1.12.0) — harmonie juste
+
+* Les **nouvelles** générations utilisent le moteur **21** (défaut actuel, y compris en v1.18.0).
+* Les morceaux enregistrés avec `engine: 20` (ou moins) sont recalculés **à l’identique** (empreintes de test inchangées).
+* Corrections d’harmonie : accords dans la tonalité, moins de quintes parallèles, basse et mélodie alignées sur l’accord joué, strum / swing lo-fi jazzy corrigés — détails dans `docs/THEORIE.md`.
+* Bouton / API `POST /api/tracks/{id}/regenerate` : produit une nouvelle piste en moteur 21 sans modifier l’original (`meta.regenOf`).
 
 ## Boîtes à rythmes et synthés (synthèse JS)
 

@@ -1,3 +1,5 @@
+> Document d’audit harmonique du **moteur 21**. Produit documenté : soundtube **v1.18.0** (empreinte moteur inchangée).
+
 # Audit de théorie musicale — moteur 20 (v1.11.0)
 
 Date : 4 novembre 2026. Analyse en lecture seule : seule la partition est générée (`compose`), sans rendu audio.

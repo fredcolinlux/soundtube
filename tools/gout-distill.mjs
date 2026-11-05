@@ -1,4 +1,4 @@
-// v1.15.0 : distille l'export Apple Music (CSV, en-têtes français) en un profil de goût court et borné : contexte/gout.json.
+// v1.15.0 : distille l'export music library (CSV, en-têtes français) en un profil de goût court et borné : contexte/gout.json.
 // Usage : node tools/gout-distill.mjs chemin/vers/bibliotheque.csv [contexte/gout.json]
 // Le CSV n'est jamais copié : seuls des totaux d'écoutes par artiste / genre et des artistes de référence par style sont gardés.
 import fs from 'node:fs';
@@ -14,7 +14,7 @@ export function* csvRows(s) {
   }
   if (v || f.length) { f.push(v); yield f; }
 }
-// genres proches regroupés (Apple Music mélange anglais / français et variantes)
+// genres proches regroupés (music library mélange anglais / français et variantes)
 const GENRE_ALIAS = [[/^(hip[- ]?hop(\/rap)?|rap|alternative rap|hip-hop\/rap|rap français|french rap)$/i, 'Hip-Hop/Rap'], [/^(electronic|électronique|electronica|idm)$/i, 'Électronique'],
   [/^(alternative|alternatif|alternative rock|indie rock)$/i, 'Alternative'], [/^(hard ?rock)$/i, 'Hard rock'], [/^(dance)$/i, 'Dance'], [/^(r&b\/soul|soul|r&b)$/i, 'R&B/Soul']];
 const normGenre = (g) => { g = (g || '').trim(); for (const [rx, n] of GENRE_ALIAS) if (rx.test(g)) return n; return g; };
@@ -64,7 +64,7 @@ export const SEED = {
   overallSound: 'électronique et rap avant tout : French Touch, house, big beat, electro, trip-hop, boom bap français et US, avec un fond new wave sombre',
 };
 
-export function buildProfile(text, source = 'Apple Music') {
+export function buildProfile(text, source = 'music library') {
   const d = distill(text), extras = { house: 'House', techno: 'Techno', dnb: 'Drum & Bass' };
   const styles = {};
   for (const [id, s] of Object.entries(SEED.styles)) {

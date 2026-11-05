@@ -1,48 +1,83 @@
 # Installation manual — soundtube 1.18.0
 
-## 1. CT — Debian 13 (bare metal or LXC)
+## Requirements
 
-Run **as root** (the script does not call `sudo`):
+- **CT:** Debian 13 (trixie) recommended; **run as root** (LXC). Node.js ≥ 20 (installer defaults to NodeSource 22; agents pin Node 24).
+- **ffmpeg** (MP3 + video).
+- Optional: Windows 11 + NVIDIA GPU, or macOS Apple Silicon, for render nodes.
+- Optional: Ollama host on the LAN for the art director.
+
+## Install / upgrade the CT
+
+From the extracted standalone tree, **as root** (the root `install.sh` refuses non-root and does not call `sudo`):
 
 ```bash
 ./install.sh --port 8080
+# or: ./deploy/install.sh --port 8080
 ```
 
-Installs Node 24 if needed, user `soundtube`, app under `/opt/soundtube/app`, data `/var/lib/soundtube`, unit `soundtube.service`.
+| Flag | Meaning |
+|---|---|
+| `--port N` | Set `SOUNDTUBE_PORT` |
+| `--nodesource` | Force NodeSource Node |
+| `--debian-node` | Use Debian nodejs/npm |
+| `--no-start` | Install without restarting the unit |
+| `--skip-apt` | Assume ffmpeg + node already present |
 
-Sample pack is not in the light archive — place files under `assets/samples/` then restart.
+Paths:
 
-## 2. Windows node
+| Path | Role |
+|---|---|
+| `/opt/soundtube/app` | Application |
+| `/var/lib/soundtube` | Data (SQLite/JSON + audio files) |
+| `/etc/soundtube/soundtube.env` | Environment |
+| `/etc/systemd/system/soundtube.service` | Unit |
 
-Extract `dist/soundtube-node-agent-*-windows.zip`, admin PowerShell:
+On upgrade, existing env is backed up and merged via `deploy/migrate-env.sh` (missing keys added, values preserved).
+
+Uninstall: `./deploy/uninstall.sh` (see script help).
+
+## Configuration keys (selection)
+
+See `deploy/soundtube.env` for the full commented list:
+
+- `SOUNDTUBE_HOST` / `SOUNDTUBE_PORT` (default `0.0.0.0` / `8080`)
+- `SOUNDTUBE_DATA_DIR`, `SOUNDTUBE_MAX_JOBS`, `SOUNDTUBE_MAX_QUEUE`, `SOUNDTUBE_MAX_DURATION`
+- `SOUNDTUBE_MP3`, `SOUNDTUBE_MP3_BITRATE`, `SOUNDTUBE_LUFS`, `SOUNDTUBE_TRUE_PEAK`
+- `SOUNDTUBE_ARTIST`, `SOUNDTUBE_KEEP_WAV`, `SOUNDTUBE_SAMPLE_CACHE_MB`, `SOUNDTUBE_MEDIA_MAX_MB`
+- Optional bootstrap: `SOUNDTUBE_RENDER_NODES`, `SOUNDTUBE_NODE_TOKEN`, `SOUNDTUBE_LOCAL_VIDEO_SLOTS`
+- Tests: `SOUNDTUBE_YT_TRANSPORT=mock`
+
+## Windows node
+
+1. Unpack `dist/soundtube-node-agent-1.18.0-windows.zip`.
+2. PowerShell **as Administrator**:
 
 ```powershell
-.\install-windows.ps1 -AllowFrom 192.168.1.0/24
+Set-ExecutionPolicy -Scope Process Bypass -Force
+.\install-windows.ps1
+# .\install-windows.ps1 -GenerateToken -AudioSlots 2
 ```
 
-Admin → Nodes: `http://<PC-IP>:8765`.
+Installs under `C:\ProgramData\soundtube-node`, scheduled task `soundtube-node`, Private firewall profile.  
+Uninstall: `.\uninstall-windows.ps1`.  
+Details: [NODES.md](NODES.md).
 
-## 3. macOS node (Apple Silicon)
+## macOS node (Apple Silicon)
 
 ```bash
-./install-macos.sh          # user LaunchAgent (default)
-./install-macos.sh --system # LaunchDaemon
+chmod +x install-macos.sh uninstall-macos.sh
+./install-macos.sh
+# headless at boot: ./install-macos.sh --system   # requires elevated privileges
 ```
 
-Admin → Nodes: `http://<Mac-IP>:8765`. Encoder: VideoToolbox.
+Default: user LaunchAgent (no elevation). `--system`: LaunchDaemon.  
+Details: [NODES.md](NODES.md).
 
-## 4. Ollama (optional)
+## Verify
 
-Admin → AI PC: e.g. `http://192.168.1.50:11434`, model `qwen3:14b`, Test.
-
-## 5. YouTube OAuth
-
-See `docs/YOUTUBE.md`. Never commit secrets.
-
-## 6. Multi-subnet networking
-
-UDP discovery may fail across VLANs — add node URLs manually. Open TCP 8080 / 8765 / 11434 as needed. Windows `-AllowFrom` must cover the CT subnet.
-
-## 7. Updates / backup / troubleshooting
-
-Re-run `./install.sh` (env file preserved). Backup `/var/lib/soundtube` and `/etc/soundtube/soundtube.env`. Check `journalctl -u soundtube`, node `/health`, sample pack presence.
+```bash
+systemctl status soundtube
+curl -s http://127.0.0.1:8080/api/health
+npm test   # from the app directory if you keep sources/tests
+```

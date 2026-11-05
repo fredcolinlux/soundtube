@@ -2,7 +2,7 @@
 # v1.17.0 : construit le zip de l'agent (Windows et/ou macOS).
 # core/ = copie exacte du moteur audio du CT + ENGINE.json { version, hash }.
 # Usage :
-#   sh tools/build-node-agent.sh                  # les deux zips dans /workspace
+#   sh tools/build-node-agent.sh                  # les deux zips dans /var/tmp
 #   sh tools/build-node-agent.sh windows [out.zip]
 #   sh tools/build-node-agent.sh macos [out.zip]
 set -e

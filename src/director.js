@@ -1,4 +1,4 @@
-// v1.15.0 : contexte facultatif du directeur artistique IA — profil de goût (distillé de l'export Apple Music, livré dans
+// v1.15.0 : contexte facultatif du directeur artistique IA — profil de goût (distillé de l'export music library, livré dans
 // contexte/gout.json, artistes de référence par style modifiables dans Admin) et résumé de la dernière veille tendances.
 // Chaque source a son interrupteur (Admin › Contexte du directeur), un budget fixe en caractères, et n'est jamais citée
 // dans les textes publics : les noms d'artistes du profil sont retirés des titres / descriptions / tags proposés.
