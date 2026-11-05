@@ -87,14 +87,23 @@
     <section class="module panel" id="ai">
       <div class="module-head">
         <h2><span class="num">03</span><span data-i18n="admin.ai">PC IA (Ollama)</span></h2>
-        <span class="hint">Sert au directeur artistique (page Générer → « Décris l’ambiance ») et à la veille tendances. Sans PC IA joignable : propositions locales.</span>
+        <span class="hint" data-i18n="admin.aiHint">Directeur artistique et, en repli, veille tendances. Sans PC joignable : propositions locales.</span>
       </div>
+      <h3 class="subhead" data-i18n="admin.aiDirector">Directeur artistique</h3>
       <div class="grid-3">
-        <div class="field"><label for="aiUrl">Adresse Ollama</label><input type="text" id="aiUrl" placeholder="http://192.168.1.50:11434 ou http://proxy:port/chemin" spellcheck="false"></div>
-        <div class="field"><label for="aiModel">Modèle</label><input type="text" id="aiModel" placeholder="qwen3:14b" spellcheck="false"></div>
-        <div class="field"><label for="aiTimeout">Délai max d’une réponse (s)</label><input type="number" id="aiTimeout" min="10" max="600" step="10" placeholder="120"></div>
+        <div class="field"><label for="aiUrl" data-i18n="admin.aiUrl">Adresse Ollama</label><input type="text" id="aiUrl" placeholder="http://192.168.1.50:11434" spellcheck="false" list="aiModelHints"></div>
+        <div class="field"><label for="aiModel" data-i18n="admin.aiModel">Modèle</label><input type="text" id="aiModel" placeholder="choisi dans Admin (liste /api/tags)" spellcheck="false" list="aiModelsList"><datalist id="aiModelsList"></datalist></div>
+        <div class="field"><label for="aiTimeout" data-i18n="admin.aiTimeout">Délai max d’une réponse (s)</label><input type="number" id="aiTimeout" min="10" max="600" step="10" placeholder="120"></div>
       </div>
-      <div class="row"><button class="btn btn-primary" id="aiSave" type="button" data-i18n="admin.save">Enregistrer</button><button class="btn" id="aiTest" type="button" data-i18n="admin.test">Tester la connexion</button><span class="hint" id="aiMsg"></span></div>
+      <div class="row"><button class="btn btn-primary" id="aiSave" type="button" data-i18n="admin.save">Enregistrer</button><button class="btn" id="aiTest" type="button" data-i18n="admin.testDirector">Tester le directeur</button><span class="hint" id="aiMsg"></span></div>
+      <h3 class="subhead" data-i18n="admin.aiWatch">Veille tendances (modèle dédié)</h3>
+      <p class="hint" data-i18n="admin.aiWatchHint">URL optionnelle (sinon celle du directeur). Modèle propre recommandé. Si le modèle veille est vide : repli sur le modèle directeur, avec avis visible.</p>
+      <div class="grid-3">
+        <div class="field"><label for="watchUrl" data-i18n="admin.watchUrl">Adresse Ollama veille</label><input type="text" id="watchUrl" placeholder="(repli directeur)" spellcheck="false"></div>
+        <div class="field"><label for="watchModel" data-i18n="admin.watchModel">Modèle veille</label><input type="text" id="watchModel" placeholder="(repli directeur)" spellcheck="false" list="watchModelsList"><datalist id="watchModelsList"></datalist></div>
+        <div class="field"><label class="sr">—</label><button class="btn" id="watchTest" type="button" data-i18n="admin.testWatch">Tester la veille</button></div>
+      </div>
+      <p class="hint" id="watchMsg"></p>
     </section>
 
     <section class="module panel" id="trends">
@@ -102,19 +111,23 @@
         <h2><span class="num">04</span>Veille tendances</h2>
         <span class="hint" id="trSource">—</span>
       </div>
-      <p class="hint">Lit seulement des métadonnées publiques (titres, mots-clés, durées, vues) de vidéos récentes par style, puis le PC IA en fait un résumé et propose des retouches de réglages. Rien n’est appliqué tout seul : chaque proposition a son bouton « Appliquer » (elle devient la retouche mémorisée du style sur la page Générer).</p>
+      <p class="hint" data-i18n="admin.trendsHint">Crawl autonome de métadonnées publiques (RSS, pages), résumé par le modèle veille, propositions de retouches. Rien n’est appliqué tout seul : bouton « Appliquer » par proposition. Pas de téléchargement audio, pas de connexion à des comptes.</p>
       <div class="grid-3">
         <div class="field"><label for="trEvery">Fréquence (jours)</label><input type="number" id="trEvery" min="1" max="60" step="1" value="7"></div>
-        <div class="field"><label for="trPer">Vidéos par style</label><input type="number" id="trPer" min="5" max="50" step="5" value="20"></div>
+        <div class="field"><label for="trPer">Entrées par style</label><input type="number" id="trPer" min="5" max="50" step="5" value="20"></div>
         <div class="field"><label for="trKey">Clé YouTube Data API <span class="opt">(facultative)</span></label><input type="password" id="trKey" placeholder="AIza…" autocomplete="off" spellcheck="false"></div>
       </div>
-      <div class="field"><label for="trFeeds">Flux RSS / pages (sans clé) : une ligne « style URL » ; style = <code>*</code> pour tous</label><textarea id="trFeeds" rows="3" spellcheck="false" placeholder="frenchtouch https://www.youtube.com/feeds/videos.xml?channel_id=…&#10;* https://exemple.org/charts.rss"></textarea></div>
+      <div class="field"><label for="trFeeds">Sources RSS / pages : une ligne « style URL » (<code>*</code> = tous). Bouton « Remettre les sources par défaut » ci-dessous.</label><textarea id="trFeeds" rows="6" spellcheck="false" placeholder="* https://www.reddit.com/r/edmproduction/.rss"></textarea></div>
       <div class="row tr-opts">
         <label class="toggle"><input type="checkbox" id="trOn"><span>Veille planifiée</span></label>
-        <label class="toggle"><input type="checkbox" id="trHtml"><span>Sans clé ni flux : page publique de recherche YouTube</span></label>
+        <label class="toggle"><input type="checkbox" id="trCrawl" checked><span>Crawl des sources listées</span></label>
+        <label class="toggle"><input type="checkbox" id="trHtml"><span>Compléter via recherche YouTube publique</span></label>
+        <label class="toggle"><input type="checkbox" id="trDiscover"><span>Découverte DuckDuckGo (désactivée par défaut)</span></label>
+        <label class="toggle"><input type="checkbox" id="trPrivate"><span>Autoriser IPs privées pour sources listées seulement</span></label>
       </div>
       <div class="field"><label>Styles suivis</label><div class="chips" id="trStyles"></div></div>
-      <div class="row"><button class="btn btn-primary" id="trSave" type="button">Enregistrer</button><button class="btn" id="trRun" type="button">Lancer maintenant</button><button class="btn btn-ghost btn-mini" id="trKeyDel" type="button" hidden>Effacer la clé</button><span class="hint" id="trMsg"></span></div>
+      <div class="row"><button class="btn btn-primary" id="trSave" type="button">Enregistrer</button><button class="btn" id="trRun" type="button">Lancer la veille</button><button class="btn btn-ghost btn-mini" id="trFeedsReset" type="button">Sources par défaut</button><button class="btn btn-ghost btn-mini" id="trKeyDel" type="button" hidden>Effacer la clé</button><span class="hint" id="trMsg"></span></div>
+      <div id="trHistory" class="tr-history hint"></div>
       <div id="trReport" class="tr-report"></div>
     </section>
 

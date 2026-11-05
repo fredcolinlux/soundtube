@@ -1,12 +1,12 @@
-# Quick start — soundtube 1.18.0
+# Quick start — soundtube 1.19.0
 
 ## 1. Install the control tower (CT)
 
 On Debian 13, **as root** (no `sudo` if already root):
 
 ```bash
-tar -xzf soundtube-1.18.0-standalone.tar.gz
-cd soundtube-1.18.0
+tar -xzf soundtube-1.19.0-standalone.tar.gz
+cd soundtube-1.19.0
 ./install.sh --port 8080
 ```
 
@@ -26,7 +26,7 @@ Open `http://<host>:8080/` → **Studio**. Use **FR | EN** in the top bar.
 
 ## 3. Optional: Windows or Mac render node
 
-Unpack `dist/soundtube-node-agent-1.18.0-windows.zip` or `…-macos.zip`, run the platform installer, then in **Admin → Render nodes** add `http://<node>:8765` (token if you set one). See [docs/en/NODES.md](docs/en/NODES.md).
+Unpack `dist/soundtube-node-agent-1.19.0-windows.zip` or `…-macos.zip`, run the platform installer, then in **Admin → Render nodes** add `http://<node>:8765` (token if you set one). See [docs/en/NODES.md](docs/en/NODES.md).
 
 ## 4. Optional: Ollama art director
 

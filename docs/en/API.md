@@ -43,3 +43,14 @@ Same surface as the French [API.md](../API.md) tables (split, youtube, media, pa
 ## Common status codes
 
 `400` bad params · `404` missing · `409` node engine mismatch · `202` accepted generate.
+
+## Admin — watch AI (v1.19)
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/api/admin/ai` | Director + `watch` object |
+| PUT | `/api/admin/ai` | Director; optional `watchUrl` / `watchModel` |
+| PUT | `/api/admin/ai/watch` | Watch model/URL only |
+| POST | `/api/admin/ai/test` | `role: "director"` \| `"watch"` |
+| GET | `/api/admin/trends` | settings + report + `history` + `watchAi` |
+

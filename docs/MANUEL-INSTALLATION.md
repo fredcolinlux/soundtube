@@ -56,3 +56,8 @@ Après `./install.sh`, les fichiers sont dans `/opt/soundtube/app/assets/samples
 systemctl status soundtube
 curl -s http://127.0.0.1:8080/api/health
 ```
+
+## Veille et IA
+
+Aucune clé API n’est requise pour le crawl RSS par défaut. Optionnel : clé YouTube Data API, bascule DuckDuckGo, modèle Ollama dédié à la veille (Admin → PC IA). Voir `SAMPLES-LICENSES.md` et le manuel d’exploitation pour la sécurité du crawler.
+

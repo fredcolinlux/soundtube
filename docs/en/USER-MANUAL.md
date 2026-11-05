@@ -60,3 +60,8 @@ Top bar collapses under ~390 px width; the language switch stays visible (`margi
 ## Sample bank
 
 Pianos, strings, acoustic drums, etc. from `assets/samples/` (see [SAMPLES-LICENSES.md](../../SAMPLES-LICENSES.md)). Sampled Rhodes (jRhodes, CC BY-NC) is not in the public tree — synth fallback. Salamander piano auto-adds the CC BY credit in YouTube descriptions.
+
+## Trend watch
+
+In **Admin**, configure public RSS sources (defaults provided) and optionally a **dedicated watch model**. Run manually or on a schedule. Proposals appear with an **Apply** button (they never apply themselves). Artist names are scrubbed from generated text.
+

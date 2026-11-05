@@ -4,6 +4,7 @@ Heures : Europe/Paris.
 
 | Date | Jalon | État | Détail |
 |---|---|---|---|
+| 06/11/2026 00:15 | v1.19.0 : modèle veille dédié + crawl RSS autonome (anti-SSRF) | ✅ fait | Admin PC IA : URL/modèle veille séparés, Tester, repli directeur+notice. `src/crawl.js` RSS défaut + DDG off, robots/UA/rate/cache/SSRF. Directeur inchangé. `test/v1190.js` mocks. Docs FR/EN. Empreinte `696de0f4125a`. |
 | 05/11/2026 14:30 | v1.18.0 : i18n FR/EN + sélecteur + docs EN | ✅ fait | Locales `public/i18n/{fr,en}.json`, `public/js/i18n.js`, sélecteur barre du haut, cookie/localStorage/Accept-Language, API `/api/ui/lang`, README EN + manuels `docs/en/`, empreinte moteur inchangée, `test/v1180.js`. |
 | 28/10/2026 22:44 | 1. Titre dans les noms de fichiers | ✅ fait | `<titre-slug>_<style>_<AAAA-MM-JJ_HHhMM>`.wav/.mp3/.mid/-midi.zip ; Content-Disposition identique ; renommage des fichiers au changement de titre (même pendant le rendu) ; migration au démarrage. En cours : 2. Mise en page. Restant : 3–6. |
 | 28/10/2026 22:44 | 2. Mise en page verticale | ✅ fait | 01 Style pleine largeur (grille 4/3/2 colonnes) → 02 Réglages (3 colonnes sur grand écran) → 03 Bibliothèque ; vérifié 1440/900/390 px sans débordement ; screenshot.png mis à jour. En cours : 3. Batterie 909. Restant : 4–6. |

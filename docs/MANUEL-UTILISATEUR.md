@@ -58,3 +58,8 @@ Sous ~390 px la barre se replie ; le sélecteur de langue reste visible.
 ## Banque d'échantillons
 
 Pianos, cordes, batterie acoustique, etc. depuis `assets/samples/` (voir [SAMPLES-LICENSES.md](../SAMPLES-LICENSES.md)). Le Rhodes échantillonné (jRhodes, CC BY-NC) n'est pas dans le dépôt public : synthèse à la place. Le piano Salamander ajoute automatiquement le crédit CC BY dans les descriptions YouTube.
+
+## Veille tendances
+
+Dans **Admin**, configurez les sources RSS publiques (liste par défaut fournie) et, si besoin, un **modèle Ollama dédié** à la veille. Lancement manuel ou planifié. Les propositions ont un bouton **Appliquer** (rien n’est appliqué seul). Les noms d’artistes sont retirés des textes générés.
+

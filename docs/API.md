@@ -126,3 +126,14 @@ Paramètres principaux de `POST /api/generate` : `style`, `bpm`, `key`, `scale`,
 - `404` — style / morceau inconnu.
 - `409` — moteur de nœud différent (audio).
 - `202` — génération acceptée (suivre `/api/jobs/{id}` ou le morceau).
+
+## Admin — IA veille (v1.19)
+
+| Méthode | Chemin | Rôle |
+|---|---|---|
+| GET | `/api/admin/ai` | Directeur + objet `watch` (effectif, notice) |
+| PUT | `/api/admin/ai` | Directeur ; `watchUrl` / `watchModel` optionnels |
+| PUT | `/api/admin/ai/watch` | Uniquement le modèle / URL veille |
+| POST | `/api/admin/ai/test` | `role: "director"` \| `"watch"` — liste `/api/tags` |
+| GET | `/api/admin/trends` | settings + report + `history` + `watchAi` |
+

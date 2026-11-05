@@ -43,10 +43,11 @@ export function parseJsonReply(s) {
   if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch { /* suite */ } }
   throw err('Réponse de l\'IA illisible (JSON attendu)', 502);
 }
-export async function ollamaJson(ai, system, user, { timeout } = {}) {
+export async function ollamaJson(ai, system, user, { timeout, temperature, num_ctx } = {}) {
   const base = normAiUrl(ai?.url); if (!base) throw err('Aucune URL Ollama (Admin → PC IA)', 503);
   const model = ai.model || 'qwen3:14b', ms = timeout || (ai.timeout ? ai.timeout * 1000 : 120000);
-  const options = { temperature: 0.7, num_ctx: 8192 };
+  // temperature défaut 0.7 = comportement directeur inchangé (v1.18) ; la veille passe temperature: 0.4
+  const options = { temperature: temperature == null ? 0.7 : +temperature, num_ctx: num_ctx == null ? 8192 : +num_ctx };
   let r = await request(base, 'POST', 'api/chat', { timeout: ms, json: { model, stream: false, format: 'json', think: false, options, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] } });
   if (r.status === 404 || r.status === 405) r = await request(base, 'POST', 'api/generate', { timeout: ms, json: { model, stream: false, format: 'json', think: false, options, system, prompt: user } });
   if (r.status !== 200) throw err(`Ollama : HTTP ${r.status}${r.data?.error ? ' — ' + String(r.data.error).slice(0, 160) : ''}`, 502);

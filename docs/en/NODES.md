@@ -1,6 +1,6 @@
-# Render nodes: music + video (v1.18.0)
+# Render nodes: music + video (v1.19.0)
 
-A node is a LAN machine (Windows NVIDIA PC, Apple Silicon Mac, …) running the `soundtube-node` agent. Since **v1.16.0** it also renders **music** (same engine as the CT, bit-identical). **v1.17.0** adds official **macOS arm64** (VideoToolbox). Zips shipped with CT 1.18.0 are named `soundtube-node-agent-1.18.0-*.zip` (engine fingerprint still `696de0f4125a`).
+A node is a LAN machine (Windows NVIDIA PC, Apple Silicon Mac, …) running the `soundtube-node` agent. Since **v1.16.0** it also renders **music** (same engine as the CT, bit-identical). **v1.17.0** adds official **macOS arm64** (VideoToolbox). Zips shipped with CT 1.19.0 are named `soundtube-node-agent-1.19.0-*.zip` (engine fingerprint still `696de0f4125a`).
 
 ## 1. Audio capability
 
@@ -30,7 +30,46 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 
 Install root: `C:\ProgramData\soundtube-node`. Options: `-NoAudio`, `-AudioSlots`, `-AllowFrom 192.168.0.0/24`, `-CtAddress`, `-GenerateToken`. Uninstall: `.\uninstall-windows.ps1`.
 
-## 5. macOS Apple Silicon
+## 6bis. macOS Apple Silicon (v1.17.0)
+
+### Install
+
+```bash
+cd ~/Downloads/soundtube-node-agent-1.19.0
+chmod +x install-macos.sh uninstall-macos.sh
+./install-macos.sh
+./install-macos.sh --generate-token
+./install-macos.sh --no-audio
+./install-macos.sh --audio-slots 2
+./install-macos.sh --system   # LaunchDaemon (requires elevation)
+```
+
+- **Default**: `~/Library/Application Support/soundtube-node` + **LaunchAgent** (no elevation).
+- **`--system`**: `/usr/local/soundtube-node` + **LaunchDaemon**.
+- Homebrew: Node 24 + ffmpeg (**VideoToolbox**).
+- Logs: `agent.log`, launchd out/err.
+
+### Firewall
+
+macOS Application Firewall is per-app. On first listen, allow `node`. To force:
+
+```bash
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add "$(which node)"
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp "$(which node)"
+```
+
+Access control remains the shared **token**. UDP discovery (47811) often stays on-subnet — add the Mac URL manually in Admin when routed across subnets.
+
+### Uninstall
+
+```bash
+./uninstall-macos.sh
+./uninstall-macos.sh --keep-files
+./uninstall-macos.sh --system
+```
+
+
+## 5. macOS Apple Silicon (summary)
 
 ```bash
 ./install-macos.sh
