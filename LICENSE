@@ -1,0 +1,11 @@
+Copyright (c) 2026 soundtube contributors.
+
+All rights reserved.
+
+This software and associated documentation files (the "Software") are the
+proprietary property of their owners. No licence to use, copy, modify, merge,
+publish, distribute, sublicense, or sell copies of the Software is granted by
+this file alone. Contact the repository owner for licensing terms.
+
+Third-party components (fonts, sample licences under tools/pack-sources/licenses/,
+npm dependencies) remain under their respective licences.

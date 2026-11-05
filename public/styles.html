@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>soundtube — les styles</title>
+  <meta name="theme-color" content="#0b1022">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/app.css?v=1.17.0">
+  <link rel="stylesheet" href="/css/site.css?v=1.17.0">
+</head>
+<body class="site page-styles">
+  <main class="site-wrap">
+    <section class="page-hero">
+      <p class="kicker">Les styles</p>
+      <h1 class="mega mega-2">Chaque style a<br><span>ses machines.</span></h1>
+      <p class="lead">Tempos, gammes, grooves, synthés et mix propres à chaque genre — décrits en détail sur chaque page, avec sa bibliothèque et un préréglage prêt à générer.</p>
+    </section>
+    <div class="sc-grid sc-grid-lg" id="allGrid"></div>
+    <section class="roadmap" aria-labelledby="hRoad" id="roadSec" hidden>
+      <div class="sec-head" data-reveal><h2 id="hRoad"><span class="num">→</span>Feuille de route</h2><span class="hint">Techniques seulement : jamais de mélodie ni d’échantillon repris.</span></div>
+      <div class="doc" id="roadmap" data-reveal></div>
+    </section>
+  </main>
+  <footer class="site-foot"><span>Détail technique : <code>docs/STYLES.md</code></span><a href="/">Studio</a></footer>
+  <script type="module">
+    import { $, api, esc, mountTopbar, mountBackground, reveal, styleCardHtml } from '/js/site.js?v=1.17.0';
+    mountTopbar('/styles'); mountBackground();
+    api('/api/styles').then((st) => {
+      $('#allGrid').innerHTML = st.styles.map(styleCardHtml).join('');
+      if (st.roadmap) { $('#roadmap').innerHTML = st.roadmap; $('#roadSec').hidden = false; }
+      reveal();
+    }).catch((e) => { $('#allGrid').innerHTML = `<p class="err">Serveur injoignable : ${esc(e.message)}</p>`; });
+  </script>
+</body>
+</html>

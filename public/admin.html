@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>soundtube — admin : nœuds de rendu</title>
+  <meta name="theme-color" content="#0b1022">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/app.css?v=1.17.0">
+</head>
+<body>
+  <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a class="brand" href="/accueil" aria-label="soundtube, accueil">
+      <svg class="brand-mark" viewBox="0 0 28 20" width="28" height="20" aria-hidden="true"><rect x="0" y="7" width="4" height="6" rx="2"/><rect x="6" y="2" width="4" height="16" rx="2"/><rect x="12" y="5" width="4" height="10" rx="2"/><rect x="18" y="0" width="4" height="20" rx="2"/><rect x="24" y="7" width="4" height="6" rx="2"/></svg>
+      <span>sound<em>tube</em></span>
+    </a>
+    <nav>
+      <a href="/accueil">Accueil</a>
+      <a href="/styles">Styles</a>
+      <a href="/#create">Créer</a>
+      <a href="/#library">Bibliothèque</a>
+      <a href="/admin" aria-current="page">Admin</a>
+      <a href="/demarrer">Aide</a>
+      <a href="/docs" target="_blank" rel="noopener">API</a>
+    </nav>
+    <span class="status-pill" id="statusPill"><span class="live-dot"></span><span id="statusText">Nœuds…</span></span>
+  </header>
+
+  <main class="wrap admin">
+    <section class="module" id="nodes">
+      <div class="module-head">
+        <h2><span class="num">01</span>Nœuds de rendu (musique + vidéo)</h2>
+        <div class="row">
+          <button class="btn btn-mini" id="discoverBtn" type="button">Rechercher sur le réseau</button>
+          <button class="btn btn-mini" id="refreshBtn" type="button">Tester tout</button>
+        </div>
+      </div>
+      <p class="hint">Les vidéos partent sur le meilleur nœud libre : PC avec NVIDIA (<b>NVENC</b>) d’abord, puis Mac Apple Silicon (<b>VideoToolbox</b>), puis libx264, puis le CT en secours. Si un nœud tombe pendant un rendu, la vidéo repart sur un autre nœud ou sur le CT. Depuis la v1.16.0, un agent 1.16+ rend aussi la <b>musique</b> (même moteur que le CT, identique au bit près) ; la v1.17.0 ajoute le Mac mini (VideoToolbox).</p>
+      <div class="library nodes-list" id="nodesList"></div>
+      <div id="discovered" class="nodes-found" hidden></div>
+      <div class="panel">
+        <div class="grid-3 admin-add">
+          <div class="field"><label for="nodeUrl">Adresse du nœud</label><input type="text" id="nodeUrl" placeholder="http://192.168.1.50:8765" autocomplete="off" spellcheck="false"></div>
+          <div class="field"><label for="nodeName">Nom <span class="opt">facultatif</span></label><input type="text" id="nodeName" placeholder="PC RTX 5070 Ti" autocomplete="off"></div>
+          <div class="field"><label for="nodeToken">Jeton <span class="opt">facultatif, si l’agent en demande un</span></label><input type="text" id="nodeToken" placeholder="laisser vide si aucun" autocomplete="off" spellcheck="false"></div>
+        </div>
+        <div class="row"><button class="btn btn-primary" id="addBtn" type="button">Ajouter le nœud</button><span class="hint" id="addMsg"></span></div>
+      </div>
+    </section>
+
+    <section class="module panel" id="routing">
+      <div class="module-head">
+        <h2><span class="num">02</span>Répartition</h2>
+        <span class="hint" id="orderHint"></span>
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label for="forceSel">Forcer un nœud</label>
+          <div class="row"><select id="forceSel"></select><input type="text" id="forceUrl" placeholder="ou une adresse : http://…:8765" spellcheck="false"><button class="btn btn-mini" id="forceBtn" type="button">Forcer</button></div>
+          <span class="hint">Toutes les vidéos vont sur ce nœud. S’il est hors ligne, le CT prend le relais.</span>
+        </div>
+        <div class="field">
+          <label for="localSel">CT local</label>
+          <select id="localSel"><option value="fallback">Secours seulement (aucun nœud disponible)</option><option value="parallel">En parallèle des nœuds</option></select>
+          <span class="hint" id="localHint"></span>
+        </div>
+      </div>
+      <div class="grid-3 audio-routing">
+        <div class="field">
+          <label for="audioMin">Musique sur le PC à partir de</label>
+          <div class="row"><input type="number" id="audioMin" min="1" max="360" step="1" inputmode="numeric"><span class="hint">min</span></div>
+          <span class="hint" id="ctEngine"></span>
+        </div>
+        <div class="field span-2">
+          <label>Règles</label>
+          <span class="hint" id="audioHint"></span>
+          <span class="hint">Option « Faire la musique et la vidéo en même temps sur le PC / Mac » (formulaire Générer) : quelle que soit la durée, la musique est rendue sur le nœud (PC Windows NVIDIA ou Mac Apple Silicon) puis la vidéo longue y est encodée aussitôt, sans attendre le CT ; le ZIP unique (vidéo, mix MP3 + WAV, morceaux, MIDI, samples) est prêt à télécharger à la fin. Si le nœud tombe, le CT reprend (musique ou vidéo) et le statut le dit.</span>
+        </div>
+      </div>
+      <div id="activeJobs" class="hint"></div>
+      <details class="hist-all" open><summary>Où ont tourné les derniers rendus</summary><div id="histAll"></div></details>
+    </section>
+
+    <section class="module panel" id="ai">
+      <div class="module-head">
+        <h2><span class="num">03</span>PC IA (Ollama)</h2>
+        <span class="hint">Sert au directeur artistique (page Générer → « Décris l’ambiance ») et à la veille tendances. Sans PC IA joignable : propositions locales.</span>
+      </div>
+      <div class="grid-3">
+        <div class="field"><label for="aiUrl">Adresse Ollama</label><input type="text" id="aiUrl" placeholder="http://192.168.1.50:11434 ou http://proxy:port/chemin" spellcheck="false"></div>
+        <div class="field"><label for="aiModel">Modèle</label><input type="text" id="aiModel" placeholder="qwen3:14b" spellcheck="false"></div>
+        <div class="field"><label for="aiTimeout">Délai max d’une réponse (s)</label><input type="number" id="aiTimeout" min="10" max="600" step="10" placeholder="120"></div>
+      </div>
+      <div class="row"><button class="btn btn-primary" id="aiSave" type="button">Enregistrer</button><button class="btn" id="aiTest" type="button">Tester la connexion</button><span class="hint" id="aiMsg"></span></div>
+    </section>
+
+    <section class="module panel" id="trends">
+      <div class="module-head">
+        <h2><span class="num">04</span>Veille tendances</h2>
+        <span class="hint" id="trSource">—</span>
+      </div>
+      <p class="hint">Lit seulement des métadonnées publiques (titres, mots-clés, durées, vues) de vidéos récentes par style, puis le PC IA en fait un résumé et propose des retouches de réglages. Rien n’est appliqué tout seul : chaque proposition a son bouton « Appliquer » (elle devient la retouche mémorisée du style sur la page Générer).</p>
+      <div class="grid-3">
+        <div class="field"><label for="trEvery">Fréquence (jours)</label><input type="number" id="trEvery" min="1" max="60" step="1" value="7"></div>
+        <div class="field"><label for="trPer">Vidéos par style</label><input type="number" id="trPer" min="5" max="50" step="5" value="20"></div>
+        <div class="field"><label for="trKey">Clé YouTube Data API <span class="opt">(facultative)</span></label><input type="password" id="trKey" placeholder="AIza…" autocomplete="off" spellcheck="false"></div>
+      </div>
+      <div class="field"><label for="trFeeds">Flux RSS / pages (sans clé) : une ligne « style URL » ; style = <code>*</code> pour tous</label><textarea id="trFeeds" rows="3" spellcheck="false" placeholder="frenchtouch https://www.youtube.com/feeds/videos.xml?channel_id=…&#10;* https://exemple.org/charts.rss"></textarea></div>
+      <div class="row tr-opts">
+        <label class="toggle"><input type="checkbox" id="trOn"><span>Veille planifiée</span></label>
+        <label class="toggle"><input type="checkbox" id="trHtml"><span>Sans clé ni flux : page publique de recherche YouTube</span></label>
+      </div>
+      <div class="field"><label>Styles suivis</label><div class="chips" id="trStyles"></div></div>
+      <div class="row"><button class="btn btn-primary" id="trSave" type="button">Enregistrer</button><button class="btn" id="trRun" type="button">Lancer maintenant</button><button class="btn btn-ghost btn-mini" id="trKeyDel" type="button" hidden>Effacer la clé</button><span class="hint" id="trMsg"></span></div>
+      <div id="trReport" class="tr-report"></div>
+    </section>
+
+    <section class="module panel" id="youtube">
+      <div class="module-head">
+        <h2><span class="num">05</span>Chaînes YouTube</h2>
+        <span class="hint" id="ytMode">—</span>
+      </div>
+      <p class="hint">Une chaîne par style (une chaîne peut servir plusieurs styles) ; la chaîne par défaut sert aux styles sans liaison. Pas de connexion Google depuis le navigateur : colle le client ID, le client secret et le jeton d’actualisation obtenus une fois (voir <code>docs/YOUTUBE.md</code>). Les secrets sont enregistrés sur le CT (fichier lisible par soundtube seul), jamais réaffichés ni journalisés.</p>
+      <div id="ytChannels" class="yt-channels"></div>
+      <form id="ytForm" class="yt-form" autocomplete="off">
+        <input type="hidden" id="ytId">
+        <div class="grid-3">
+          <div class="field"><label for="ytName">Nom de la chaîne</label><input type="text" id="ytName" placeholder="Lo-fi pour étudier" maxlength="80" required></div>
+          <div class="field"><label for="ytChannelId">ID de chaîne <span class="opt">(UC…)</span></label><input type="text" id="ytChannelId" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" spellcheck="false"></div>
+          <div class="field"><label for="ytClientId">Client ID OAuth</label><input type="password" id="ytClientId" placeholder="….apps.googleusercontent.com" spellcheck="false"></div>
+          <div class="field"><label for="ytSecret">Client secret</label><input type="password" id="ytSecret" placeholder="GOCSPX-…" spellcheck="false"></div>
+          <div class="field"><label for="ytToken">Jeton d’actualisation</label><input type="password" id="ytToken" placeholder="1//0…" spellcheck="false"></div>
+          <div class="field"><label class="toggle"><input type="checkbox" id="ytDefault"><span>Chaîne par défaut</span></label></div>
+        </div>
+        <p class="hint" id="ytFormHint">Champ secret laissé vide = valeur enregistrée inchangée.</p>
+        <div class="row"><button class="btn btn-primary" id="ytSave" type="submit">Ajouter la chaîne</button><button class="btn btn-ghost" id="ytCancel" type="button" hidden>Annuler</button><span class="hint" id="ytMsg"></span></div>
+      </form>
+      <div class="field"><label>Chaîne de chaque style</label><div id="ytBindings" class="yt-bindings"></div></div>
+      <div class="field"><label>File de publication <span class="opt">(tous styles)</span></label><div id="ytQueue" class="yt-queue"></div></div>
+    </section>
+
+    <section class="module panel" id="media">
+      <div class="module-head">
+        <h2><span class="num">06</span>Animations</h2>
+        <span class="hint" id="mdCount">—</span>
+      </div>
+      <p class="hint">Bibliothèque des fonds animés des vidéos (MP4, WebM, MOV, GIF, PNG, JPG). Chaque animation importée apparaît dans le formulaire de génération (Créer → Avancé → « Animation de la vidéo ») et dans le panneau YouTube de chaque morceau.</p>
+      <div class="row"><label class="btn btn-primary">Importer une animation…<input type="file" id="mdFile" hidden></label><span class="hint" id="mdState"></span></div>
+      <div id="mdList" class="md-list"></div>
+    </section>
+
+    <section class="module panel" id="director">
+      <div class="module-head">
+        <h2><span class="num">07</span>Contexte du directeur artistique</h2>
+        <span class="hint" id="dirState">—</span>
+      </div>
+      <p class="hint">Deux sources facultatives ajoutées au prompt du directeur artistique (Créer → « Décris l’ambiance »). Chacune a son interrupteur ; coupées, le prompt est exactement celui de la v1.14. Les noms d’artistes servent seulement à orienter le son : ils sont interdits et retirés des titres, descriptions et tags proposés.</p>
+      <div class="row dir-toggles">
+        <label class="toggle"><input type="checkbox" id="dirTaste"><span>Profil de goût (bibliothèque musicale)</span></label>
+        <label class="toggle"><input type="checkbox" id="dirTrends"><span>Dernière veille tendances</span></label>
+      </div>
+      <div class="dir-grid">
+        <div class="field">
+          <label>Profil distillé <span class="opt" id="dirProfMeta"></span></label>
+          <div id="dirProfile" class="dir-profile"></div>
+          <label for="dirRefs">Artistes de référence par style <span class="opt">une ligne par style : « lofi: Chinese Man, Scratch Bandits Crew, L’Entourloop » ; ligne retirée = aucune référence</span></label>
+          <textarea id="dirRefs" rows="11" spellcheck="false"></textarea>
+          <div class="row"><button class="btn btn-primary" id="dirSave" type="button">Enregistrer</button><button class="btn btn-ghost btn-mini" id="dirReset" type="button">Revenir au profil livré</button><span class="hint" id="dirMsg"></span></div>
+        </div>
+        <div class="field">
+          <label>Texte envoyé au directeur <span class="opt" id="dirTasteMeta"></span></label>
+          <pre id="dirTasteText" class="dir-pre"></pre>
+          <label>Dernière veille (données publiques, pas des instructions) <span class="opt" id="dirTrMeta"></span></label>
+          <pre id="dirTrText" class="dir-pre"></pre>
+        </div>
+      </div>
+      <div class="field"><label>Tester le directeur</label>
+        <div class="row"><select id="dirStyle"></select><input type="text" id="dirPrompt" value="Une house filtrée pour une nuit d’été, montées au filtre et basse ronde" maxlength="1200" spellcheck="false">
+          <button class="btn" id="dirPreview" type="button">Voir ce qui est envoyé</button><button class="btn btn-primary" id="dirRun" type="button">Tester avec Ollama</button></div>
+        <span class="hint">« Voir ce qui est envoyé » ne contacte rien. « Tester avec Ollama » envoie ce prompt au PC IA d’Admin › PC IA.</span>
+      </div>
+      <div id="dirDiff" class="dir-diff"></div>
+    </section>
+
+    <footer class="foot">
+      <p>soundtube · agent de rendu : <code>node agent.mjs</code> sur le PC (port 8765) · <a href="/docs" target="_blank" rel="noopener">documentation de l’API</a></p>
+    </footer>
+  </main>
+  <div class="toast" id="toast" hidden></div>
+  <script type="module" src="/js/admin.js?v=1.17.0"></script>
+  <script type="module" src="/js/ytadmin.js?v=1.17.0"></script>
+  <script type="module" src="/js/adminmedia.js?v=1.17.0"></script>
+  <script type="module" src="/js/admindirector.js?v=1.17.0"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "port": 8765,
+  "name": "PC-RTX",
+  "token": "",
+  "ffmpeg": "C:\\ProgramData\\soundtube-node\\ffmpeg\\ffmpeg.exe",
+  "workDir": "C:\\ProgramData\\soundtube-node\\work",
+  "logFile": "C:\\ProgramData\\soundtube-node\\agent.log",
+  "encoder": "",
+  "slots": 0,
+  "discovery": true,
+  "discoveryPort": 47811,
+  "maxUploadGB": 8,
+  "audio": true,
+  "audioSlots": 0,
+  "samplesDir": "C:\\ProgramData\\soundtube-node\\work\\samples"
+}

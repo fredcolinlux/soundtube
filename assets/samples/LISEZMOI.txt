@@ -1,0 +1,4 @@
+Échantillons audio (non livrés dans l’archive publique — trop volumineux).
+Placez ici le pack d’échantillons soundtube (fichiers FLAC/WAV indexés),
+ou générez-le avec : node tools/build-sample-pack.mjs
+Sans ce dossier, la synthèse instrumentale est limitée (kits synthétiques uniquement).

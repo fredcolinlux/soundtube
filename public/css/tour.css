@@ -1,0 +1,9 @@
+/* soundtube v1.10.0 — visite guidée du studio (/?tour=1), feuille chargée par tour.js seulement */
+.st-tour { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
+.st-ring { position: fixed; border-radius: 14px; border: 2px solid var(--mint); box-shadow: 0 0 0 9999px rgba(4, 6, 16, .62), 0 0 30px rgba(94, 242, 201, .35); transition: all .35s cubic-bezier(.2, .8, .2, 1); }
+.st-pop { position: fixed; pointer-events: auto; background: #10152e; border: 1px solid rgba(94, 242, 201, .5); border-radius: 14px; padding: 16px 16px 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, .6); transition: top .35s, left .35s; }
+.st-n { margin: 0 0 6px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--mint); }
+.st-t { font-size: 18px; letter-spacing: -.02em; }
+.st-p { margin: 8px 0 14px; color: #c3c9ea; font-size: 14px; line-height: 1.55; }
+.st-act { display: flex; gap: 6px; justify-content: flex-end; }
+.st-act .btn-primary { width: auto; }

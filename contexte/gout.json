@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "source": "exemple (à remplacer)",
+  "builtAt": "2026-01-01",
+  "stats": {
+    "tracks": 1200,
+    "audioTracks": 1180,
+    "plays": 5000
+  },
+  "topArtists": [
+    {
+      "name": "Exemple Synth",
+      "plays": 120
+    },
+    {
+      "name": "Exemple Groove",
+      "plays": 95
+    },
+    {
+      "name": "Exemple Bass",
+      "plays": 80
+    },
+    {
+      "name": "Exemple Beat",
+      "plays": 70
+    },
+    {
+      "name": "Exemple Pad",
+      "plays": 60
+    },
+    {
+      "name": "Exemple Break",
+      "plays": 55
+    },
+    {
+      "name": "Exemple House",
+      "plays": 50
+    },
+    {
+      "name": "Exemple Chill",
+      "plays": 45
+    },
+    {
+      "name": "Exemple Dark",
+      "plays": 40
+    },
+    {
+      "name": "Exemple Funk",
+      "plays": 35
+    }
+  ],
+  "topGenres": [
+    {
+      "name": "Électronique",
+      "plays": 2000,
+      "share": 40.0
+    },
+    {
+      "name": "House",
+      "plays": 800,
+      "share": 16.0
+    },
+    {
+      "name": "Hip-Hop/Rap",
+      "plays": 600,
+      "share": 12.0
+    },
+    {
+      "name": "Ambient",
+      "plays": 400,
+      "share": 8.0
+    },
+    {
+      "name": "Techno",
+      "plays": 300,
+      "share": 6.0
+    }
+  ],
+  "favourites": [
+    {
+      "name": "Exemple Synth",
+      "plays": 120
+    },
+    {
+      "name": "Exemple Groove",
+      "plays": 95
+    },
+    {
+      "name": "Exemple Bass",
+      "plays": 80
+    },
+    {
+      "name": "Exemple Beat",
+      "plays": 70
+    },
+    {
+      "name": "Exemple Pad",
+      "plays": 60
+    },
+    {
+      "name": "Exemple Break",
+      "plays": 55
+    },
+    {
+      "name": "Exemple House",
+      "plays": 50
+    },
+    {
+      "name": "Exemple Chill",
+      "plays": 45
+    }
+  ],
+  "sound": "Profil d'exemple générique. Remplacez-le en distillant votre bibliothèque : node tools/gout-distill.mjs bibliotheque.csv",
+  "styles": {
+    "frenchtouch": {
+      "refs": [
+        "Daft Punk",
+        "Justice",
+        "Myd",
+        "Cassius",
+        "Mr. Oizo",
+        "Ed Banger"
+      ],
+      "sound": "house filtrée et compressée, basses saturées, boucles disco hachées, montées au filtre, côté Ed Banger plus sale et ludique"
+    },
+    "lofi": {
+      "refs": [
+        "Chinese Man",
+        "Scratch Bandits Crew",
+        "L'Entourloop",
+        "Bonobo"
+      ],
+      "sound": "boom bap poussiéreux, scratchs, cuivres et samples rétro, groove chaloupé plutôt que lo-fi plat"
+    },
+    "hiphop": {
+      "refs": [
+        "IAM",
+        "NTM",
+        "Beastie Boys"
+      ],
+      "sound": "boom bap 90 chaud, caisse claire sèche, basse ronde, boucles soul et funk, énergie de crew"
+    },
+    "trap": {
+      "refs": [
+        "Action Bronson"
+      ],
+      "sound": "instrumental rap moderne mais musical, 808 tenues, mélodies sombres sans surcharge de hi-hats"
+    },
+    "house": {
+      "refs": [
+        "DJ Koze",
+        "deadmau5",
+        "Bonobo"
+      ],
+      "sound": "house profonde et organique, groove hypnotique, accords chauds, détails ludiques et progressions longues"
+    },
+    "techno": {
+      "refs": [
+        "Vitalic",
+        "Chemical Brothers"
+      ],
+      "sound": "techno et electro puissantes, synthés analogiques agressifs, gros breakbeats, montées de rave"
+    },
+    "dnb": {
+      "refs": [
+        "Pendulum"
+      ],
+      "sound": "drum & bass énergique, basses lourdes, côté rock/électro, montées épiques"
+    },
+    "synthwave": {
+      "refs": [
+        "Kavinsky",
+        "Air"
+      ],
+      "sound": "synthés 80 sombres et mélodiques, arpèges, ambiance nocturne de film"
+    },
+    "ambient": {
+      "refs": [
+        "Air",
+        "Massive Attack",
+        "Bonobo"
+      ],
+      "sound": "trip-hop et ambient chaleureux, basses profondes, nappes vintage, mélancolie douce"
+    },
+    "cinematic": {
+      "refs": [
+        "Massive Attack",
+        "Air"
+      ],
+      "sound": "cinématique sombre et texturée, tension lente, couleurs trip-hop"
+    },
+    "chiptune": {
+      "refs": [
+        "Mr. Oizo",
+        "Justice"
+      ],
+      "sound": "chiptune ludique et nerveux, côté electro sale plutôt que mignon"
+    }
+  }
+}

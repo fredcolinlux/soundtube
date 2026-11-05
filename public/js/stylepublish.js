@@ -1,0 +1,47 @@
+// v1.13.0 : page Style › Publication YouTube (profil par style, chaîne liée, auto-publication avec confirmation, file du style).
+import { queueHtml, bindQueue } from './pubqueue.js';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
+async function api(method, url, body) {
+  const r = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(d.error || `Erreur ${r.status}`), { status: r.status }); return d;
+}
+let V = null;
+const localDT = (iso) => { if (!iso) return ''; const d = new Date(iso); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
+function fill(P) {
+  $('#pubTitle').value = P.title; $('#pubDesc').value = P.description; $('#pubTags').value = P.tags.join(', ');
+  $('#pubAutoTags').checked = P.autoTags; $('#pubThumb').checked = P.thumbnail === 'auto'; $('#pubVis').value = P.visibility; $('#pubPlaylist').value = P.playlistId;
+  $('#pubSched').value = P.schedule.mode; $('#pubDelay').value = P.schedule.delayHours || 24; $('#pubAt').value = localDT(P.schedule.at); sched();
+  $('#pubAuto').checked = P.autoPublish; $('#pubConfirm').value = ''; confirmRow();
+}
+function sched() { const m = $('#pubSched').value; $('#pubDelay').hidden = m !== 'delay'; $('#pubAt').hidden = m !== 'at'; }
+function confirmRow() { $('#pubConfirmRow').hidden = !($('#pubAuto').checked && !V?.profile.autoPublish); }
+function render(v) {
+  V = v;
+  $('#pubMode').textContent = v.transport === 'mock' ? 'Mode simulation : aucun envoi réel' : '';
+  $('#pubWord').textContent = v.confirmWord;
+  const st = $('#pubState');
+  st.className = 'pub-state ' + (v.ready ? 'ok' : 'bad');
+  st.textContent = v.ready ? `Publication vers « ${v.channel.name} »${v.channelId ? '' : ' (chaîne par défaut)'} — ${v.profile.autoPublish ? 'auto-publication ACTIVÉE' : 'auto-publication désactivée (envoi manuel seulement)'}.` : v.reason;
+  $('#pubChannel').innerHTML = `<option value="">Chaîne par défaut${v.channels.find((c) => c.isDefault) ? ' (' + esc(v.channels.find((c) => c.isDefault).name) + ')' : ''}</option>` + v.channels.map((c) => `<option value="${esc(c.id)}" ${v.channelId === c.id ? 'selected' : ''}>${esc(c.name)}${c.ready ? '' : ' — incomplète'}</option>`).join('');
+  $('#pubVis').innerHTML = v.visibilities.map((x) => `<option value="${x.id}">${esc(x.label)}</option>`).join('');
+  fill(v.profile);
+  $('#pubQueue').innerHTML = queueHtml(v.queue, { empty: 'Aucun envoi pour ce style.' });
+}
+function collect() {
+  const at = $('#pubAt').value ? new Date($('#pubAt').value).toISOString() : '';
+  return { title: $('#pubTitle').value, description: $('#pubDesc').value, tags: $('#pubTags').value, autoTags: $('#pubAutoTags').checked, thumbnail: $('#pubThumb').checked ? 'auto' : 'none', visibility: $('#pubVis').value, playlistId: $('#pubPlaylist').value,
+    schedule: { mode: $('#pubSched').value, delayHours: +$('#pubDelay').value || 24, at }, autoPublish: $('#pubAuto').checked };
+}
+async function load() { render(await api('GET', `/api/styles/${encodeURIComponent(id)}/publish`)); }
+$('#pubSched').addEventListener('change', sched);
+$('#pubAuto').addEventListener('change', confirmRow);
+$('#pubSave').addEventListener('click', async () => {
+  $('#pubMsg').textContent = '';
+  try { render(await api('PUT', `/api/styles/${encodeURIComponent(id)}/publish`, { channelId: $('#pubChannel').value || null, profile: collect(), confirm: $('#pubConfirm').value.trim() })); $('#pubMsg').textContent = 'Profil enregistré.'; }
+  catch (e) { $('#pubMsg').textContent = e.message; }
+});
+$('#pubReset').addEventListener('click', () => { fill({ ...V.defaults, autoPublish: false }); $('#pubMsg').textContent = 'Valeurs par défaut (pas encore enregistrées).'; });
+bindQueue($('#pubQueue'), () => load().catch(() => {}));
+if (id) { load().catch((e) => { $('#pubState').textContent = e.message; }); setInterval(async () => { try { const q = await api('GET', `/api/publish/queue?style=${encodeURIComponent(id)}`); $('#pubQueue').innerHTML = queueHtml(q.items.slice(0, 50), { empty: 'Aucun envoi pour ce style.' }); } catch {} }, 5000); }
