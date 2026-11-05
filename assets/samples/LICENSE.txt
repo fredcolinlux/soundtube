@@ -1,0 +1,11 @@
+Échantillons sonores de soundtube — licences multiples (détail : CREDITS.md, textes : licenses/)
+
+ - CC0 1.0 (domaine public) : VCSL et VSCO 2 CE (Versilian Studios / Sam Gossner), Virtuosity Drums, Frankensnare (Karoryfer),
+   piano Steinway B (VCSL). https://creativecommons.org/publicdomain/zero/1.0/
+ - CC-BY 3.0 : Salamander Grand Piano V3 — Alexander Holm (dossier salamander/). Attribution requise.
+ - CC BY-NC 4.0 : jRhodes3d — Jeff Learman (dossier jrhodes/). Redistribution des échantillons non commerciale ;
+   la musique produite avec ces échantillons est CC0 selon l'auteur.
+
+Traitement : rognage, longueur limitée, fondu de fin, normalisation par instrument, pré-mixage des micros (batterie), FLAC 44,1 kHz 16 bits.
+La musique générée vous appartient et peut être utilisée dans des vidéos YouTube monétisées
+(créditer « Salamander Grand Piano V3 par Alexander Holm, CC-BY 3.0 » quand ce piano est utilisé — fait automatiquement par soundtube).

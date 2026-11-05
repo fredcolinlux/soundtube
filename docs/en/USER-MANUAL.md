@@ -56,3 +56,7 @@ Thumbnail / animated background, design layout, loudness, FR+EN texts, OAuth pub
 ## 5. Keyboard / mobile
 
 Top bar collapses under ~390 px width; the language switch stays visible (`margin-left: auto` on narrow layouts).
+
+## Sample bank
+
+Pianos, strings, acoustic drums, etc. from `assets/samples/` (see [SAMPLES-LICENSES.md](../../SAMPLES-LICENSES.md)). Sampled Rhodes (jRhodes, CC BY-NC) is not in the public tree — synth fallback. Salamander piano auto-adds the CC BY credit in YouTube descriptions.

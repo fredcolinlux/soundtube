@@ -14,6 +14,7 @@
 | Complete ZIP pack | [PACK.md](PACK.md) | [en/PACK.md](en/PACK.md) |
 | Art director context | [DIRECTEUR.md](DIRECTEUR.md) | [en/DIRECTOR.md](en/DIRECTOR.md) |
 | HTTP API | [API.md](API.md) | [en/API.md](en/API.md) |
+| Sample bank licences | [../SAMPLES-LICENSES.md](../SAMPLES-LICENSES.md) + [CREDITS.md](../assets/samples/CREDITS.md) | same |
 | Changelog | [../CHANGELOG.md](../CHANGELOG.md) | same |
 
 Live OpenAPI UI while the server runs: **`/docs`** · machine-readable: **`/api/openapi.json`**.

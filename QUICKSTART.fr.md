@@ -32,6 +32,8 @@ Décompressez `dist/soundtube-node-agent-1.18.0-windows.zip` ou `…-macos.zip`,
 
 **Admin → PC IA (Ollama)** → URL du type `http://192.168.1.50:11434` + modèle → **Tester la connexion**.
 
+La banque `assets/samples/` est installée avec le CT (licences : [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md)).
+
 ## Suite
 
 - [docs/MANUEL-UTILISATEUR.md](docs/MANUEL-UTILISATEUR.md)

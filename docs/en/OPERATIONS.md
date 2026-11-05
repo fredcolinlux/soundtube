@@ -54,3 +54,7 @@ Do not confuse the two when debugging “wrong language” reports.
 2. `./install.sh` as root (keeps env, migrates keys).
 3. Reinstall node agents when `ENGINE` / agent zip version changes.
 4. `curl /api/health` and spot-check Studio + Admin.
+
+## Samples
+
+Presence: `assets/samples/manifest.json` and `samples: true` on `/api/health`. Memory cache: `SOUNDTUBE_SAMPLE_CACHE_MB`. Licences: [SAMPLES-LICENSES.md](../../SAMPLES-LICENSES.md).

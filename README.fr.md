@@ -49,6 +49,14 @@ Agents de rendu dans `dist/` :
 - Admin : nœuds, répartition, PC IA, chaînes YouTube, animations, contexte directeur
 - i18n léger (fichiers JSON, sans framework lourd)
 
+
+## Banque d'échantillons
+
+Le dépôt public inclut `assets/samples/` (FLAC, ~120 Mo, CC0 + Salamander **CC BY 3.0**).  
+Détail et attributions : [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md).  
+**Non inclus** : `jrhodes/` (jRhodes3d, CC BY-NC 4.0) — repli sur synthèse Rhodes.  
+`./install.sh` copie la banque dans `/opt/soundtube/app/assets/samples` ; `GET /api/health` → `samples: true`.
+
 ## i18n (v1.18.0)
 
 | Élément | Chemin / API |
