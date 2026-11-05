@@ -35,7 +35,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const p = buildProfile(csv);
   check(!JSON.stringify(p).includes('Un, deux') && p.styles.frenchtouch.refs.includes('Daft Punk') && p.sound.length < 200, 'profil : aucun titre de morceau, références French Touch, son décrit en une phrase');
 }
-// ---------- 2. profil livré (contexte/gout.json, distillé de l'export bibliothèque musicale d'exemple (1 200 pistes)
+// ---------- 2. profil livré (contexte/gout.json, distillé de l'export bibliothèque musicale de 1 200 pistes)
 const shipped = D.loadShipped();
 {
   check(shipped && shipped.stats.tracks === 1200 && shipped.topArtists[0].name === 'Exemple Synth' && shipped.topArtists[0].plays === 120 && shipped.topGenres[0].name === 'Électronique', `profil livré : 1 200 pistes, n° 1 Exemple Synth (120 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);

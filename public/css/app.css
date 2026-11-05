@@ -246,6 +246,17 @@ input[type=range]:disabled { opacity: .35; cursor: default; }
   .stats li { padding: 0 14px; }
 }
 @media (max-width: 520px) { .grid-3 { grid-template-columns: 1fr; } .styles-grid { grid-template-columns: 1fr 1fr; } .style-tag { display: none; } .style-card { min-height: 0; } }
+
+/* ---------- sélecteur de langue (v1.18.0) */
+.lang-switch { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; padding: 2px; border: 1px solid var(--edge); border-radius: 8px; background: rgba(0,0,0,.22); flex-shrink: 0; }
+.lang-btn { appearance: none; border: 0; background: transparent; color: var(--mute); font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .06em; padding: 5px 8px; border-radius: 6px; cursor: pointer; line-height: 1; }
+.lang-btn:hover { color: var(--ink); }
+.lang-btn.is-active { color: var(--bg0); background: var(--mint); }
+@media (max-width: 860px) {
+  .lang-switch { margin-left: auto; order: 2; }
+  .status-pill { order: 3; }
+  .topbar .brand { order: 0; }
+}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 /* ---------- durée, graine, formats */

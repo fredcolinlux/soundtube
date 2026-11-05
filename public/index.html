@@ -3,96 +3,96 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>soundtube — musique instrumentale générée par algorithme</title>
+  <title data-i18n="title.studio">soundtube — musique instrumentale générée par algorithme</title>
   <meta name="description" content="Compose des morceaux instrumentaux uniques par algorithme : lo-fi, ambient, synthwave, house, French Touch, techno, cinématique, chiptune, trap, hip-hop, drum and bass.">
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.17.0">
+  <link rel="stylesheet" href="/css/app.css?v=1.18.0">
 </head>
 <body>
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
 
   <header class="topbar">
-    <a class="brand" href="/accueil" aria-label="soundtube, accueil">
+    <a class="brand" href="/accueil" data-i18n-aria="nav.brandAria" aria-label="soundtube, accueil">
       <svg class="brand-mark" viewBox="0 0 28 20" width="28" height="20" aria-hidden="true"><rect x="0" y="7" width="4" height="6" rx="2"/><rect x="6" y="2" width="4" height="16" rx="2"/><rect x="12" y="5" width="4" height="10" rx="2"/><rect x="18" y="0" width="4" height="20" rx="2"/><rect x="24" y="7" width="4" height="6" rx="2"/></svg>
       <span>sound<em>tube</em></span>
     </a>
     <nav>
-      <a href="/accueil">Accueil</a>
-      <a href="/styles">Styles</a>
-      <a href="#create">Créer</a>
-      <a href="#library">Bibliothèque</a>
-      <a href="/admin">Admin</a>
-      <a href="/demarrer">Aide</a>
-      <a href="/docs" target="_blank" rel="noopener">API</a>
+      <a href="/accueil" data-i18n="nav.home">Accueil</a>
+      <a href="/styles" data-i18n="nav.styles">Styles</a>
+      <a href="#create" data-i18n="nav.create">Créer</a>
+      <a href="#library" data-i18n="nav.library">Bibliothèque</a>
+      <a href="/admin" data-i18n="nav.admin">Admin</a>
+      <a href="/demarrer" data-i18n="nav.help">Aide</a>
+      <a href="/docs" target="_blank" rel="noopener" data-i18n="nav.api">API</a>
     </nav>
-    <span class="status-pill" id="statusPill"><span class="live-dot"></span><span id="statusText">Moteur prêt</span></span>
+    <span class="status-pill" id="statusPill"><span class="live-dot"></span><span id="statusText" data-i18n="status.ready">Moteur prêt</span></span>
   </header>
 
   <main class="wrap">
     <section class="hero">
       <div class="hero-text">
-        <p class="kicker">Studio génératif · musique instrumentale</p>
-        <h1>La musique s’écrit <span>toute seule.</span></h1>
-        <p class="lead">Des morceaux instrumentaux uniques, composés et synthétisés en temps réel par algorithme. Sans voix&nbsp;: de la théorie musicale, des synthés, des instruments échantillonnés libres de droits (CC0) et une graine.</p>
+        <p class="kicker" data-i18n="hero.kicker">Studio génératif · musique instrumentale</p>
+        <h1><span data-i18n="hero.h1">La musique s’écrit </span><span data-i18n="hero.h1span">toute seule.</span></h1>
+        <p class="lead" data-i18n="hero.lead">Des morceaux instrumentaux uniques, composés et synthétisés en temps réel par algorithme. Sans voix&nbsp;: de la théorie musicale, des synthés, des instruments échantillonnés libres de droits (CC0) et une graine.</p>
         <ul class="stats">
-          <li><b id="statStyles">11</b><span>styles</span></li>
-          <li><b>7</b><span>modes</span></li>
-          <li><b>WAV · MP3 · MIDI</b><span>exports</span></li>
+          <li><b id="statStyles">11</b><span data-i18n="hero.stat.styles">styles</span></li>
+          <li><b>7</b><span data-i18n="hero.stat.modes">modes</span></li>
+          <li><b>WAV · MP3 · MIDI</b><span data-i18n="hero.stat.exports">exports</span></li>
         </ul>
       </div>
-      <ol class="pipeline" aria-label="Fonctionnement">
-        <li><span class="num">01</span><div><b>Théorie</b><p>Gamme, mode et progression d’accords tirés de la graine.</p></div></li>
-        <li><span class="num">02</span><div><b>Composition</b><p>Mélodie en chaîne de Markov, basse, batterie, arrangement en sections.</p></div></li>
-        <li><span class="num">03</span><div><b>Synthèse</b><p>Oscillateurs, FM, cordes pincées, réverbération, mastering.</p></div></li>
+      <ol class="pipeline" data-i18n-aria="hero.pipeAria" aria-label="Fonctionnement">
+        <li><span class="num">01</span><div><b data-i18n="hero.pipe1.t">Théorie</b><p data-i18n="hero.pipe1.d">Gamme, mode et progression d’accords tirés de la graine.</p></div></li>
+        <li><span class="num">02</span><div><b data-i18n="hero.pipe2.t">Composition</b><p data-i18n="hero.pipe2.d">Mélodie en chaîne de Markov, basse, batterie, arrangement en sections.</p></div></li>
+        <li><span class="num">03</span><div><b data-i18n="hero.pipe3.t">Synthèse</b><p data-i18n="hero.pipe3.d">Oscillateurs, FM, cordes pincées, réverbération, mastering.</p></div></li>
       </ol>
     </section>
 
     <div class="studio">
       <section id="create" class="module">
         <div class="module-head">
-          <h2><span class="num">01</span>Style</h2>
-          <span class="hint">Chaque style a ses gammes, ses progressions d’accords, ses grooves et ses synthés.</span>
+          <h2><span class="num">01</span><span data-i18n="create.style">Style</span></h2>
+          <span class="hint" data-i18n="create.styleHint">Chaque style a ses gammes, ses progressions d’accords, ses grooves et ses synthés.</span>
         </div>
         <div class="styles-grid" id="stylesGrid"></div>
       </section>
 
       <section class="module panel" id="settings">
         <div class="module-head">
-          <h2><span class="num">02</span>Réglages</h2>
-          <button class="btn btn-ghost btn-mini" id="resetBtn" type="button">Réinitialiser</button>
+          <h2><span class="num">02</span><span data-i18n="create.settings">Réglages</span></h2>
+          <button class="btn btn-ghost btn-mini" id="resetBtn" type="button" data-i18n="create.reset">Réinitialiser</button>
         </div>
 
         <details class="adv ai-box" id="aiBox">
-          <summary><span>Directeur artistique</span><span class="hint" id="aiState">décris l’ambiance, l’IA règle le reste</span></summary>
+          <summary><span data-i18n="create.ai">Directeur artistique</span><span class="hint" id="aiState" data-i18n="create.aiState">décris l’ambiance, l’IA règle le reste</span></summary>
           <div class="field">
-            <label for="aiPrompt">Décris l’ambiance</label>
-            <textarea id="aiPrompt" rows="3" maxlength="1200" placeholder="Ex. : une nuit à Paris, basse funky filtrée, un peu sale comme Justice, qui monte doucement…"></textarea>
+            <label for="aiPrompt" data-i18n="create.aiPrompt">Décris l’ambiance</label>
+            <textarea id="aiPrompt" rows="3" maxlength="1200" data-i18n-placeholder="create.aiPlaceholder" placeholder="Ex. : une nuit à Paris…"></textarea>
           </div>
           <div class="row ai-opts">
-            <label class="toggle"><input type="checkbox" id="aiMeta"><span>Titre, description et tags FR + EN</span></label>
-            <label class="toggle" id="aiPlanOpt" hidden><input type="checkbox" id="aiPlan"><span>Plan titre par titre (mix ≥ 1 h)</span></label>
-            <button class="btn btn-mini" id="aiGo" type="button">Proposer</button>
+            <label class="toggle"><input type="checkbox" id="aiMeta"><span data-i18n="create.aiMeta">Titre, description et tags FR + EN</span></label>
+            <label class="toggle" id="aiPlanOpt" hidden><input type="checkbox" id="aiPlan"><span data-i18n="create.aiPlan">Plan titre par titre (mix ≥ 1 h)</span></label>
+            <button class="btn btn-mini" id="aiGo" type="button" data-i18n="create.aiGo">Proposer</button>
           </div>
           <div id="aiOut" class="ai-out" hidden></div>
         </details>
 
         <div class="field">
-          <label>Ambiance</label>
+          <label data-i18n="create.mood">Ambiance</label>
           <div class="chips" id="moodChips"></div>
         </div>
 
         <div class="field" id="variantField" hidden>
-          <label>Variante <span class="opt">(propre au style choisi)</span></label>
+          <label><span data-i18n="create.variant">Variante</span> <span class="opt" data-i18n="create.variantOpt">(propre au style choisi)</span></label>
           <div class="chips" id="variantChips"></div>
         </div>
 
         <div class="field">
-          <label>Fond sonore <span class="opt">(synthétisé, sans enregistrement)</span></label>
+          <label><span data-i18n="create.amb">Fond sonore</span> <span class="opt" data-i18n="create.ambOpt">(synthétisé, sans enregistrement)</span></label>
           <div class="chips" id="ambChips"></div>
           <div class="amb-vol" id="ambVolRow" hidden>
-            <label for="ambVol">Volume du fond sonore</label>
+            <label for="ambVol" data-i18n="create.ambVol">Volume du fond sonore</label>
             <input type="range" id="ambVol" min="0" max="100" step="1" value="50">
             <span class="amb-vol-val" id="ambVolVal">50</span>
           </div>
@@ -100,113 +100,112 @@
 
         <div class="grid-3">
           <div class="field">
-            <label for="keySel">Tonalité</label>
+            <label for="keySel" data-i18n="create.key">Tonalité</label>
             <select id="keySel"></select>
           </div>
           <div class="field">
-            <label for="scaleSel">Gamme / mode</label>
+            <label for="scaleSel" data-i18n="create.scale">Gamme / mode</label>
             <select id="scaleSel"></select>
           </div>
           <div class="field">
-            <label for="titleIn">Titre <span class="opt">(optionnel)</span></label>
-            <input id="titleIn" type="text" maxlength="120" placeholder="Généré automatiquement">
+            <label for="titleIn"><span data-i18n="create.title">Titre</span> <span class="opt" data-i18n="create.titleOpt">(optionnel)</span></label>
+            <input id="titleIn" type="text" maxlength="120" data-i18n-placeholder="create.titlePh" placeholder="Généré automatiquement">
           </div>
         </div>
 
         <div class="grid-3">
           <div class="field">
-            <label for="bpmIn">Tempo <b id="bpmVal">auto</b></label>
+            <label for="bpmIn"><span data-i18n="create.tempo">Tempo</span> <b id="bpmVal">auto</b></label>
             <div class="row">
               <input id="bpmIn" type="range" min="50" max="180" value="90">
-              <label class="toggle"><input type="checkbox" id="bpmAuto" checked><span>Auto</span></label>
+              <label class="toggle"><input type="checkbox" id="bpmAuto" checked><span data-i18n="create.auto">Auto</span></label>
             </div>
           </div>
           <div class="field">
-            <label id="durLbl">Durée <b id="durVal">3 min</b></label>
+            <label id="durLbl"><span data-i18n="create.duration">Durée</span> <b id="durVal">3 min</b></label>
             <div class="chips dur-grid" id="durPresets" role="radiogroup" aria-labelledby="durLbl"></div>
           </div>
           <div class="field">
-            <label for="seedIn">Graine <span class="opt">(vide = nouvelle graine à chaque fois)</span></label>
+            <label for="seedIn"><span data-i18n="create.seed">Graine</span> <span class="opt" data-i18n="create.seedOpt">(vide = nouvelle graine à chaque fois)</span></label>
             <div class="row">
-              <input id="seedIn" type="number" min="0" placeholder="aléatoire">
-              <button class="btn btn-mini" id="diceBtn" type="button" title="Tirer une graine au hasard">🎲</button>
-              <button class="btn btn-mini" id="seedClear" type="button" title="Vider : graine aléatoire">✕</button>
+              <input id="seedIn" type="number" min="0" data-i18n-placeholder="create.seedPh" placeholder="aléatoire">
+              <button class="btn btn-mini" id="diceBtn" type="button" data-i18n-title="create.seedDice" title="Tirer une graine au hasard">🎲</button>
+              <button class="btn btn-mini" id="seedClear" type="button" data-i18n-title="create.seedClear" title="Vider : graine aléatoire">✕</button>
             </div>
-            <label class="toggle small"><input type="checkbox" id="seedLock"><span>Garder cette graine</span></label>
+            <label class="toggle small"><input type="checkbox" id="seedLock"><span data-i18n="create.seedLock">Garder cette graine</span></label>
             <span class="hint" id="lastSeed"></span>
           </div>
         </div>
 
         <div class="field" id="varietyField">
-          <label id="varietyLbl">Variation <span class="opt">(surtout pour les générations longues)</span></label>
+          <label id="varietyLbl"><span data-i18n="create.variety">Variation</span> <span class="opt" data-i18n="create.varietyOpt">(surtout pour les générations longues)</span></label>
           <div class="chips" id="varietyChips" role="radiogroup" aria-labelledby="varietyLbl">
-            <button type="button" role="radio" class="chip" data-v="low">Faible</button>
-            <button type="button" role="radio" class="chip on" data-v="auto">Moyenne</button>
-            <button type="button" role="radio" class="chip" data-v="high">Forte</button>
-            <button type="button" role="radio" class="chip" data-v="max">Maximale</button>
+            <button type="button" role="radio" class="chip" data-v="low" data-i18n="create.var.low">Faible</button>
+            <button type="button" role="radio" class="chip on" data-v="auto" data-i18n="create.var.auto">Moyenne</button>
+            <button type="button" role="radio" class="chip" data-v="high" data-i18n="create.var.high">Forte</button>
+            <button type="button" role="radio" class="chip" data-v="max" data-i18n="create.var.max">Maximale</button>
           </div>
           <span class="hint" id="varietyHint"></span>
           <div class="row" id="mixStylesRow" hidden>
-            <label class="toggle small"><input type="checkbox" id="mixRelated"><span>Autoriser d’autres styles proches dans le mix</span></label>
+            <label class="toggle small"><input type="checkbox" id="mixRelated"><span data-i18n="create.mixRelated">Autoriser d’autres styles proches dans le mix</span></label>
           </div>
         </div>
 
         <div class="field">
-          <label>Formats</label>
+          <label data-i18n="create.formats">Formats</label>
           <div class="row">
-            <label class="toggle"><input type="checkbox" id="wavOn" checked><span>WAV (sans perte)</span></label>
-            <span class="hint">MP3 et MIDI (complet + ZIP par instrument) sont toujours produits.</span>
+            <label class="toggle"><input type="checkbox" id="wavOn" checked><span data-i18n="create.wav">WAV (sans perte)</span></label>
+            <span class="hint" data-i18n="create.formatsHint">MP3 et MIDI (complet + ZIP par instrument) sont toujours produits.</span>
           </div>
         </div>
 
         <div class="field" id="splitOpt" hidden>
-          <label>Découpage</label>
+          <label data-i18n="create.split">Découpage</label>
           <div class="row">
-            <label class="toggle"><input type="checkbox" id="splitOn"><span>Découper en morceaux individuels</span></label>
+            <label class="toggle"><input type="checkbox" id="splitOn"><span data-i18n="create.splitOn">Découper en morceaux individuels</span></label>
           </div>
           <div class="split-more" id="splitMore" hidden>
             <div class="row">
-              <select id="splitMode" aria-label="Où couper">
-                <option value="mid">Coupe au milieu des transitions</option>
-                <option value="full">Transitions complètes</option>
-                <option value="clean">Sans transitions</option>
+              <select id="splitMode" data-i18n-aria="create.splitWhere" aria-label="Où couper">
+                <option value="mid" data-i18n="create.splitMid">Coupe au milieu des transitions</option>
+                <option value="full" data-i18n="create.splitFull">Transitions complètes</option>
+                <option value="clean" data-i18n="create.splitClean">Sans transitions</option>
               </select>
-              <label class="toggle"><input type="checkbox" id="splitLib"><span>Ajouter chaque morceau à la bibliothèque</span></label>
+              <label class="toggle"><input type="checkbox" id="splitLib"><span data-i18n="create.splitLib">Ajouter chaque morceau à la bibliothèque</span></label>
             </div>
             <div class="row">
-              <label class="toggle"><input type="checkbox" id="splitVid"><span>Une vidéo YouTube par morceau</span></label>
-              <select id="splitRes" aria-label="Résolution des vidéos"><option value="720p">720p</option><option value="1080p" selected>1080p</option><option value="2160p">4K</option></select>
+              <label class="toggle"><input type="checkbox" id="splitVid"><span data-i18n="create.splitVid">Une vidéo YouTube par morceau</span></label>
+              <select id="splitRes" data-i18n-aria="create.splitRes" aria-label="Résolution des vidéos"><option value="720p">720p</option><option value="1080p" selected>1080p</option><option value="2160p">4K</option></select>
             </div>
           </div>
-          <p class="hint">Pour les générations de plus de 30 min : à la fin du rendu, chaque sous-morceau devient un fichier (WAV, MP3, MIDI) nommé « 01 - Titre », à télécharger en ZIP depuis la bibliothèque (bouton « Morceaux »). Avec « Une vidéo YouTube par morceau », chaque morceau reçoit aussi sa vidéo (animation, mise en page et langue du panneau YouTube). Possible aussi plus tard.</p>
+          <p class="hint" data-i18n="create.splitHint">Pour les générations de plus de 30 min…</p>
         </div>
 
         <div class="field pack-opts" id="packOpts"></div>
 
         <details class="adv" id="advBox">
-          <summary><span>Avancé</span><span class="hint" id="advCount">valeurs du style</span></summary>
-          <p class="hint">Les champs montrent les valeurs que le style va réellement utiliser avec cette graine. Changez-en une : elle passe en vert et elle est mémorisée pour ce style (↺ pour revenir à la valeur du style). Les réglages sont enregistrés avec le morceau et réutilisés par « Variation ».</p>
+          <summary><span data-i18n="create.adv">Avancé</span><span class="hint" id="advCount" data-i18n="create.advCount">valeurs du style</span></summary>
+          <p class="hint" data-i18n="create.advHint">Les champs montrent les valeurs…</p>
           <div class="anim-pick" id="animPick"></div>
           <div class="adv-grid" id="advGrid"></div>
           <div class="row">
-            <button class="btn btn-mini" id="advRandom" type="button">🎲 Tout aléatoire</button>
-            <button class="btn btn-mini btn-ghost" id="advAuto" type="button">Réinitialiser ce style</button>
+            <button class="btn btn-mini" id="advRandom" type="button" data-i18n="create.advRandom">🎲 Tout aléatoire</button>
+            <button class="btn btn-mini btn-ghost" id="advAuto" type="button" data-i18n="create.advReset">Réinitialiser ce style</button>
           </div>
         </details>
 
         <div class="field">
-          <label>Instruments</label>
+          <label data-i18n="create.instruments">Instruments</label>
           <div class="chips" id="instChips"></div>
         </div>
 
         <div class="actions">
           <button class="btn btn-primary btn-lg" id="genBtn" type="button">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
-            Générer le morceau
+            <span data-i18n="create.generate">Générer le morceau</span>
           </button>
-          <span class="hint" id="genHint">La génération prend quelques secondes sur le serveur.</span>
+          <span class="hint" id="genHint" data-i18n="create.genHint">La génération prend quelques secondes sur le serveur.</span>
         </div>
-
 
         <div class="jobs" id="jobsBox"></div>
       </section>
@@ -214,10 +213,10 @@
 
     <section id="library" class="module">
       <div class="module-head">
-        <h2><span class="num">03</span>Bibliothèque</h2>
+        <h2><span class="num">03</span><span data-i18n="lib.title">Bibliothèque</span></h2>
         <div class="row">
-          <select id="filterStyle"><option value="">Tous les styles</option></select>
-          <select id="sortSel" aria-label="Tri"><option value="desc">Plus récents d’abord</option><option value="asc">Plus anciens d’abord</option></select>
+          <select id="filterStyle"><option value="" data-i18n="lib.allStyles">Tous les styles</option></select>
+          <select id="sortSel" data-i18n-aria="lib.sort" aria-label="Tri"><option value="desc" data-i18n="lib.sortDesc">Plus récents d’abord</option><option value="asc" data-i18n="lib.sortAsc">Plus anciens d’abord</option></select>
           <span class="hint" id="libCount"></span>
         </div>
       </div>
@@ -225,12 +224,12 @@
     </section>
 
     <footer class="foot">
-      <p>soundtube · moteur procédural open source · <a href="/docs" target="_blank" rel="noopener">documentation de l’API</a></p>
+      <p><span data-i18n="footer.studio">soundtube · moteur procédural open source · </span><a href="/docs" target="_blank" rel="noopener" data-i18n="footer.api">documentation de l’API</a></p>
     </footer>
   </main>
 
   <div class="player" id="player" hidden>
-    <button class="play-btn" id="playBtn" type="button" aria-label="Lecture">
+    <button class="play-btn" id="playBtn" type="button" data-i18n-aria="player.play" aria-label="Lecture">
       <svg id="icoPlay" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>
       <svg id="icoPause" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" hidden><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
     </button>
@@ -244,17 +243,17 @@
     </div>
     <canvas id="vizCanvas" class="viz"></canvas>
     <div class="player-actions">
-      <input type="range" id="volIn" min="0" max="1" step="0.01" value="0.9" title="Volume">
+      <input type="range" id="volIn" min="0" max="1" step="0.01" value="0.9" data-i18n-title="player.volume" title="Volume">
       <a class="btn btn-mini" id="dlMp3" download>MP3</a>
       <a class="btn btn-mini" id="dlWav" download>WAV</a>
       <a class="btn btn-mini" id="dlMid" download>MIDI</a>
-      <a class="btn btn-mini" id="dlZip" download title="Un fichier MIDI par instrument + le morceau complet">ZIP</a>
+      <a class="btn btn-mini" id="dlZip" download data-i18n-title="player.zipTitle" title="Un fichier MIDI par instrument + le morceau complet">ZIP</a>
     </div>
     <audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
   </div>
 
   <div class="toast" id="toast" hidden></div>
 
-  <script type="module" src="/js/app.js?v=1.17.0"></script>
+  <script type="module" src="/js/app.js?v=1.18.0"></script>
 </body>
 </html>

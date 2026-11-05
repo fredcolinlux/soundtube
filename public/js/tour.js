@@ -9,7 +9,7 @@ const STEPS = [
 ];
 export function startTour() {
   let i = 0;
-  if (!document.querySelector('link[data-tour]')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/css/tour.css?v=1.17.0'; l.dataset.tour = '1'; document.head.append(l); }
+  if (!document.querySelector('link[data-tour]')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/css/tour.css?v=1.18.0'; l.dataset.tour = '1'; document.head.append(l); }
   const ov = document.createElement('div'); ov.className = 'st-tour'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'false'); ov.setAttribute('aria-label', 'Visite guidée');
   ov.innerHTML = '<div class="st-ring"></div><div class="st-pop"><p class="st-n"></p><b class="st-t"></b><p class="st-p"></p><div class="st-act"><button type="button" class="btn btn-ghost btn-mini" data-a="end">Terminer</button><button type="button" class="btn btn-ghost btn-mini" data-a="prev">←</button><button type="button" class="btn btn-primary btn-mini" data-a="next">Suivant</button></div></div>';
   document.body.append(ov);

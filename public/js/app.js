@@ -1,15 +1,16 @@
 // soundtube — interface web (vanilla JS, sans build).
 import { AuroraField } from './aurora.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.17.0';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.17.0';
-import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.17.0';
+import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.18.0';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.18.0';
+import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.18.0';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
   const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
   if (r.status === 204) return null;
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error || `Erreur ${r.status}`);
+  if (!r.ok) throw new Error(data.error || t('err.generic', { status: r.status }));
   return data;
 };
 const fmt = (s) => { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
@@ -22,7 +23,7 @@ const DUR_PRESETS = [[60, '1 min'], [180, '3 min'], [300, '5 min'], [420, '7 min
 const DUR_DEFAULT = 180;
 const durLabel = (s) => (DUR_PRESETS.find(([v]) => v === s) || [0, s >= 3600 ? `${Math.floor(s / 3600)} h ${String(Math.round(s % 3600 / 60)).padStart(2, '0')}` : s >= 60 ? `${Math.floor(s / 60)} min${s % 60 ? ' ' + String(s % 60).padStart(2, '0') + ' s' : ''}` : `${s} s`])[1];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function toast(msg, ms = 2800) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), ms); }
+function toast(msg, ms = 2800) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (el.hidden = true), ms); }
 
 const state = { options: null, style: 'lofi', mood: 'auto', instruments: {}, tracks: [], jobs: new Map(), current: null, duration: DUR_DEFAULT, maxDur: 14400, minDur: 20, adv: {}, open: new Set(), ytOpen: new Set(), yt: new Map(), sort: 'desc', variation: 0 };
 // Couleur propre à chaque style (cartes, badges, bibliothèque)
@@ -283,7 +284,7 @@ function buildAdvanced(defs) {
     }
     setAdvanced(a); saveTweaks(); $('#advBox').open = true;
   });
-  $('#advAuto').addEventListener('click', () => { state.adv = emptyAdv(); state.advSession = false; saveTweaks(); readAdvanced(); refreshDefaults(); toast('Réglages avancés de ce style réinitialisés.'); });
+  $('#advAuto').addEventListener('click', () => { state.adv = emptyAdv(); state.advSession = false; saveTweaks(); readAdvanced(); refreshDefaults(); toast(t('toast.advReset')); });
 }
 /** Graine des valeurs affichées : la graine saisie, sinon une graine « prochaine génération » tirée d'avance. */
 function previewSeed() {
@@ -371,14 +372,14 @@ function renderSuggestion(r) {
 }
 $('#aiGo').addEventListener('click', async () => {
   const prompt = $('#aiPrompt').value.trim();
-  if (prompt.length < 3) return toast('Décris l’ambiance en quelques mots.');
-  const b = $('#aiGo'); b.disabled = true; b.textContent = 'Réflexion…'; $('#aiState').textContent = 'en cours…';
+  if (prompt.length < 3) return toast(t('toast.aiNeedPrompt'));
+  const b = $('#aiGo'); b.disabled = true; b.textContent = t('create.aiThinking'); $('#aiState').textContent = t('create.aiBusy');
   try {
     const r = await api('/api/ai/suggest', { method: 'POST', body: JSON.stringify({ prompt, style: state.style, duration: state.duration, meta: $('#aiMeta').checked, plan: $('#aiPlan').checked }) });
     applySuggestion(r); renderSuggestion(r);
-    $('#aiState').textContent = r.source === 'ai' ? 'proposition de l’IA appliquée' : 'proposition locale appliquée';
-  } catch (e) { toast(e.message); $('#aiState').textContent = 'échec'; }
-  finally { b.disabled = false; b.textContent = 'Proposer'; }
+    $('#aiState').textContent = r.source === 'ai' ? t('create.aiApplied') : t('create.aiLocal');
+  } catch (e) { toast(e.message); $('#aiState').textContent = t('create.aiFail'); }
+  finally { b.disabled = false; b.textContent = t('create.aiGo'); }
 });
 
 /** Charge des réglages (objet « settings » de l'API) dans le formulaire. */
@@ -419,7 +420,7 @@ $('#genBtn').addEventListener('click', async () => {
     if (m && (m.description_fr || m.description_en || m.tags?.length)) body.aiMeta = { description_fr: m.description_fr, description_en: m.description_en, tags: m.tags };
     if (state.ai.plan && state.duration >= 3600) body.aiPlan = state.ai.plan;
   }
-  if (!Object.values(state.instruments).some(Boolean)) return toast('Active au moins un instrument.');
+  if (!Object.values(state.instruments).some(Boolean)) return toast(t('toast.needInstrument'));
   $('#genBtn').disabled = true;
   try {
     if (body.seed !== undefined && !preview) { // graine fixée : risque de doublon (contenu répétitif aux yeux de YouTube)
@@ -431,7 +432,7 @@ $('#genBtn').addEventListener('click', async () => {
     if (!$('#seedLock').checked) { $('#seedIn').value = ''; state.variation = 0; }
     state.nextSeed = null; refreshDefaults(); // nouvelle graine pour la prochaine génération
     if (job.duplicates?.length) toast(`⚠ « ${job.title} » : ${job.duplicates[0].label} de « ${job.duplicates[0].title} ».`, 6000);
-    else toast(`« ${job.title} » (${durLabel(body.duration)}) est en cours de composition (graine ${job.seed})…`);
+    else toast(t('toast.jobQueued', { title: job.title, dur: durLabel(body.duration), seed: job.seed }));
   }
   catch (e) { toast(e.message); }
   finally { setTimeout(() => ($('#genBtn').disabled = false), 600); }
@@ -452,7 +453,7 @@ async function pollJobs() {
     for (const id of [...state.jobs.keys()]) {
       try {
         const j = await api(`/api/jobs/${id}`); state.jobs.set(id, j);
-        if (j.status === 'done') { state.jobs.delete(id); await loadLibrary(); const t = state.tracks.find((x) => x.id === id); if (t && (!state.current || audio.paused)) play(t); toast(`« ${j.title} » est prêt ✨`); }
+        if (j.status === 'done') { state.jobs.delete(id); await loadLibrary(); const t = state.tracks.find((x) => x.id === id); if (t && (!state.current || audio.paused)) play(t); toast(t('toast.jobReady', { title: j.title })); }
         if (j.status === 'error') { setTimeout(() => { state.jobs.delete(id); renderJobs(); }, 8000); }
       } catch { state.jobs.delete(id); }
     }
@@ -464,7 +465,7 @@ async function pollJobs() {
 function renderJobs() {
   const busy = [...state.jobs.values()].some((j) => j.status !== 'error');
   $('#statusPill').classList.toggle('busy', busy);
-  $('#statusText').textContent = busy ? `Génération en cours (${state.jobs.size})` : 'Moteur prêt';
+  $('#statusText').textContent = busy ? t('status.busy', { n: state.jobs.size }) : t('status.ready');
   $('#jobsBox').innerHTML = [...state.jobs.values()].map((j) => `
     <div class="job ${j.status === 'error' ? 'error' : ''}">
       <div class="job-top"><b>${esc(j.title)}</b><span>${esc(STYLE_LABEL[j.style] || j.style)} · ${j.status === 'queued' ? `en file (${j.queue_position || 1})` : j.status === 'error' ? 'erreur : ' + esc(j.error) : esc(j.stage || '')} · ${Math.round((j.progress || 0) * 100)}%${j.status === 'running' && j.eta ? ' · reste ≈ ' + fmt(j.eta) : ''}</span></div>
@@ -674,7 +675,7 @@ $('#libraryList').addEventListener('click', async (e) => {
   try {
     if (act === 'play') { if (state.current?.id === t.id) togglePlay(); else play(t); }
     else if (act === 'seek') { const r = btn.getBoundingClientRect(); const p = (e.clientX - r.left) / r.width; if (state.current?.id !== t.id) await play(t); const go = () => { audio.currentTime = p * audio.duration; }; audio.duration ? go() : audio.addEventListener('loadedmetadata', go, { once: true }); }
-    else if (act === 'variation' || act === 'remix') { const j = await api(`/api/tracks/${t.id}/variation`, { method: 'POST', body: JSON.stringify({ mode: act }) }); trackJob(j); toast(act === 'variation' ? 'Nouvelle variation en préparation…' : 'Remix en préparation…'); $('#create').scrollIntoView(); }
+    else if (act === 'variation' || act === 'remix') { const j = await api(`/api/tracks/${t.id}/variation`, { method: 'POST', body: JSON.stringify({ mode: act }) }); trackJob(j); toast(act === 'variation' ? t('toast.variation') : t('toast.remix')); $('#create').scrollIntoView(); }
     else if (act === 'regen') { btn.disabled = true; const j = await api(`/api/tracks/${t.id}/regenerate`, { method: 'POST', body: '{}' }); trackJob(j); toast(`Régénération de « ${t.title} » en v1.12.0 : même graine, harmonie corrigée. L’original est conservé.`); }
     else if (act === 'yt') { if (state.ytOpen.has(t.id)) state.ytOpen.delete(t.id); else { state.ytOpen.add(t.id); loadYt(t.id); loadPub(t.id); } renderLibrary(); }
     else if (await onPubAction(act, t, btn)) { /* v1.13.0 : publication, ZIP complet */ }
@@ -686,13 +687,13 @@ $('#libraryList').addEventListener('click', async (e) => {
     else if (act === 'ytlang') { await setYtLang(btn.dataset.lang); }
     else if (act === 'yttitles') { btn.disabled = true; await saveTitles(t, btn.closest('.yt-titles')); }
     else if (act === 'ytbrand') { btn.disabled = true; await applyBrand(t.id, btn.closest('.yt-brand')); }
-    else if (act === 'ytthumb') { btn.disabled = true; state.yt.set(t.id, await api(`/api/tracks/${t.id}/thumbnail`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(t.id) }) })); renderLibrary(); toast('Miniature regénérée.'); }
+    else if (act === 'ytthumb') { btn.disabled = true; state.yt.set(t.id, await api(`/api/tracks/${t.id}/thumbnail`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(t.id) }) })); renderLibrary(); toast(t('toast.thumbDone')); }
     else if (act === 'ytvideo') { state.yt.set(t.id, await api(`/api/tracks/${t.id}/video`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(t.id) }) })); renderLibrary(); pollYt(t.id); toast(`Création de la vidéo ${ytResLabel(t.id)} lancée…`); }
     else if (act === 'details') { state.open.has(t.id) ? state.open.delete(t.id) : state.open.add(t.id); renderLibrary(); }
-    else if (act === 'reuse') { applySettings(settingsOf(t)); genShowTrack(t.id); $('#settings').scrollIntoView({ behavior: 'smooth' }); toast('Réglages rechargés : même graine + mêmes réglages = même morceau.'); }
+    else if (act === 'reuse') { applySettings(settingsOf(t)); genShowTrack(t.id); $('#settings').scrollIntoView({ behavior: 'smooth' }); toast(t('toast.settingsLoaded')); }
     else if (act === 'copy') {
       const json = JSON.stringify(settingsOf(t), null, 2);
-      if (await copyText(json)) toast('Réglages copiés (JSON) — à coller dans POST /api/generate.');
+      if (await copyText(json)) toast(t('toast.settingsCopied'));
       else prompt('Copie manuelle des réglages (JSON) :', JSON.stringify(settingsOf(t)));
     }
     else if (act === 'rename') {
@@ -730,7 +731,7 @@ async function startSplit(id, box) {
   const q = (s) => box.querySelector(s), body = { mode: q('[data-splitmode]:checked')?.value || 'mid', lang: q('[data-splitlang]:checked')?.value || state.ytLang,
     formats: { wav: q('[data-splitf="wav"]').checked, mp3: !!q('[data-splitf="mp3"]')?.checked, midi: q('[data-splitf="midi"]').checked }, library: q('[data-splitlib]').checked };
   if (q('[data-splitvid]')?.checked) { body.video = { resolution: q('select[name="splitres"]').value }; body.library = true; localStorage.setItem('st.ytRes', body.video.resolution); }
-  try { state.split.set(id, await api(`/api/tracks/${id}/split`, { method: 'POST', body: JSON.stringify(body) })); renderLibrary(); pollSplit(id); toast('Découpage lancé…'); }
+  try { state.split.set(id, await api(`/api/tracks/${id}/split`, { method: 'POST', body: JSON.stringify(body) })); renderLibrary(); pollSplit(id); toast(t('toast.splitStart')); }
   catch (e) { toast(e.message); renderLibrary(); }
 }
 $('#libraryList').addEventListener('change', (e) => {
@@ -986,15 +987,26 @@ $('#waveCanvas').addEventListener('click', (e) => { if (!audio.duration) return;
 document.addEventListener('keydown', (e) => { if (e.code === 'Space' && !['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement.tagName) && state.current) { e.preventDefault(); togglePlay(); } });
 addEventListener('resize', () => { lastProg = -1; renderLibrary(); });
 
-initPubPanel({ api, toast, rerender: () => { if (!document.activeElement?.closest?.('[data-pubform]')) renderLibrary(); } });
-initGenForm({ api, toast, esc }).then(() => { if (state.style) genStyle(state.style); });
-['input', 'change'].forEach((ev) => $('#libraryList').addEventListener(ev, onPubInput));
-initEditors({ api, toast, getTrack: (id) => state.tracks.find((x) => x.id === id), getYt: (id) => state.yt.get(id), onSaved: async (id) => { await Promise.all([...new Set([id, ...state.ytOpen])].map((x) => loadYt(x))); } });
-field.start();
-loadOptions().then(loadLibrary).then(() => {
-  // v1.10.0 : /?track=<id> (pages de style) → le morceau dans la bibliothèque ; /?tour=1 → visite guidée
-  const q = new URLSearchParams(location.search), tid = q.get('track');
-  const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
-  if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-  if (q.get('tour') === '1') import('./tour.js?v=1.17.0').then((m) => m.startTour());
-}).catch((e) => toast('Impossible de joindre le serveur : ' + e.message, 6000));
+async function boot() {
+  await initI18n();
+  mountLangSwitcher(document.querySelector('.topbar'));
+  applyDom(document);
+  onLangChange(() => { applyDom(document); renderLibrary(); updateStatus(); });
+  initPubPanel({ api, toast, rerender: () => { if (!document.activeElement?.closest?.('[data-pubform]')) renderLibrary(); } });
+  initGenForm({ api, toast, esc }).then(() => { if (state.style) genStyle(state.style); });
+  ['input', 'change'].forEach((ev) => $('#libraryList').addEventListener(ev, onPubInput));
+  initEditors({ api, toast, getTrack: (id) => state.tracks.find((x) => x.id === id), getYt: (id) => state.yt.get(id), onSaved: async (id) => { await Promise.all([...new Set([id, ...state.ytOpen])].map((x) => loadYt(x))); } });
+  field.start();
+  loadOptions().then(loadLibrary).then(() => {
+    const q = new URLSearchParams(location.search), tid = q.get('track');
+    const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
+    if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
+    if (q.get('tour') === '1') import('./tour.js?v=1.18.0').then((m) => m.startTour());
+  }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
+}
+function updateStatus() {
+  const busy = state.jobs.size > 0;
+  const el = $('#statusText'); if (el) el.textContent = busy ? t('status.busy', { n: state.jobs.size }) : t('status.ready');
+  $('#statusPill')?.classList.toggle('busy', busy);
+}
+boot();

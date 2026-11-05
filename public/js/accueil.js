@@ -1,7 +1,7 @@
-import { $, api, esc, mountTopbar, mountBackground, reveal, styleCardHtml, MiniPlayer, trackRowHtml, colorOf } from './site.js?v=1.17.0';
+import { $, api, esc, bootSite, mountBackground, reveal, styleCardHtml, MiniPlayer, trackRowHtml, colorOf, t } from './site.js?v=1.18.0';
 
-mountTopbar('/accueil');
 const field = mountBackground();
+await bootSite('/accueil');
 const player = new MiniPlayer(field);
 let latest = [];
 const renderLatest = () => { $('#latestList').innerHTML = latest.map((t) => trackRowHtml(t, player)).join(''); };

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Installation / mise à jour de soundtube sur Debian 13 (trixie), ex. conteneur LXC Proxmox.
-# Usage (en root) : ./deploy/install.sh [--port 8080] [--nodesource|--debian-node] [--no-start] [--skip-apt]
-# Pas d'appel à sudo : le script doit déjà tourner en root (conteneur LXC, session root, su -).
+# Usage : sudo ./deploy/install.sh [--port 8080] [--nodesource|--debian-node] [--no-start] [--skip-apt]
 set -euo pipefail
 
 APP_USER=soundtube
@@ -12,8 +11,8 @@ DATA_DIR=${SOUNDTUBE_INSTALL_DATA:-/var/lib/soundtube}
 CONF_DIR=${SOUNDTUBE_CONF_DIR:-/etc/soundtube}
 ENV_FILE=$CONF_DIR/soundtube.env
 UNIT=${SOUNDTUBE_UNIT:-/etc/systemd/system/soundtube.service}
-NODE_MAJOR=${NODE_MAJOR:-24}
-NODE_MODE=auto      # auto : garde un Node >= 20 existant, sinon NodeSource 24
+NODE_MAJOR=${NODE_MAJOR:-22}
+NODE_MODE=auto      # auto : garde un Node >= 20 existant, sinon NodeSource 22
 PORT=""
 START=1
 SKIP_APT=0
@@ -31,7 +30,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 log() { printf '\033[1;31m▸\033[0m %s\n' "$*"; }
-[[ $EUID -eq 0 ]] || { echo "Lancer en root (session root, su -, ou équivalent — ce script n'appelle pas sudo)." >&2; exit 1; }
+[[ $EUID -eq 0 ]] || { echo "Lancer en root (sudo)." >&2; exit 1; }
 SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 [[ -f $SRC_DIR/package.json && -f $SRC_DIR/src/server.js ]] || { echo "Sources introuvables dans $SRC_DIR" >&2; exit 1; }
 
@@ -101,7 +100,7 @@ if [[ -d /run/systemd/system && -z ${SOUNDTUBE_UNIT:-} ]]; then
   if (( START )); then systemctl restart soundtube.service; sleep 2; systemctl --no-pager --lines=5 status soundtube.service || true; fi
 else
   log "systemd absent (environnement de test ?) : service non démarré. Lancement manuel :"
-  echo "   runuser -u $APP_USER -- bash -c 'set -a; . $ENV_FILE; exec $NODE_BIN $APP_DIR/src/server.js'"
+  echo "   sudo -u $APP_USER bash -c 'set -a; . $ENV_FILE; exec $NODE_BIN $APP_DIR/src/server.js'"
 fi
 
 P=$(grep -E '^SOUNDTUBE_PORT=' $ENV_FILE | cut -d= -f2)
