@@ -1,70 +1,56 @@
-# Manuel utilisateur — soundtube
+# Manuel utilisateur — soundtube 1.18.0
 
-Interface en français. Aucune voix chantée : musique instrumentale générée par algorithme.
+L’interface web est en **français** et en **anglais** (**FR | EN** dans la barre du haut). Le choix est stocké dans le navigateur (`localStorage` + cookie `soundtube_ui_lang`). La génération des titres / descriptions / tags YouTube (FR+EN) est **indépendante** de la langue d’interface (`/api/youtube/lang`).
 
-## 1. Studio (page Générer)
+## Pages
 
-1. Choisir un **style** (lo-fi, house, techno, French Touch, synthwave, drum & bass, hip-hop, ambient…).
-2. Régler la **durée**, le **tempo**, la **tonalité** / mode, l’**ambiance**.
-3. Optionnel : panneau **Avancé** (énergie, kits, patches, swing, sous-variantes).
-4. Lancer la génération. Suivre la file dans **Jobs**.
-5. Écouter, télécharger WAV/MP3, ou préparer la vidéo YouTube.
+| Chemin | Libellé | Rôle |
+|---|---|---|
+| `/accueil` | Accueil | Entrée |
+| `/demarrer` | Démarrer | Visite guidée + premiers réglages |
+| `/styles` | Styles | Catalogue |
+| `/styles/<id>` | Fiche de style | Texte issu de `docs/STYLES.md`, préréglage → génération |
+| `/` | Studio | Créer, bibliothèque, panneau YouTube |
+| `/admin` | Admin | Nœuds, répartition, IA, YouTube, animations, directeur, veille, marque |
+| `/docs` | API | Interface OpenAPI |
 
-La **visite guidée** (`/?tour=1` ou depuis /demarrer) pose des bulles sur le formulaire.
+## 1. Studio — Créer
 
-## 2. Styles
+Libellés tels qu’affichés en français :
 
-Chaque style a des bornes (BPM, tonalités, instrumentation). Voir `docs/STYLES.md` pour le détail musical.
+1. **Style** — l’un des 11 styles (voir `docs/STYLES.md`).
+2. **Durée** — secondes ; préréglage 15 min (= 900 s) ; plafond `SOUNDTUBE_MAX_DURATION` (défaut 14400 = 4 h).
+3. **Tempo**, **Tonalité**, **Gamme / mode**, **Ambiance** — Auto possible.
+4. **Variante** — sous-styles (lo-fi, French Touch, hip-hop, DnB…).
+5. **Fond sonore** — synthétisé + volume.
+6. **Variation** — Faible / Moyenne / Forte / Maximale (Moyenne = comportement historique octet pour octet). Sur les longs mix : **Autoriser d’autres styles proches dans le mix**.
+7. **Avancé** — valeurs réelles pour la graine affichée ; champs modifiés en vert, mémorisés par style.
+8. **Directeur artistique** — décrire l’ambiance → **Proposer** ; option **Titre, description et tags FR + EN** ; **Plan titre par titre** (mix ≥ 1 h).
+9. **Formats** — MP3 + MIDI toujours ; **WAV (sans perte)** optionnel.
+10. **Découpage** (jobs > 30 min) — coupe milieu / transitions complètes / sans transitions ; bibliothèque et vidéos par morceau optionnelles.
+11. **Pack** — préparer le ZIP complet en fin de rendu.
+12. Option **Faire la musique et la vidéo en même temps sur le PC / Mac**.
+13. **Générer le morceau**.
 
-- **French Touch** : variantes classic / Ed Banger / Myd (`ftStyle`).
-- **Lo-fi** : sous-genres jazzy, chillhop, lofi-house, ambient, sad, beatmaker (`lofiStyle`).
-- **Moteur** : les nouvelles générations utilisent le moteur courant (voir `/api/options`).
+## 2. Bibliothèque
 
-## 3. Pack ZIP
+Écoute, téléchargements WAV / MP3 / MIDI / ZIP MIDI, détails (graine, moteur, nœud), renommage FR/EN, **Variation**, **Régénérer** (harmonie v1.12+), découpage, pack, YouTube, publication.
 
-Depuis un job terminé : **Pack ZIP** regroupe audio, MIDI, métadonnées et éventuelle vidéo selon les options (voir `docs/PACK.md`).
+## 3. Panneau YouTube
 
-Utile pour archiver un mix long (chapitres, stems relatifs) ou livrer un lot cohérent.
+Miniature / fond animé, mise en page, loudness, textes FR+EN, publication OAuth si chaînes configurées. Voir [YOUTUBE.md](YOUTUBE.md).
 
-## 4. YouTube
+## 4. Admin
 
-Panneau YouTube d’un job :
+- **Nœuds de rendu (musique + vidéo)** — URL `http://hôte:8765`, jeton optionnel, découverte LAN, tout tester, historique.
+- **Répartition** — forcer un nœud ; CT local = secours / parallèle ; **Musique sur le PC à partir de** N min.
+- **PC IA (Ollama)** — URL + modèle + délai.
+- **Chaînes YouTube** — multi-chaînes, défaut, liaisons par style (secrets jamais renvoyés).
+- **Animations vidéo** — import des fonds.
+- **Contexte du directeur artistique** — goût / veille (coupés par défaut).
+- **Veille tendances**.
+- **Marque / nom affiché**.
 
-- vignette / fond animé, titre, description, tags (FR/EN si fournis par le directeur IA) ;
-- mastering loudness (LUFS / true-peak) ;
-- publication via OAuth (chaînes enregistrées dans Admin) — voir `docs/YOUTUBE.md` et le manuel d’installation § OAuth.
+## 5. Mobile
 
-Le transport de test `SOUNDTUBE_YT_TRANSPORT=mock` n’envoie rien à Google.
-
-## 5. Directeur artistique (IA)
-
-Sur Générer → *Directeur artistique* : décrire l’ambiance → **Proposer**.
-
-- Nécessite un PC IA (Ollama) configuré dans Admin, sinon **repli local** par mots-clés.
-- Réponse validée et bornée par le serveur (tempo, style, avancés).
-- Options : métadonnées FR+EN, plan titre-par-titre pour les mix ≥ 1 h.
-- Contexte optionnel (Admin › Contexte) : profil de goût (`contexte/gout.json`) et dernière veille tendances — **coupés par défaut**.
-
-## 6. Admin
-
-| Section | Rôle |
-|--------|------|
-| Nœuds de rendu | Agents Windows / macOS, santé, répartition CT / nœuds audio |
-| PC IA | URL Ollama, modèle, délai |
-| YouTube / chaînes | OAuth, playlists |
-| Veille tendances | clé API YouTube optionnelle, RSS, intervalle |
-| Contexte directeur | goût, veille, aperçu du prompt, test Ollama |
-| Réglages | marque, slots locaux, seuils de routage (ex. durée mini audio nœud) |
-
-## 7. Page d’accueil et démarrage
-
-- `/` — studio
-- `/demarrer` — schéma système + visite 5 étapes + premiers réglages
-- `/admin` — administration
-- `/docs` — OpenAPI
-
-## 8. Conseils
-
-- Pour un mix ≥ 1 h : laisser le routage envoyer l’audio vers un nœud dédié si disponible.
-- `pcCombo` : combiner rendu CT + nœud selon la charge.
-- Ne jamais coller de jetons ou clés dans le chat ou les captures d’écran.
+Sous ~390 px la barre se replie ; le sélecteur de langue reste visible.

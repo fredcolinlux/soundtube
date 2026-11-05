@@ -53,7 +53,7 @@ const ok = (desc, schema) => ({ description: desc, content: { 'application/json'
 export const openapi = {
   openapi: '3.0.3',
   components: { schemas: { SplitOptions } },
-  info: { title: 'soundtube API', version: '1.17.0', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
+  info: { title: 'soundtube API', version: '1.18.0', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
   paths: {
     '/api/health': { get: { summary: 'État du service', responses: { 200: ok('OK', { type: 'object' }) } } },
     '/api/options': { get: { summary: 'Styles, ambiances, tonalités, gammes, instruments disponibles', responses: { 200: ok('Options', { type: 'object' }) } } },
