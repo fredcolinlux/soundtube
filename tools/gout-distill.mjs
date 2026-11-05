@@ -1,4 +1,4 @@
-// v1.15.0 : distille un export de bibliothèque musicale (CSV, en-têtes français) en un profil de goût court et borné : contexte/gout.json.
+// v1.15.0 : distille l'export Apple Music (CSV, en-têtes français) en un profil de goût court et borné : contexte/gout.json.
 // Usage : node tools/gout-distill.mjs chemin/vers/bibliotheque.csv [contexte/gout.json]
 // Le CSV n'est jamais copié : seuls des totaux d'écoutes par artiste / genre et des artistes de référence par style sont gardés.
 import fs from 'node:fs';
@@ -14,7 +14,7 @@ export function* csvRows(s) {
   }
   if (v || f.length) { f.push(v); yield f; }
 }
-// genres proches regroupés (les exports mélangent anglais / français et variantes)
+// genres proches regroupés (Apple Music mélange anglais / français et variantes)
 const GENRE_ALIAS = [[/^(hip[- ]?hop(\/rap)?|rap|alternative rap|hip-hop\/rap|rap français|french rap)$/i, 'Hip-Hop/Rap'], [/^(electronic|électronique|electronica|idm)$/i, 'Électronique'],
   [/^(alternative|alternatif|alternative rock|indie rock)$/i, 'Alternative'], [/^(hard ?rock)$/i, 'Hard rock'], [/^(dance)$/i, 'Dance'], [/^(r&b\/soul|soul|r&b)$/i, 'R&B/Soul']];
 const normGenre = (g) => { g = (g || '').trim(); for (const [rx, n] of GENRE_ALIAS) if (rx.test(g)) return n; return g; };
@@ -47,7 +47,7 @@ export function distill(text, { top = 15, topGenres = 10 } = {}) {
 
 // favoris déclarés (graine) et son recherché par style — décrit le son, jamais des titres
 export const SEED = {
-  overall: ['Daft Punk', 'Justice', 'Bonobo', 'deadmau5', 'Pendulum', 'Kavinsky', 'Air', 'Massive Attack', 'DJ Koze', 'Mr. Oizo'],
+  overall: ['Exemple Synth', 'Beastie Boys', 'IAM', 'NTM', 'Scratch Bandits Crew', 'deadmau5', 'Pendulum', "L'Entourloop", 'DJ Koze', 'Bonobo', 'Chemical Brothers', 'Vitalic', 'Action Bronson', 'Biggie', 'Massive Attack', 'Air', 'Kavinsky', 'Mr. Oizo'],
   styles: {
     frenchtouch: { refs: ['Daft Punk', 'Justice', 'Myd', 'Cassius', 'Mr. Oizo', 'Ed Banger'], sound: 'house filtrée et compressée, basses saturées, boucles disco hachées, montées au filtre, côté Ed Banger plus sale et ludique' },
     lofi: { refs: ['Chinese Man', 'Scratch Bandits Crew', "L'Entourloop", 'Bonobo'], sound: 'boom bap poussiéreux, scratchs, cuivres et samples rétro, groove chaloupé plutôt que lo-fi plat' },
@@ -56,7 +56,7 @@ export const SEED = {
     house: { refs: ['DJ Koze', 'deadmau5', 'Bonobo'], sound: 'house profonde et organique, groove hypnotique, accords chauds, détails ludiques et progressions longues' },
     techno: { refs: ['Vitalic', 'Chemical Brothers', 'deadmau5'], sound: 'techno et electro puissantes, synthés analogiques agressifs, gros breakbeats, montées de rave' },
     dnb: { refs: ['Pendulum'], sound: 'drum & bass énergique, basses lourdes, côté rock/électro, montées épiques' },
-    synthwave: { refs: ['Kavinsky', 'Air'], sound: 'synthés 80 sombres et mélodiques, arpèges, ambiance nocturne de film' },
+    synthwave: { refs: ['Kavinsky', 'Exemple Synth', 'Air'], sound: 'synthés 80 sombres et mélodiques, arpèges, ambiance nocturne de film' },
     ambient: { refs: ['Air', 'Massive Attack', 'Bonobo'], sound: 'trip-hop et ambient chaleureux, basses profondes, nappes vintage, mélancolie douce' },
     cinematic: { refs: ['Massive Attack', 'Air'], sound: 'cinématique sombre et texturée, tension lente, couleurs trip-hop' },
     chiptune: { refs: ['Mr. Oizo', 'Justice'], sound: 'chiptune ludique et nerveux, côté electro sale plutôt que mignon' },
@@ -64,7 +64,7 @@ export const SEED = {
   overallSound: 'électronique et rap avant tout : French Touch, house, big beat, electro, trip-hop, boom bap français et US, avec un fond new wave sombre',
 };
 
-export function buildProfile(text, source = 'bibliothèque musicale') {
+export function buildProfile(text, source = 'Apple Music') {
   const d = distill(text), extras = { house: 'House', techno: 'Techno', dnb: 'Drum & Bass' };
   const styles = {};
   for (const [id, s] of Object.entries(SEED.styles)) {

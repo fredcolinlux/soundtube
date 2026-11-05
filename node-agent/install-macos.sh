@@ -17,7 +17,7 @@
 # Pare-feu : le pare-feu « applications » de macOS est par application (pas de CIDR).
 # Au premier démarrage, macOS demande « Autoriser les connexions entrantes ? » pour node :
 # répondre Autoriser. Les options --allow-from / --ct-address documentent le réseau multi-sous-réseaux
-# (CT 192.168.1.x, PC 192.168.2.x, Mac ailleurs) et proposent un modèle pf optionnel (sudo).
+# (CT 192.168.0.x, PC 192.168.11.x, Mac ailleurs) et proposent un modèle pf optionnel (sudo).
 #
 # Node.js : même majeure que le CT (24). Homebrew : brew install node@24 (ou node si déjà 24).
 # ffmpeg : brew install ffmpeg (VideoToolbox est inclus dans les builds Homebrew sur macOS).
@@ -296,7 +296,7 @@ info "  Cliquez Autoriser. Pour forcer (sudo) :"
 info "    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add \"$NODE_BIN\""
 info "    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp \"$NODE_BIN\""
 info "Découverte UDP (port $DISCOVERY_PORT) ne traverse en général PAS les sous-réseaux routés."
-info "Si le CT est en 192.168.1.x, le PC Windows en 192.168.2.x et le Mac ailleurs :"
+info "Si le CT est en 192.168.0.x, le PC Windows en 192.168.11.x et le Mac ailleurs :"
 info "  → ajoutez le Mac dans Admin par son URL http://<IP-du-Mac>:$PORT (bouton Ajouter)."
 if [[ -n "$CT_ADDRESS" || ${#ALLOW_FROM[@]} -gt 0 ]]; then
   info "Restriction CIDR (--allow-from / --ct-address) : le pare-feu apps ne filtre pas par source."

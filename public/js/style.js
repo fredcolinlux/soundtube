@@ -1,8 +1,8 @@
 // v1.10.0 : page d'un style — en-tête coloré, fiche (docs/STYLES.md), machines, préréglage, bibliothèque du style.
-import { $, $$, api, esc, fmt, mountTopbar, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS } from './site.js?v=1.17.0';
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS } from './site.js?v=1.18.0';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
-mountTopbar('/styles/' + id);
+await bootSite('/styles/' + id);
 const field = mountBackground(id);
 const player = new MiniPlayer(field);
 const S = { style: null, opt: null, variant: '', mood: 'auto', amb: null, ambLevel: null, duration: 180, ai: null, tracks: [], total: 0, job: null, labels: { key: {}, mood: {} } };

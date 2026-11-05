@@ -1,6 +1,6 @@
-import { $, $$, esc, mountTopbar, mountBackground, reveal, colorOf } from './site.js?v=1.17.0';
+import { $, $$, esc, bootSite, mountBackground, reveal, colorOf } from './site.js?v=1.18.0';
 
-mountTopbar('/demarrer'); mountBackground();
+mountBackground(); await bootSite('/demarrer');
 // Chaque étape : texte + petite illustration en HTML/CSS (aucune image externe)
 const STEPS = [
   { t: 'Choisis un style', c: 'frenchtouch', p: 'Onze styles, chacun avec ses tempos, ses gammes, ses boîtes à rythmes et ses synthés. Certains ont des variantes : French Touch classique, Ed Banger ou Myd ; techno Detroit, minimale ou industrielle…',

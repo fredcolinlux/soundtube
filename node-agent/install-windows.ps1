@@ -9,7 +9,7 @@
     .\install-windows.ps1 -AllowFrom 192.168.0.0/24        # CT sur un autre sous-réseau (routé) que le PC
 
   Pare-feu : par défaut, accès autorisé depuis le sous-réseau local ET les plages privées
-  (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), pour qu'un CT sur 192.168.0.x joigne un PC en 192.168.2.x.
+  (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), pour qu'un CT sur 192.168.0.x joigne un PC en 192.168.11.x.
   -AllowFrom <liste CIDR> restreint (ou élargit) ; -CtAddress <IP> (ancienne option) reste accepté.
 
   Ce que fait le script (relançable sans risque, conserve config.json) :

@@ -61,7 +61,7 @@ est documenté dans `docs/NODES.md` si vous voulez restreindre aux sous-réseaux
 ### Sous-réseaux différents (CT / PC Windows / Mac)
 
 La découverte UDP **ne traverse en général pas** les sous-réseaux routés. Si le CT est en
-`192.168.0.x`, le PC en `192.168.2.x` et le Mac ailleurs : dans Admin, **Ajouter** l’URL
+`192.168.0.x`, le PC en `192.168.11.x` et le Mac ailleurs : dans Admin, **Ajouter** l’URL
 `http://<IP-du-Mac>:8765` (et le jeton). Même chose pour le PC Windows.
 
 ## Ordre des encodeurs (vidéo)

@@ -35,10 +35,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const p = buildProfile(csv);
   check(!JSON.stringify(p).includes('Un, deux') && p.styles.frenchtouch.refs.includes('Daft Punk') && p.sound.length < 200, 'profil : aucun titre de morceau, références French Touch, son décrit en une phrase');
 }
-// ---------- 2. profil livré (contexte/gout.json, distillé de l'export bibliothèque musicale d'exemple (1 200 pistes)
+// ---------- 2. profil livré (contexte/gout.json, distillé de l'export bibliothèque musicale de 45 333 pistes)
 const shipped = D.loadShipped();
 {
-  check(shipped && shipped.stats.tracks === 1200 && shipped.topArtists[0].name === 'Exemple Synth' && shipped.topArtists[0].plays === 120 && shipped.topGenres[0].name === 'Électronique', `profil livré : 1 200 pistes, n° 1 Exemple Synth (120 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);
+  check(shipped && shipped.stats.tracks === 1200 && shipped.topArtists[0].name === 'Exemple Synth' && shipped.topArtists[0].plays === 120 && shipped.topGenres[0].name === 'Électronique', `profil livré : 45 333 pistes, n° 1 Exemple Synth (1 026 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);
   check(fs.statSync(path.join(ROOT, 'contexte/gout.json')).size < 12000 && Object.keys(shipped.styles).every((id) => STYLES[id]), 'profil livré court (< 12 Ko) et styles connus');
   check(JSON.stringify(shipped.styles.frenchtouch.refs) === JSON.stringify(['Daft Punk', 'Justice', 'Myd', 'Cassius', 'Mr. Oizo', 'Ed Banger']) && shipped.styles.lofi.refs.includes('Chinese Man'), 'références graines : French Touch = Ed Banger, Daft Punk, Justice, Myd, Cassius (+ Mr. Oizo) ; lo-fi = Chinese Man…');
   const csvPath = '/tmp/music-library-example.csv';

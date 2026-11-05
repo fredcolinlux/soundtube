@@ -1,6 +1,6 @@
 {
   "name": "soundtube",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "description": "soundtube — plateforme de création musicale instrumentale par algorithme (moteur procédural + synthèse audio en JavaScript)",
   "type": "module",
   "main": "src/server.js",
@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "test": "node test/smoke.js && bash test/migrate-env.sh && node test/styles.js --quick && node test/sounds.js && node test/duration.js --quick && node test/v162.js && node test/v163.js && node test/v170.js --quick && node test/v180.js && node test/v190.js && node test/v1100.js && node test/v1110.js && node test/v1120.js && node test/v1130.js && node test/v1140.js && node test/v1150.js && node test/v1160.js && node test/v1170.js",
+    "test": "node test/smoke.js && bash test/migrate-env.sh && node test/styles.js --quick && node test/sounds.js && node test/duration.js --quick && node test/v162.js && node test/v163.js && node test/v170.js --quick && node test/v180.js && node test/v190.js && node test/v1100.js && node test/v1110.js && node test/v1120.js && node test/v1130.js && node test/v1140.js && node test/v1150.js && node test/v1160.js && node test/v1170.js && node test/v1180.js",
     "test:styles": "node test/styles.js",
     "test:durations": "node test/duration.js"
   },

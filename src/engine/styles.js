@@ -449,7 +449,7 @@ export const STYLE19 = {
     patches: { chords: 'supersaw', bass: 'reese', lead: 'synthlead', arp: 'arpsaw', texture: 'noisewash' },
     mix: { drumSat: 1.6, punch: 0.45, sidechain: 0.5, levels: { drums: 1.25, chords: 1.0, lead: 1.1 } },
   },
-  // synthwave plus sombre, côté synth-pop des années 80 (synth-pop 80s) : mineur / phrygien, nappes sombres, basse liée, batterie métallique
+  // synthwave plus sombre, côté synth-pop des années 80 (Depeche Mode) : mineur / phrygien, nappes sombres, basse liée, batterie métallique
   synthwave: {
     bpm: [100, 116], scales: { minor: 4, phrygian: 2, harmonic_minor: 2 },
     patches: { chords: 'darkpad', bass: 'bass80', lead: 'synthlead', arp: 'arp80', texture: 'riser' },

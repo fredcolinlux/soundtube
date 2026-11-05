@@ -64,16 +64,6 @@
       "name": "Hip-Hop/Rap",
       "plays": 600,
       "share": 12.0
-    },
-    {
-      "name": "Ambient",
-      "plays": 400,
-      "share": 8.0
-    },
-    {
-      "name": "Techno",
-      "plays": 300,
-      "share": 6.0
     }
   ],
   "favourites": [
@@ -110,7 +100,7 @@
       "plays": 45
     }
   ],
-  "sound": "Profil d'exemple générique. Remplacez-le en distillant votre bibliothèque : node tools/gout-distill.mjs bibliotheque.csv",
+  "sound": "Profil d'exemple générique. Remplacez-le : node tools/gout-distill.mjs bibliotheque.csv",
   "styles": {
     "frenchtouch": {
       "refs": [

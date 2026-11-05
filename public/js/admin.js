@@ -1,18 +1,21 @@
 // Page Admin : nœuds de rendu musique + vidéo (v1.16.0 : capacité musicale, moteur, historique ; état en direct, ajout / retrait, activation, nœud forcé), CT local, PC IA (Ollama).
 import { AuroraField } from './aurora.js';
+import { initI18n, t, mountLangSwitcher, onLangChange, applyDom } from './i18n.js';
+await initI18n();
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function toast(msg, ms = 3200) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), ms); }
+function toast(msg, ms = 3200) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (el.hidden = true), ms); }
 try { new AuroraField($('#bgCanvas')); } catch {}
 async function api(method, url, body) {
   const r = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
-  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || `Erreur ${r.status}`); return d;
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || t('err.generic', { status: r.status })); return d;
 }
-const STATUS = { up: ['En ligne', 'up'], down: ['Hors ligne', 'down'], disabled: ['Désactivé', 'off'], unknown: ['Test…', 'off'] };
+const STATUS_L = () => ({ up: [t('admin.st.up'), 'up'], down: [t('admin.st.down'), 'down'], disabled: [t('admin.st.off'), 'off'], unknown: [t('admin.st.test'), 'off'] });
+const STATUS = new Proxy({}, { get: (_, k) => STATUS_L()[k] });
 const PLATFORM = { win32: 'Windows', darwin: 'macOS', linux: 'Linux' };
 let V = null, editing = false; const open = new Set();
-const KIND = { audio: 'Musique', video: 'Vidéo' };
-const HSTAT = { done: ['terminé', 'ok'], error: ['échec', 'bad'], fallback: ['repris sur le CT', 'warn'] };
+const KIND = new Proxy({}, { get: (_, k) => ({ audio: t('admin.kind.audio'), video: t('admin.kind.video') })[k] });
+const HSTAT = new Proxy({}, { get: (_, k) => ({ done: [t('admin.h.done'), 'ok'], error: [t('admin.h.err'), 'bad'], fallback: [t('admin.h.fb'), 'warn'] })[k] });
 const parisTime = (iso) => { try { return new Date(iso).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return iso; } };
 const dur = (ms) => (ms == null ? '' : ms < 60000 ? `${Math.round(ms / 1000)} s` : `${Math.floor(ms / 60000)} min ${String(Math.round(ms / 1000) % 60).padStart(2, '0')}`);
 function histTable(list, showNode = false) {
@@ -84,7 +87,7 @@ $('#nodesList').addEventListener('change', async (e) => {
   try { render(await api('PATCH', `/api/admin/nodes/${id}`, { enabled: e.target.checked })); toast(e.target.checked ? 'Nœud activé.' : 'Nœud désactivé.'); } catch (err) { toast(err.message); }
 });
 $('#addBtn').addEventListener('click', async () => {
-  const url = $('#nodeUrl').value.trim(); if (!url) return toast('Indique l’adresse du nœud (ex. http://192.168.1.50:8765).');
+  const url = $('#nodeUrl').value.trim(); if (!url) return toast(t('toast.needNodeUrl'));
   $('#addBtn').disabled = true; $('#addMsg').textContent = 'Connexion…';
   try {
     const v = await api('POST', '/api/admin/nodes', { url, name: $('#nodeName').value.trim(), token: $('#nodeToken').value.trim() }); render(v);
@@ -167,3 +170,8 @@ $('#trReport').addEventListener('click', (e) => {
   toast(`Retouches enregistrées pour ${TR.r.styles[id].label || id} : elles apparaissent en vert dans « Avancé » (page Générer).${g.mood ? ` Ambiance conseillée : ${g.mood}.` : ''}`, 6000);
 });
 loadTrends();
+
+
+mountLangSwitcher(document.querySelector('.topbar'));
+applyDom(document);
+onLangChange(() => { applyDom(document); try { render(); } catch {} });

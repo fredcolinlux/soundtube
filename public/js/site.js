@@ -1,6 +1,8 @@
 // v1.10.0 : socle commun des pages Accueil, Démarrer, Styles et pages de style
 // (navigation, fond animé teinté, couleurs par style, mini-lecteur, petites aides).
 import { AuroraField } from './aurora.js';
+import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
+export { t, getUiLang };
 
 export const $ = (q, el = document) => el.querySelector(q);
 export const $$ = (q, el = document) => [...el.querySelectorAll(q)];
@@ -8,11 +10,11 @@ export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&a
 export async function api(url, opts = {}) {
   const r = await fetch(url, { headers: { 'content-type': 'application/json' }, ...opts });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || `Erreur ${r.status}`);
+  if (!r.ok) throw new Error(j.error || `${t('err.generic', { status: r.status })}`);
   return j;
 }
 export const fmt = (s) => { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`; };
-export const dateFr = (d) => { try { return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return ''; } };
+export const dateFr = (d) => { try { return new Date(d).toLocaleDateString(document.documentElement.lang === 'en' ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return ''; } };
 
 /** Couleur principale (identique au studio) + couleur d'accompagnement pour les dégradés. */
 export const STYLE_COLOR = { lofi: '#f3c97a', ambient: '#7fd0ff', synthwave: '#c792ff', house: '#5ef2c9', frenchtouch: '#ffd23f', techno: '#a9b4d8', cinematic: '#e8dcb0', chiptune: '#b6f36a', trap: '#ff8fc7', hiphop: '#ffb36b', dnb: '#6be3ff' };
@@ -28,19 +30,32 @@ export const colorOf = (id) => STYLE_COLOR[id] || '#5ef2c9';
 export const color2Of = (id) => STYLE_COLOR_2[id] || '#9b8cff';
 const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
-const NAV = [['/accueil', 'Accueil'], ['/demarrer', 'Démarrer'], ['/styles', 'Styles'], ['/', 'Studio'], ['/admin', 'Admin']];
+const NAV = () => [['/accueil', t('nav.home')], ['/demarrer', t('nav.start')], ['/styles', t('nav.styles')], ['/', t('nav.studio')], ['/admin', t('nav.admin')]];
 /** Barre du haut commune ; `current` = chemin de la page (aria-current). */
 export function mountTopbar(current) {
   const h = document.createElement('header'); h.className = 'topbar site-top';
-  h.innerHTML = `<a class="brand" href="/accueil" aria-label="soundtube, accueil">
+  const paint = () => {
+    h.innerHTML = `<a class="brand" href="/accueil" aria-label="${t('nav.brandAria')}">
       <svg class="brand-mark" viewBox="0 0 28 20" width="28" height="20" aria-hidden="true"><rect x="0" y="7" width="4" height="6" rx="2"/><rect x="6" y="2" width="4" height="16" rx="2"/><rect x="12" y="5" width="4" height="10" rx="2"/><rect x="18" y="0" width="4" height="20" rx="2"/><rect x="24" y="7" width="4" height="6" rx="2"/></svg>
       <span>sound<em>tube</em></span></a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span><b class="sr">Menu</b></button>
-    <nav id="siteNav">${NAV.map(([href, l]) => `<a href="${href}"${href === current || (href === '/styles' && current.startsWith('/styles')) ? ' aria-current="page"' : ''}>${l}</a>`).join('')}
-      <a href="/docs" target="_blank" rel="noopener">API</a></nav>
-    <a class="btn btn-primary btn-mini nav-cta" href="/">Ouvrir le studio</a>`;
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span><b class="sr">${t('nav.menu')}</b></button>
+    <nav id="siteNav">${NAV().map(([href, l]) => `<a href="${href}"${href === current || (href === '/styles' && current.startsWith('/styles')) ? ' aria-current="page"' : ''}>${l}</a>`).join('')}
+      <a href="/docs" target="_blank" rel="noopener">${t('nav.api')}</a></nav>
+    <a class="btn btn-primary btn-mini nav-cta" href="/">${t('nav.openStudio')}</a>`;
+    const tog = $('.nav-toggle', h); tog.addEventListener('click', () => { const o = h.classList.toggle('open'); tog.setAttribute('aria-expanded', String(o)); });
+    mountLangSwitcher(h);
+  };
+  paint();
   document.body.prepend(h);
-  const t = $('.nav-toggle', h); t.addEventListener('click', () => { const o = h.classList.toggle('open'); t.setAttribute('aria-expanded', String(o)); });
+  onLangChange(() => { paint(); applyDom(document); });
+  return h;
+}
+export async function bootI18n() { await initI18n(); applyDom(document); }
+/** Initialise i18n puis la barre du haut (pages Accueil / Démarrer / Styles). */
+export async function bootSite(current) {
+  await initI18n();
+  const h = mountTopbar(current);
+  applyDom(document);
   return h;
 }
 

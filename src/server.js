@@ -744,6 +744,23 @@ app.get('/api/openapi.json', (req, res) => res.json(openapi));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi, { customSiteTitle: 'soundtube — API', customCss: '.topbar{display:none}' }));
 
 // HTML toujours revalidé (les CSS/JS sont versionnés par ?v=) : une mise à jour de l'interface est visible tout de suite.
+
+/* ---------- v1.18.0 : langue d’interface (indépendante de la langue YouTube getLang/setLang) ---------- */
+function uiLangFromReq(req) {
+  const c = String(req.headers.cookie || '').match(/(?:^|;\s*)soundtube_ui_lang=(fr|en)(?:;|$)/);
+  if (c) return c[1];
+  const al = String(req.headers['accept-language'] || '').toLowerCase();
+  if (/(^|,)en\b/.test(al) && !/(^|,)fr\b/.test(al.split(',')[0] || '')) return 'en';
+  if (al.startsWith('en')) return 'en';
+  return 'fr';
+}
+app.get('/api/ui/lang', (req, res) => res.json({ lang: uiLangFromReq(req), supported: ['fr', 'en'] }));
+app.put('/api/ui/lang', (req, res) => {
+  const lang = req.body?.lang === 'en' ? 'en' : 'fr';
+  res.setHeader('Set-Cookie', `soundtube_ui_lang=${lang}; Path=/; Max-Age=31536000; SameSite=Lax`);
+  res.json({ lang });
+});
+
 app.use(express.static(config.publicDir, { extensions: ['html'], maxAge: '1h', setHeaders: (res, p) => { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Route inconnue' }));
