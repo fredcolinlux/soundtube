@@ -1,13 +1,14 @@
 import { t as tf } from './i18n.js';
-// v1.13.0 : panneau YouTube › « Publier sur YouTube » (formulaire prérempli par le profil du style) et « ZIP complet ».
+// v1.13.0 : panneau YouTube › « Publier sur YouTube » + ZIP. v1.21.0 : Facebook Page + X.
 import { queueHtml } from './pubqueue.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const P = { pub: new Map(), pack: new Map(), draft: new Map(), polls: new Set() };
+const P = { pub: new Map(), pack: new Map(), draft: new Map(), soc: new Map(), socDraft: new Map(), polls: new Set() };
 let ctx = null; // { api, toast, rerender }
 export function initPubPanel(c) { ctx = c; }
 export async function loadPub(id, channelId) {
   try { P.pub.set(id, await ctx.api(`/api/tracks/${id}/publish${channelId ? '?channelId=' + encodeURIComponent(channelId) : ''}`)); } catch (e) { P.pub.set(id, { error: e.message }); }
   try { P.pack.set(id, await ctx.api(`/api/tracks/${id}/pack`)); } catch (e) { P.pack.set(id, { error: e.message }); }
+  try { P.soc.set(id, await ctx.api(`/api/tracks/${id}/social`)); } catch (e) { P.soc.set(id, { error: e.message }); }
   ctx.rerender(); if (P.pack.get(id)?.state?.status === 'running' || (P.pub.get(id)?.queue || []).some((x) => ['queued', 'video', 'uploading'].includes(x.status))) poll(id);
 }
 const localDT = (iso) => { if (!iso) return ''; const d = new Date(iso), p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -85,8 +86,59 @@ async function poll(id) {
     }
   } catch (e) { ctx.toast(e.message); } finally { P.polls.delete(id); }
 }
+
+export function socialHTML(t) {
+  const d = P.soc.get(t.id); if (!d) return '';
+  if (d.error) return `<div class="soc-form"><p class="err">${esc(d.error)}</p></div>`;
+  const draft = P.socDraft.get(t.id) || {};
+  const lang = draft.lang || 'fr';
+  const net = draft.network || 'facebook';
+  const base = net === 'x'
+    ? (lang === 'en' ? d.drafts?.xEn : d.drafts?.xFr)
+    : (lang === 'en' ? d.drafts?.en : d.drafts?.fr);
+  const text = draft.text != null ? draft.text : (base?.text || '');
+  const link = draft.link != null ? draft.link : (base?.link || d.drafts?.youtubeUrl || '');
+  const max = net === 'x' ? (d.x?.maxChars || 280) : 2000;
+  const ready = net === 'facebook' ? d.facebook?.ready : d.x?.ready;
+  const useCover = draft.useCover !== false;
+  const hist = (d.history || []).slice().reverse();
+  return `<div class="soc-form" data-socform>
+    <h4>${esc(tf('soc.heading'))}</h4>
+    <div class="row">
+      <div class="seg seg-sm" role="radiogroup">${[['facebook','Facebook'],['x','X']].map(([v,l]) => `<button type="button" role="radio" data-sock="network" data-v="${v}" aria-checked="${net===v}" class="${net===v?'on':''}">${l}</button>`).join('')}</div>
+      <div class="seg seg-sm" role="radiogroup">${[['fr','FR'],['en','EN']].map(([v,l]) => `<button type="button" role="radio" data-sock="lang" data-v="${v}" aria-checked="${lang===v}" class="${lang===v?'on':''}">${l}</button>`).join('')}</div>
+    </div>
+    <div class="pub-state ${ready ? 'ok' : 'bad'}">${ready ? esc(tf('soc.ready')) : `${esc(tf('soc.notReady'))} <a href="/admin#social">${esc(tf('soc.openAdmin'))}</a>`}</div>
+    <div class="field full"><label>${tf('soc.text')} <span class="hint">${text.length}/${max}</span></label>
+      <textarea data-sock="text" rows="4" maxlength="${max}">${esc(text)}</textarea></div>
+    ${net === 'facebook' ? `<div class="field full"><label>${tf('soc.link')}</label><input type="url" data-sock="link" value="${esc(link)}" placeholder="https://…"></div>` : ''}
+    <div class="field full"><label class="toggle"><input type="checkbox" data-sock="useCover" ${useCover ? 'checked' : ''}><span>${tf('soc.useCover')}</span></label></div>
+    <div class="pub-confirm"><span class="hint">${tf('soc.confirmHint')} <b>${esc(d.confirmWord || 'PUBLISH')}</b></span>
+      <input type="text" data-sock="confirm" autocomplete="off" spellcheck="false" ${ready ? '' : 'disabled'}>
+      <button class="btn btn-primary" data-act="socgo" type="button" ${ready ? '' : 'disabled'}>${esc(net === 'x' ? tf('soc.publishX') : tf('soc.publishFb'))}</button></div>
+    ${hist.length ? `<ul class="soc-hist hint">${hist.map((h) => `<li><b>${esc(h.network)}</b> ${esc(h.status)}${h.url ? ` · <a href="${esc(h.url)}" target="_blank" rel="noopener">link</a>` : ''}${h.error ? ' · ' + esc(h.error) : ''}</li>`).join('')}</ul>` : ''}
+  </div>`;
+}
+
 /** Saisie dans le formulaire : mémorisée (le panneau est redessiné souvent). Renvoie true si l'évènement a été traité. */
 export function onPubInput(e) {
+  const sockBtn = e.target.closest('[data-sock][data-v]');
+  if (sockBtn && (e.type === 'click' || e.type === 'change')) {
+    const id = sockBtn.closest('.track')?.dataset.id; if (!id) return false;
+    const k = sockBtn.dataset.sock, v = sockBtn.dataset.v;
+    const cur = { ...(P.socDraft.get(id) || {}), [k]: v };
+    if (k === 'network' || k === 'lang') { delete cur.text; delete cur.link; }
+    P.socDraft.set(id, cur); ctx.rerender(); return true;
+  }
+  const s = e.target.closest('[data-sock]');
+  if (s && !s.dataset.v) {
+    const id = s.closest('.track')?.dataset.id; if (!id) return false;
+    const k = s.dataset.sock;
+    if (k === 'confirm') return true;
+    P.socDraft.set(id, { ...(P.socDraft.get(id) || {}), [k]: s.type === 'checkbox' ? s.checked : s.value });
+    if (k === 'text') { const hint = s.closest('.field')?.querySelector('.hint'); if (hint) { const max = s.getAttribute('maxlength') || ''; hint.textContent = `${s.value.length}/${max}`; } }
+    return true;
+  }
   const q = e.target.closest('[data-packk]'); if (q) { const id = q.closest('.track')?.dataset.id; if (!id) return false; (P.pkDraft ||= new Map()).set(id, { ...(P.pkDraft.get(id) || {}), [q.dataset.packk]: q.type === 'checkbox' ? q.checked : q.value }); if (e.type === 'change') ctx.rerender(); return true; }
   const i = e.target.closest('[data-pubk]'); if (!i) return false; const id = i.closest('.track')?.dataset.id; if (!id) return false;
   const k = i.dataset.pubk;
@@ -108,6 +160,28 @@ export async function onPubAction(act, t, btn) {
   if (act === 'packgo') {
     const o = pkOpts(t.id); if (o.pieceVideo && o.pieces && !confirm(tf('confirm.pieceVideo'))) return true;
     btn.disabled = true; P.pack.set(t.id, await ctx.api(`/api/tracks/${t.id}/pack`, { method: 'POST', body: JSON.stringify({ ...o, videoRes: o.videoRes || undefined }) })); P.pkDraft?.delete(t.id); ctx.rerender(); poll(t.id); ctx.toast(tf('toast.packPreparing'));
+    return true;
+  }
+  if (act === 'socgo') {
+    const f = btn.closest('[data-socform]');
+    const v = (k) => f.querySelector(`[data-sock="${k}"]:not([data-v])`);
+    const draft = P.socDraft.get(t.id) || {};
+    const body = {
+      network: draft.network || 'facebook',
+      lang: draft.lang || 'fr',
+      text: v('text')?.value,
+      link: v('link')?.value,
+      useCover: v('useCover') ? v('useCover').checked : true,
+      confirm: v('confirm')?.value.trim(),
+    };
+    btn.disabled = true;
+    try {
+      const it = await ctx.api(`/api/tracks/${t.id}/social`, { method: 'POST', body: JSON.stringify(body) });
+      P.socDraft.delete(t.id);
+      ctx.toast(it.mock ? tf('toast.socMock') : tf('toast.socDone'));
+      P.soc.set(t.id, await ctx.api(`/api/tracks/${t.id}/social`));
+      ctx.rerender();
+    } catch (e) { btn.disabled = false; ctx.toast(e.message, 5000); }
     return true;
   }
   return false;

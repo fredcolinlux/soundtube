@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.20.5">
+  <link rel="stylesheet" href="/css/app.css?v=1.21.0">
 </head>
 <body>
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -162,6 +162,53 @@
       <div class="field"><label>File de publication <span class="opt">(tous styles)</span></label><div id="ytQueue" class="yt-queue"></div></div>
     </section>
 
+    
+    <section class="module panel" id="social">
+      <div class="sec-head">
+        <h2><span class="num">05b</span><span data-i18n="admin.socialTitle">Réseaux sociaux</span></h2>
+        <span class="hint" data-i18n="admin.socialHint">Facebook Page + X/Twitter. Jetons chiffrés, jamais réaffichés. LAN admin uniquement.</span>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <h3>Facebook Page</h3>
+          <label class="toggle"><input type="checkbox" id="socFbOn"><span data-i18n="admin.socialEnable">Activer</span></label>
+          <label for="socFbPageId" data-i18n="admin.socialFbPageId">Page ID</label>
+          <input id="socFbPageId" spellcheck="false" placeholder="1234567890">
+          <label for="socFbToken" data-i18n="admin.socialFbToken">Page access token</label>
+          <input id="socFbToken" type="password" autocomplete="off" spellcheck="false" placeholder="•••• (laisse vide pour conserver)">
+          <p class="hint" id="socFbStatus"></p>
+        </div>
+        <div class="field">
+          <h3>X / Twitter</h3>
+          <label class="toggle"><input type="checkbox" id="socXOn"><span data-i18n="admin.socialEnable">Activer</span></label>
+          <label for="socXMode" data-i18n="admin.socialXMode">Auth</label>
+          <select id="socXMode"><option value="oauth1">OAuth 1.0a</option><option value="oauth2">OAuth 2 PKCE / Bearer</option></select>
+          <label for="socXApiKey">API Key / Client ID</label>
+          <input id="socXApiKey" spellcheck="false">
+          <label for="socXApiSecret">API Secret / Client Secret</label>
+          <input id="socXApiSecret" type="password" autocomplete="off" spellcheck="false" placeholder="••••">
+          <label for="socXAccess">Access Token / Bearer</label>
+          <input id="socXAccess" type="password" autocomplete="off" spellcheck="false" placeholder="••••">
+          <label for="socXAccessSecret">Access Token Secret (OAuth1)</label>
+          <input id="socXAccessSecret" type="password" autocomplete="off" spellcheck="false" placeholder="••••">
+          <p class="hint" id="socXStatus"></p>
+        </div>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="socSave" data-i18n="admin.socialSave">Enregistrer</button>
+        <span class="hint" id="socMsg"></span>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <h3 data-i18n="admin.socialAuto">Auto-publication par style (défaut : off)</h3>
+        <p class="hint" data-i18n="admin.socialAutoHint">Nécessite PUBLISH / PUBLIER à l’activation. Aucun envoi sans confirmation préalable.</p>
+        <div id="socAuto" class="row" style="flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <h3 data-i18n="admin.socialHistory">Historique récent</h3>
+        <ul id="socHistory" class="hint" style="max-height:220px;overflow:auto;padding-left:1.2em"></ul>
+      </div>
+    </section>
+
     <section class="module panel" id="media">
       <div class="module-head">
         <h2><span class="num">06</span><span data-i18n="admin.mediaTitle">Animations</span></h2>
@@ -301,10 +348,11 @@
     </footer>
   </main>
   <div class="toast" id="toast" hidden></div>
-  <script type="module" src="/js/admin.js?v=1.20.5"></script>
-  <script type="module" src="/js/ytadmin.js?v=1.20.5"></script>
-  <script type="module" src="/js/adminmedia.js?v=1.20.5"></script>
-  <script type="module" src="/js/admindirector.js?v=1.20.5"></script>
-  <script type="module" src="/js/adminauth.js?v=1.20.5"></script>
+  <script type="module" src="/js/admin.js?v=1.21.0"></script>
+  <script type="module" src="/js/ytadmin.js?v=1.21.0"></script>
+  <script type="module" src="/js/adminmedia.js?v=1.21.0"></script>
+  <script type="module" src="/js/admindirector.js?v=1.21.0"></script>
+  <script type="module" src="/js/adminauth.js?v=1.21.0"></script>
+  <script type="module" src="/js/adminsocial.js?v=1.21.0"></script>
 </body>
 </html>

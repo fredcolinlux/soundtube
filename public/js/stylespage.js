@@ -1,4 +1,4 @@
-import { $, api, esc, bootSite, mountBackground, reveal, styleCardHtml, t, onLangChange } from '/js/site.js?v=1.20.5';
+import { $, api, esc, bootSite, mountBackground, reveal, styleCardHtml, t, onLangChange } from '/js/site.js?v=1.21.0';
 await bootSite('/styles'); mountBackground();
 
 async function load() {

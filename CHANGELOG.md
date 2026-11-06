@@ -1,5 +1,18 @@
 # Journal des versions
 
+## 1.21.0 — 2026-11-06
+
+### Social — Facebook Page + X/Twitter
+- Admin › Réseaux sociaux : credentials chiffrés (jamais réaffichés), LAN only.
+- Bibliothèque : panneau « Publier sur Facebook / X » (brouillon FR/EN, compteur X 280, confirmation PUBLISH/PUBLIER, historique).
+- Auto-publication par style (défaut off, confirmation à l’activation).
+- `SOUNDTUBE_SOCIAL_TRANSPORT=mock` + `test/v1210.js`.
+- Docs : `docs/SOCIAL.md`, `docs/en/SOCIAL.md`.
+
+### Correctif chrome auth
+- `setup.html` charge `site.css` (barre du haut + pied GitHub comme login/register/404).
+
+
 ## 1.20.5 — 2026-11-06
 
 ### Public site & Studio routes
