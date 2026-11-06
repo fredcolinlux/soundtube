@@ -41,21 +41,21 @@ function render(v) {
   $('#nodesList').innerHTML = v.nodes.length ? v.nodes.map((n) => {
     const [lab, cls] = STATUS[n.status] || STATUS.unknown;
     const details = n.status === 'up'
-      ? `<span>${esc(n.encoderLabel || n.encoder)}</span><span>${n.running}/${n.slots ?? '?'} en cours</span><span>${n.latency} ms</span>${n.platform ? `<span>${esc(PLATFORM[n.platform] || n.platform)}${n.arch ? ' ' + esc(n.arch) : ''}${n.hostname ? ' · ' + esc(n.hostname) : ''}</span>` : ''}${n.jobs ? `<span>${n.jobs} vidéo${n.jobs > 1 ? 's' : ''}</span>` : ''}`
-      : `<span class="node-err">${esc(n.error || (n.status === 'disabled' ? 'Ignoré pour les rendus' : ''))}</span>`;
+      ? `<span>${esc(n.encoderLabel || n.encoder)}</span><span>${t('admin.nodeRunning', { n: n.running, slots: n.slots ?? '?' })}</span><span>${n.latency} ms</span>${n.platform ? `<span>${esc(PLATFORM[n.platform] || n.platform)}${n.arch ? ' ' + esc(n.arch) : ''}${n.hostname ? ' · ' + esc(n.hostname) : ''}</span>` : ''}${n.jobs ? `<span>${n.jobs} vidéo${n.jobs > 1 ? 's' : ''}</span>` : ''}`
+      : `<span class="node-err">${esc(n.error || (n.status === 'disabled' ? t('admin.nodeIgnored') : ''))}</span>`;
     return `<div class="node-row ${cls}" data-id="${n.id}">
       <span class="node-dot" title="${lab}"></span>
-      <div class="node-main"><div class="node-title"><b>${esc(n.name || n.hostname || n.url)}</b>${n.forced ? '<span class="node-tag">forcé</span>' : ''}${n.hasToken ? '<span class="node-tag">jeton</span>' : ''}</div>
+      <div class="node-main"><div class="node-title"><b>${esc(n.name || n.hostname || n.url)}</b>${n.forced ? `<span class="node-tag">${t('admin.nodeForced')}</span>` : ''}${n.hasToken ? '<span class="node-tag">jeton</span>' : ''}</div>
         <div class="node-url">${esc(n.url)} · <span class="node-state">${lab}</span></div>
         <div class="node-meta">${details}</div>${audioLine(n)}
-        <div class="node-detail" ${open.has(n.id) ? '' : 'hidden'}><div class="node-detail-head">Derniers rendus sur ce nœud</div>${histTable(n.history || [])}</div></div>
+        <div class="node-detail" ${open.has(n.id) ? '' : 'hidden'}><div class="node-detail-head">${t('admin.nodeLastRenders')}</div>${histTable(n.history || [])}</div></div>
       <div class="node-actions">
-        <label class="toggle small" title="Utiliser ce nœud pour les rendus"><input type="checkbox" data-act="enable" ${n.enabled ? 'checked' : ''}> Actif</label>
-        <label class="toggle small" title="Autoriser le rendu de la musique sur ce nœud"><input type="checkbox" data-act="audio" ${n.audio?.enabled !== false ? 'checked' : ''}> Musique</label>
-        <button class="btn btn-mini" data-act="detail" type="button">${open.has(n.id) ? 'Masquer' : 'Détail'}</button>
-        <button class="btn btn-mini" data-act="verify" type="button" title="Rend un morceau de référence de 20 s sur le CT et sur le PC et compare les WAV">Vérifier</button>
-        <button class="btn btn-mini" data-act="rename" type="button">Renommer</button>
-        <button class="btn btn-mini btn-danger" data-act="remove" type="button">Retirer</button>
+        <label class="toggle small" title="${t('admin.nodeEnableTitle')}"><input type="checkbox" data-act="enable" ${n.enabled ? 'checked' : ''}> Actif</label>
+        <label class="toggle small" title="${t('admin.nodeAudioTitle')}"><input type="checkbox" data-act="audio" ${n.audio?.enabled !== false ? 'checked' : ''}> ${t('admin.music')}</label>
+        <button class="btn btn-mini" data-act="detail" type="button">${open.has(n.id) ? t('admin.nodeHide') : t('admin.nodeDetail')}</button>
+        <button class="btn btn-mini" data-act="verify" type="button" title="${t('admin.nodeVerifyTitle')}">${t('admin.verify')}</button>
+        <button class="btn btn-mini" data-act="rename" type="button">${t('admin.rename')}</button>
+        <button class="btn btn-mini btn-danger" data-act="remove" type="button">${t('admin.remove')}</button>
       </div></div>`;
   }).join('') : `<p class="hint nodes-empty">${t('admin.nodesEmpty')}</p>`;
   const sel = $('#forceSel');
@@ -93,7 +93,7 @@ $('#addBtn').addEventListener('click', async () => {
   $('#addBtn').disabled = true; $('#addMsg').textContent = t('common.connecting');
   try {
     const v = await api('POST', '/api/admin/nodes', { url, name: $('#nodeName').value.trim(), token: $('#nodeToken').value.trim() }); render(v);
-    const n = v.nodes[v.nodes.length - 1]; $('#addMsg').textContent = n.status === 'up' ? `Ajouté : ${n.encoderLabel}` : `Ajouté, mais hors ligne : ${n.error || ''}`;
+    const n = v.nodes[v.nodes.length - 1]; $('#addMsg').textContent = n.status === 'up' ? t('admin.addedUpLabel', { label: n.encoderLabel }) : t('admin.addedDownLabel', { label: n.error || '' });
     $('#nodeUrl').value = ''; $('#nodeName').value = ''; $('#nodeToken').value = '';
   } catch (err) { $('#addMsg').textContent = err.message; } finally { $('#addBtn').disabled = false; }
 });
@@ -121,7 +121,7 @@ function paintWatch(w) {
   if (!w) return;
   if (document.activeElement !== $('#watchUrl')) $('#watchUrl').value = w.url || '';
   if (document.activeElement !== $('#watchModel')) $('#watchModel').value = w.model || '';
-  const note = w.notice || (w.usingDirectorModel ? 'Repli sur le modèle du directeur.' : '');
+  const note = w.notice || (w.usingDirectorModel ? t('admin.watchFallback') : '');
   $('#watchMsg').textContent = note || (w.effective ? `Effectif : ${w.effective.model || '—'} @ ${w.effective.url || '—'}` : '');
   $('#watchMsg').className = 'hint' + (note ? ' warn' : '');
 }
@@ -173,26 +173,26 @@ function renderTrends({ settings: s, report: r }) {
   if ($('#trCrawl')) $('#trCrawl').checked = s.crawl !== false; if ($('#trDiscover')) $('#trDiscover').checked = !!s.discover; if ($('#trPrivate')) $('#trPrivate').checked = !!s.allowPrivateSources;
   if (document.activeElement !== $('#trFeeds')) $('#trFeeds').value = s.feeds || '';
   $('#trKeyDel').hidden = !s.hasKey;
-  $('#trKey').placeholder = s.hasKey ? `clé enregistrée (…${s.keyTail}) — vide = garder` : 'AIza…';
-  $('#trSource').textContent = s.source === 'none' ? 'aucune source configurée' : `source : ${s.sourceLabel}`;
+  $('#trKey').placeholder = s.hasKey ? t('admin.trKeyPhHas', { tail: s.keyTail }) : t('admin.trKeyPh');
+  $('#trSource').textContent = s.source === 'none' ? t('admin.trSourceNone') : t('admin.trSource', { label: s.sourceLabel });
   $('#trSource').classList.toggle('warn', s.source === 'none');
   $('#trStyles').innerHTML = s.styleIds.map((id) => `<button type="button" class="chip ${s.styles.includes(id) ? 'on' : ''}" data-id="${esc(id)}">${esc(id)}</button>`).join('');
-  $('#trMsg').textContent = s.running ? 'Veille en cours…' : `Dernière : ${fmtDate(s.lastRun)} · prochaine : ${s.enabled ? fmtDate(s.nextRun) : 'désactivée'}${s.lastError ? ' · erreur : ' + s.lastError : ''}`;
+  $('#trMsg').textContent = s.running ? t('admin.trRunning') : t('admin.trLast', { last: fmtDate(s.lastRun), next: s.enabled ? fmtDate(s.nextRun) : t('admin.trNextOff') }) + (s.lastError ? t('admin.trLastErr', { err: s.lastError }) : '');
   $('#trRun').disabled = s.running;
-  if (!r) { $('#trReport').innerHTML = `<p class="hint">${s.source === 'none' ? 'Aucune source : renseigne une clé YouTube Data API, des flux RSS ou active la recherche YouTube publique, puis « Lancer maintenant ».' : 'Pas encore de rapport.'}</p>`; return; }
+  if (!r) { $('#trReport').innerHTML = `<p class="hint">${s.source === 'none' ? t('admin.trNoReport') : t('admin.trNoReportYet')}</p>`; return; }
   const cards = Object.entries(r.styles || {}).map(([id, x]) => {
     const d = x.digest || {};
-    const sug = (x.suggestions || []).map((g, i) => `<li><span>${Object.entries(g.adv || {}).map(([k, v]) => `<code>${esc(k)}=${esc(v)}</code>`).join(' ')}${g.mood ? ` <code>ambiance=${esc(g.mood)}</code>` : ''}${g.why ? ` — ${esc(g.why)}` : ''}</span> <button class="btn btn-mini" type="button" data-apply="${esc(id)}" data-i="${i}">Appliquer</button></li>`).join('');
-    return `<article class="tr-card"><h3>${esc(x.label || id)} <span class="hint">${d.count ?? 0} vidéos${d.medianDuration ? ` · médiane ${Math.round(d.medianDuration / 60)} min` : ''}</span></h3>
-      ${x.error ? `<p class="warn">Erreur : ${esc(x.error)}</p>` : ''}${x.aiError ? `<p class="warn">${esc(x.aiError)} — analyse locale</p>` : ''}
-      <p>${esc(x.summary || '')}</p>${d.topWords?.length ? `<p class="hint">Mots fréquents : ${esc(d.topWords.slice(0, 10).join(', '))}</p>` : ''}
-      ${sug ? `<ul class="tr-sug">${sug}</ul>` : '<p class="hint">Pas de retouche proposée.</p>'}${(x.warnings || []).length ? `<p class="hint">Ignoré : ${esc(x.warnings.join(' · '))}</p>` : ''}</article>`;
+    const sug = (x.suggestions || []).map((g, i) => `<li><span>${Object.entries(g.adv || {}).map(([k, v]) => `<code>${esc(k)}=${esc(v)}</code>`).join(' ')}${g.mood ? ` <code>ambiance=${esc(g.mood)}</code>` : ''}${g.why ? ` — ${esc(g.why)}` : ''}</span> <button class="btn btn-mini" type="button" data-apply="${esc(id)}" data-i="${i}">${t('admin.trApply')}</button></li>`).join('');
+    return `<article class="tr-card"><h3>${esc(x.label || id)} <span class="hint">${t('admin.trVideos', { n: d.count ?? 0 })}${d.medianDuration ? t('admin.trMedian', { m: Math.round(d.medianDuration / 60) }) : ''}</span></h3>
+      ${x.error ? `<p class="warn">${esc(t('admin.trError', { err: x.error }))}</p>` : ''}${x.aiError ? `<p class="warn">${esc(x.aiError)}${esc(t('admin.trAiLocal'))}</p>` : ''}
+      <p>${esc(x.summary || '')}</p>${d.topWords?.length ? `<p class="hint">${esc(t('admin.trTopWords', { words: d.topWords.slice(0, 10).join(', ') }))}</p>` : ''}
+      ${sug ? `<ul class="tr-sug">${sug}</ul>` : `<p class="hint">${t('admin.trNoSug')}</p>`}${(x.warnings || []).length ? `<p class="hint">${esc(t('admin.trIgnored', { w: x.warnings.join(' · ') }))}</p>` : ''}</article>`;
   }).join('');
-  $('#trReport').innerHTML = `<p class="hint">Rapport du ${fmtDate(r.at)} (${esc(r.reason)}) · source : ${esc(r.sourceLabel)} · analyse : ${esc(r.analysis)}</p>${r.source === 'none' ? '<p class="warn">Aucune source : rien n’a été analysé.</p>' : ''}<div class="tr-grid">${cards}</div>`;
+  $('#trReport').innerHTML = `<p class="hint">${esc(t('admin.trReportLine', { at: fmtDate(r.at), reason: r.reason, source: r.sourceLabel, analysis: r.analysis }))}</p>${r.source === 'none' ? `<p class="warn">${t('admin.trNoSourceWarn')}</p>` : ''}<div class="tr-grid">${cards}</div>`;
 }
 async function loadTrends() { try { const v = await api('GET', '/api/admin/trends'); renderTrends(v); paintWatch(v.watchAi); if ($('#trHistory')) {
     const h = v.history || [];
-    $('#trHistory').innerHTML = h.length ? ('Historique : ' + h.slice(0, 8).map((x) => `${esc(x.at || x.file)} · ${esc(x.sourceLabel || x.source || '')}${x.errors?.length ? ' · ' + x.errors.length + ' err.' : ''}`).join(' · ')) : '';
+    $('#trHistory').innerHTML = h.length ? (t('admin.trHistory') + h.slice(0, 8).map((x) => `${esc(x.at || x.file)} · ${esc(x.sourceLabel || x.source || '')}${x.errors?.length ? t('admin.trErrCount', { n: x.errors.length }) : ''}`).join(' · ')) : '';
   } } catch (e) { $('#trMsg').textContent = e.message; } }
 $('#trFeedsReset')?.addEventListener('click', async () => {
   try { const v = await api('PUT', '/api/admin/trends', { resetFeeds: true }); $('#trFeeds').value = v.feeds || v.settings?.feeds || ''; toast(t('toast.trendsFeedsReset')); loadTrends(); }
