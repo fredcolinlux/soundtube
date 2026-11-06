@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 1.20.3 — Démo Styles (15 s) & pages d’erreur
+
+- Page **Styles** anonyme = démo : prévisualisation **audio ≤ 15 s** (durée forcée serveur), hors bibliothèque, file basse priorité, rate-limit 3 / 10 min / IP, concurrence démo 1, purge toutes les 5 min (+ au démarrage). CTA « Connectez-vous pour créer des morceaux complets ».
+- Pages d’erreur brandées **404 / 403 / 500** (FR/EN, vinyle + waveform, CSP) pour routes inconnues et Admin bloqué hors LAN.
+- Tests `test/v1203.js` ; i18n FR/EN.
+
 ## 1.20.2 — QR TOTP sur le profil
 
 - Activation MFA (TOTP) : génération d’un URI `otpauth://` (émetteur *soundtube* ou nom éditeur Admin, SHA1, 6 chiffres, 30 s) et **QR code SVG** servi par `/api/me/totp/qr.svg` (session requise, `Cache-Control: no-store`, encodeur JS vendored, aucun service externe).

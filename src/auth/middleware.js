@@ -1,4 +1,5 @@
 import { msg } from '../i18n-server.js';
+import { sendErrorPage, wantsHtml } from '../http-errors.js';
 // Middleware : IP client, auth locale vs internet, Admin local-only, CSRF.
 import { clientMeta, observeProxyHints } from '../security/ip.js';
 
@@ -84,10 +85,10 @@ export function attachAuth(auth) {
 /** Admin HTML + /api/admin/* : local uniquement → 404 depuis internet. */
 export function requireLocalAdmin(req, res, next) {
   if (!req.clientMeta?.local) {
-    if (req.path.startsWith('/api/') || req.headers.accept?.includes('application/json')) {
+    if (req.path.startsWith('/api/') || !wantsHtml(req)) {
       return res.status(404).json({ error: msg(req, 'notFound') });
     }
-    return res.status(404).type('html').send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>404</title></head><body><h1>404</h1></body></html>');
+    return sendErrorPage(res, 404);
   }
   next();
 }
@@ -128,19 +129,22 @@ export function requireRole(...roles) {
 /** Admin HTML/API : LAN + compte admin connecté. */
 export function requireAdminSession(req, res, next) {
   if (!req.clientMeta?.local) {
-    if (req.path?.startsWith('/api/') || req.headers.accept?.includes('application/json')) {
+    if (req.path?.startsWith('/api/') || !wantsHtml(req)) {
       return res.status(404).json({ error: msg(req, 'notFound') });
     }
-    return res.status(404).type('html').send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>404</title></head><body><h1>404</h1></body></html>');
+    return sendErrorPage(res, 404);
   }
   if (!req.authUser) {
-    if (req.path?.startsWith('/api/') || req.headers.accept?.includes('application/json')) {
+    if (req.path?.startsWith('/api/') || !wantsHtml(req)) {
       return res.status(401).json({ error: msg(req, 'authRequired') });
     }
     const nextUrl = encodeURIComponent(req.originalUrl || '/admin');
     return res.redirect('/login?next=' + nextUrl);
   }
-  if (req.authUser.role !== 'admin') return res.status(403).json({ error: msg(req, 'forbidden') });
+  if (req.authUser.role !== 'admin') {
+    if (wantsHtml(req) && !req.path?.startsWith('/api/')) return sendErrorPage(res, 403);
+    return res.status(403).json({ error: msg(req, 'forbidden') });
+  }
   next();
 }
 

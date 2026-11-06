@@ -73,3 +73,6 @@ See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).
 
 Under **My profile** you can enable optional TOTP: a **QR code** (SVG from `/api/me/totp/qr.svg`, no external service) plus the base32 secret, then confirm with a code. Recovery codes are shown **once** (download available). Passkeys stay optional.
 
+## Styles demo (signed out)
+
+Without an account, each style page offers a **15-second preview** (audio only). Demo files never join the library and are deleted automatically. **Sign in to create full tracks** opens login.

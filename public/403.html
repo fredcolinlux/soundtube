@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title data-i18n="err403.title">soundtube — accès refusé</title>
+  <meta name="theme-color" content="#0b1022">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.3">
+  <link rel="stylesheet" href="/css/error.css?v=1.20.3">
+</head>
+<body class="err-body" data-err="403">
+  <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
+  <main class="err-card">
+    <a class="brand auth-brand" href="/accueil"><span>sound<em>tube</em></span></a>
+    <div class="auth-lang" id="langHost"></div>
+    <div class="err-vinyl" aria-hidden="true">
+      <div class="err-disc"><i></i><i></i><i></i><span></span></div>
+      <div class="err-wave" id="errWave"></div>
+    </div>
+    <p class="err-code">403</p>
+    <h1 data-i18n="err403.h1">Accès refusé</h1>
+    <p class="hint" data-i18n="err403.lead">Tu n’as pas la permission d’ouvrir cette ressource.</p>
+    <nav class="err-links">
+      <a class="btn btn-primary" href="/accueil" data-i18n="nav.home">Accueil</a>
+      <a class="btn btn-ghost" href="/styles" data-i18n="nav.styles">Styles</a>
+      <a class="btn btn-ghost" href="/login" data-i18n="nav.login">Connexion</a>
+    </nav>
+  </main>
+  <script type="module" src="/js/error.js?v=1.20.3"></script>
+</body>
+</html>

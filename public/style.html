@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
-  <link rel="stylesheet" href="/css/site.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.3">
+  <link rel="stylesheet" href="/css/site.css?v=1.20.3">
 </head>
 <body class="site page-style">
   <header class="style-hero" id="sHero">
@@ -32,6 +32,10 @@
       </section>
 
       <aside class="preset panel" aria-labelledby="hPreset" id="preset">
+        <div class="demo-banner" id="demoBanner" hidden>
+          <p data-i18n="style.demoBanner">Aperçu gratuit : 15 secondes max, audio seul. Connectez-vous pour créer des morceaux complets.</p>
+          <a class="btn btn-primary btn-mini" id="demoLoginCta" href="/login?next=" data-i18n="style.demoCta">Connectez-vous pour créer des morceaux complets</a>
+        </div>
         <div class="module-head"><h2 id="hPreset"><span class="num">03</span>Préréglage</h2><a class="btn btn-ghost btn-mini" id="openStudio" href="/">Tous les réglages</a></div>
         <div class="field" id="pVarField" hidden><label>Variante</label><div class="chips" id="pVar"></div></div>
         <div class="field"><label>Ambiance</label><div class="chips" id="pMood"></div></div>
@@ -79,7 +83,7 @@
     <nav class="style-next" aria-label="Autres styles" id="sNext"></nav>
   </main>
   <footer class="site-foot"><span>Fiche tirée de <code>docs/STYLES.md</code></span><a href="/styles">Tous les styles</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></footer>
-  <script type="module" src="/js/style.js?v=1.20.1"></script>
-  <script type="module" src="/js/stylepublish.js?v=1.20.1"></script>
+  <script type="module" src="/js/style.js?v=1.20.3"></script>
+  <script type="module" src="/js/stylepublish.js?v=1.20.3"></script>
 </body>
 </html>

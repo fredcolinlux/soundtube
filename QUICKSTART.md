@@ -1,11 +1,11 @@
-# Quick start — soundtube 1.20.2
+# Quick start — soundtube 1.20.3
 
 Three steps. Nothing else is required.
 
 ## 1. Install
 
 ```bash
-tar xzf soundtube-1.20.2-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.20.3-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # restart the soundtube service
 ```
 
@@ -26,3 +26,5 @@ No OTP at setup — two-factor stays optional later under **My profile** (TOTP Q
 Home, styles and legal pages stay public.
 
 Registration: closed by default (`Admin → Open registration`).
+
+Anonymous **Styles** pages offer a **15 s audio demo** (not stored in the library, 3 / 10 min cap). Sign in to generate full tracks.

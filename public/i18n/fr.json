@@ -828,5 +828,20 @@
   "profile.totpQrAlt": "QR code TOTP à scanner",
   "profile.totpConfirm": "Confirmer et activer",
   "profile.recoveryHint": "Chaque code ne peut servir qu’une fois si tu perds ton application. Télécharge-les ou copie-les maintenant.",
-  "profile.recoveryDownload": "Télécharger"
+  "profile.recoveryDownload": "Télécharger",
+  "style.demoBanner": "Aperçu gratuit : 15 secondes max, audio seul. Connectez-vous pour créer des morceaux complets.",
+  "style.demoCta": "Connectez-vous pour créer des morceaux complets",
+  "style.demoGenerate": "Écouter un aperçu (15 s)",
+  "style.demoOnly": "Démo · 15 s",
+  "style.demoReady": "Aperçu prêt : {title}",
+  "style.demoQueued": "Aperçu en file…",
+  "err404.title": "soundtube — page introuvable",
+  "err404.h1": "Ce morceau s’est perdu dans le silence",
+  "err404.lead": "La page demandée n’existe pas — ou tu n’y as pas accès depuis ici.",
+  "err403.title": "soundtube — accès refusé",
+  "err403.h1": "Accès refusé",
+  "err403.lead": "Tu n’as pas la permission d’ouvrir cette ressource.",
+  "err500.title": "soundtube — erreur serveur",
+  "err500.h1": "Le moteur a sauté une mesure",
+  "err500.lead": "Une erreur interne s’est produite. Réessaie dans un instant."
 }

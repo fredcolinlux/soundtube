@@ -43,6 +43,8 @@ import { signPayload, verifySigned } from './security/crypto.js';
 import { setSecretCodec } from './publish.js';
 import { maybeSignUrls } from './auth/bootstrap.js';
 import { msg as i18nMsg } from './i18n-server.js';
+import { DemoQueue, DEMO_MAX_SEC } from './demo.js';
+import { sendErrorPage, wantsHtml } from './http-errors.js';
 
 const store = openStore(config.dataDir);
 const auth = new AuthStore(config.dataDir);
@@ -51,6 +53,10 @@ const tracksDir = path.join(config.dataDir, 'tracks');
 const renderNodes = new RenderNodes({ dataDir: config.dataDir, localSlots: config.localVideoSlots });
 const jobs = new JobQueue(store, tracksDir, renderNodes); // v1.16.0 : la musique peut aussi partir sur un PC de rendu
 const videos = new VideoQueue(store, tracksDir, renderNodes);
+const demo = new DemoQueue({
+  dir: path.join(config.dataDir, 'demo'),
+  isMainBusy: () => jobs.localRunning > 0 || jobs.pending > 0,
+});
 renderNodes.onChange(() => jobs.pump());
 /** (Re)crée la miniature d'un morceau terminé. */
 async function refreshThumb(t, resolution) {
@@ -165,6 +171,10 @@ const AUTH_ALLOW = [
   { method: 'GET', path: '/tracks/*' },
   { method: 'GET', path: '/media/*' },
   { method: 'GET', path: '/youtube/base.jpg' },
+  // Démo styles (anonyme) : prévisualisation ≤ 15 s
+  { method: 'POST', path: '/demo/generate' },
+  { method: 'GET', path: '/demo/jobs/*' },
+  { method: 'GET', path: '/demo/audio/*' },
 ];
 app.use('/api', (req, res, next) => {
   // Admin API : LAN + session admin (pas d’anonyme LAN)
@@ -301,16 +311,41 @@ app.post('/api/check-duplicates', wrap((req, res) => {
 
 app.post('/api/generate', wrap((req, res) => {
   const body = req.body || {};
-  if (!req.clientMeta?.local) {
-    if (!req.authUser) return res.status(401).json({ error: i18nMsg(req, 'authRequired') });
-    if (req.authUser.role === 'viewer') return res.status(403).json({ error: i18nMsg(req, 'readOnly') });
-    const qerr = auth.checkQuota(req.authUser, body.duration != null ? +body.duration : 90);
-    if (qerr) return res.status(429).json({ error: qerr });
-  }
-  const ownerId = req.authUser?.id || (req.clientMeta?.local ? 'local' : null);
-  const t = createJob(body, null, { ...(ownerId ? { ownerId } : {}) });
-  if (req.authUser) auth.bumpQuota(req.authUser);
+  if (!req.authUser) return res.status(401).json({ error: i18nMsg(req, 'authRequired') });
+  if (req.authUser.role === 'viewer') return res.status(403).json({ error: i18nMsg(req, 'readOnly') });
+  const qerr = auth.checkQuota(req.authUser, body.duration != null ? +body.duration : 90);
+  if (qerr) return res.status(429).json({ error: qerr });
+  const t = createJob(body, null, { ownerId: req.authUser.id });
+  auth.bumpQuota(req.authUser);
   res.status(202).json(maybeSignUrls(auth, req, t, present));
+}));
+
+/* ---- Démo anonyme (page Styles) : audio ≤ 15 s, hors bibliothèque ---- */
+app.post('/api/demo/generate', wrap((req, res) => {
+  if (req.authUser) {
+    // Connecté → utiliser le studio / generate normal
+    return res.status(400).json({ error: i18nMsg(req, 'demoUseFull') });
+  }
+  const body = req.body || {};
+  const j = demo.enqueue({
+    style: body.style,
+    mood: body.mood,
+    adv: body.adv,
+    seed: body.seed,
+    ip: req.clientMeta?.ip || req.ip,
+  });
+  res.status(202).json(j);
+}));
+app.get('/api/demo/jobs/:id', wrap((req, res) => {
+  const j = demo.get(req.params.id);
+  if (!j) return res.status(404).json({ error: i18nMsg(req, 'jobNotFound') });
+  res.json(demo.publicJob(j));
+}));
+app.get('/api/demo/audio/:token', wrap((req, res) => {
+  const a = demo.resolveAudio(req.params.token);
+  if (!a) return res.status(404).json({ error: i18nMsg(req, 'fileUnavailable') });
+  res.set({ 'Cache-Control': 'no-store', 'Content-Type': a.mime });
+  res.sendFile(a.file);
 }));
 
 app.get('/api/jobs/:id', wrap((req, res) => {
@@ -828,7 +863,10 @@ app.get('/api/styles/:id', (req, res) => {
   res.json({ ...styleCard(id), html: d?.html || '', facts: d?.facts || [], neighbours: STYLE_IDS().filter((x) => x !== id) });
 });
 // Pages de l'interface (v1.10.0) : /styles/<style> → page de style (le style est lu dans l'adresse par le navigateur)
-app.get('/styles/:id', (req, res, next) => (STYLE_IDS().includes(req.params.id) ? res.sendFile(path.join(config.publicDir, 'style.html'), { headers: { 'Cache-Control': 'no-cache' } }) : res.status(404).sendFile(path.join(config.publicDir, 'style.html'), { headers: { 'Cache-Control': 'no-cache' } })));
+app.get('/styles/:id', (req, res) => {
+  if (!STYLE_IDS().includes(req.params.id)) return sendErrorPage(res, 404);
+  res.sendFile(path.join(config.publicDir, 'style.html'), { headers: { 'Cache-Control': 'no-cache' } });
+});
 
 app.get('/api/openapi.json', (req, res) => res.json(openapi));
 const swaggerSetup = swaggerUi.setup(openapi, { customSiteTitle: 'soundtube — API', customCss: '.topbar{display:none}' });
@@ -900,12 +938,19 @@ app.put('/api/ui/lang', (req, res) => {
 app.use(express.static(config.publicDir, { extensions: ['html'], maxAge: '1h', setHeaders: (res, p) => { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate'); } }));
 
 app.use('/api', (req, res) => res.status(404).json({ error: i18nMsg(req, 'unknownRoute') }));
+// Pages inconnues → 404 brandée
+app.use((req, res) => {
+  if (wantsHtml(req)) return sendErrorPage(res, 404);
+  res.status(404).json({ error: i18nMsg(req, 'unknownRoute') });
+});
 app.use((err, req, res, next) => {
   const status = err.status || (err.type === 'entity.parse.failed' ? 400 : 500);
   if (status >= 500) console.error(err);
-  const errMsg = status >= 500 ? i18nMsg(req, 'internal') : (err.message || i18nMsg(req, 'internal'));
-  if (req.accepts('html') && !req.path.startsWith('/api/')) {
-    return res.status(status).type('html').send(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${status}</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/app.css"></head><body class="wrap"><h1>${status}</h1><p class="muted">${errMsg.replace(/[<>&]/g,'')}</p><p><a href="/">Accueil</a></p></body></html>`);
+  const key = err.message && /^(demoRate|demoBusy|demoUseFull|unknownStyle|demoNoAudio)$/.test(err.message) ? err.message : null;
+  const errMsg = status >= 500 ? i18nMsg(req, 'internal') : (key ? i18nMsg(req, key) : (err.message || i18nMsg(req, 'internal')));
+  if (wantsHtml(req) && !req.path.startsWith('/api/')) {
+    const page = status === 403 ? 403 : status >= 500 ? 500 : (status === 404 ? 404 : 0);
+    if (page) return sendErrorPage(res, page);
   }
   res.status(status).json({ error: errMsg });
 });

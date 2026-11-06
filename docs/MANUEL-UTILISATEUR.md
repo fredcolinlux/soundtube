@@ -67,3 +67,6 @@ Dans **Admin**, configurez les sources RSS publiques (liste par défaut fournie)
 
 Dans **Mon profil**, tu peux activer un TOTP optionnel : un **QR code** (SVG servi par `/api/me/totp/qr.svg`, sans service externe) + secret base32, puis confirmation par code. Les codes de récupération s’affichent **une seule fois** (téléchargement possible). Les passkeys restent optionnelles.
 
+## Démo Styles (sans compte)
+
+Sans connexion, chaque page de style propose un **aperçu de 15 secondes** (audio seul). Les fichiers démo ne rejoignent pas la bibliothèque et sont effacés automatiquement. Le bouton **Connectez-vous pour créer des morceaux complets** mène au login.
