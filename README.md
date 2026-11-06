@@ -1,103 +1,148 @@
-# soundtube
+<p align="center">
+  <img src="docs/screenshots/hero.jpg" alt="soundtube — self-hosted algorithmic instrumental music" width="100%">
+</p>
 
-Self-hosted platform for **algorithmic instrumental music** (no vocals).
-Each track is composed with music theory (scales, chord progressions, Markov melodies,
-bass, drums, intro / verse / chorus / bridge / outro) then **synthesised in real time**.
+<p align="center">
+  <strong>soundtube</strong> — self-hosted platform for <em>algorithmic instrumental music</em> (no vocals).<br/>
+  Compose with theory · synthesise in real time · optional Styles demo · studio, library &amp; admin — <strong>FR &amp; EN</strong>
+</p>
 
-| | |
-|---|---|
-| **Version** | **1.20.0** |
-| **UI languages** | French and English (header **FR \| EN** switch) |
-| **Licence** | See `LICENSE` (all rights reserved) |
-| **Engine default** | 21 (harmony-aware); fingerprint `696de0f4125a` |
+<p align="center">
+  <a href="https://github.com/fredcolinlux/soundtube/releases/tag/v1.20.4"><img alt="release" src="https://img.shields.io/github/v/release/fredcolinlux/soundtube?style=flat-square&color=5ef2c9"></a>
+  <img alt="node" src="https://img.shields.io/badge/node-%3E%3D20-7dd3fc?style=flat-square">
+  <img alt="license" src="https://img.shields.io/badge/license-ARR-c792ff?style=flat-square">
+  <img alt="i18n" src="https://img.shields.io/badge/UI-FR%20%7C%20EN-f3c97a?style=flat-square">
+</p>
 
-**French:** [README.fr.md](README.fr.md) · [docs/MANUEL-UTILISATEUR.md](docs/MANUEL-UTILISATEUR.md) · [docs/MANUEL-INSTALLATION.md](docs/MANUEL-INSTALLATION.md) · [docs/EXPLOITATION.md](docs/EXPLOITATION.md)
+<p align="center">
+  <a href="README.fr.md">Français</a> ·
+  <a href="QUICKSTART.md">Quick start</a> ·
+  <a href="docs/en/USER-MANUAL.md">User manual</a> ·
+  <a href="docs/en/INSTALL-MANUAL.md">Install</a> ·
+  <a href="docs/SECURITY.md">Security</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
 
-**English manuals:** [docs/en/USER-MANUAL.md](docs/en/USER-MANUAL.md) · [docs/en/INSTALL-MANUAL.md](docs/en/INSTALL-MANUAL.md) · [docs/en/OPERATIONS.md](docs/en/OPERATIONS.md)
+<p align="center">
+  <img src="docs/screenshots/preview.gif" alt="soundtube UI preview" width="800">
+</p>
 
-**Doc index:** [docs/README.md](docs/README.md) · [QUICKSTART.md](QUICKSTART.md) · [CHANGELOG.md](CHANGELOG.md)
+---
 
-## Quick start (Debian 13 LXC / bare metal)
+## Why soundtube?
 
-The control tower (**CT**) is meant to run **as root** (typical Proxmox LXC). Do **not** wrap the installer in `sudo` when you are already root:
+Most “AI music” tools are SaaS black boxes. **soundtube** runs on *your* hardware:
 
-```bash
-tar -xzf soundtube-1.20.0-standalone.tar.gz
-cd soundtube-1.20.0
-./install.sh --port 8080
-# equivalent: ./deploy/install.sh --port 8080
-```
+- **Procedural engine** — scales, progressions, Markov melodies, drums, intro→outro forms, then real-time synthesis (no sample packs of commercial machines required).
+- **Beautiful UI** — home, Styles, studio, library, optional YouTube publish, Admin — with a **FR | EN** switch.
+- **Internet-ready auth** — sessions, CSRF, optional TOTP (QR enrolment) & passkeys, LAN-only Admin.
+- **Anonymous Styles demo** — visitors get a **15 s audio preview** (listen only; no download, publish, or library). Sign in for full tracks.
+- **Self-hosted** — Debian LXC / bare metal, Nginx Proxy Manager friendly, WebGuardian-minded headers.
 
-Open `http://<host>:8080/`. Switch the interface with **FR | EN** in the top bar
-(`localStorage` + cookie `soundtube_ui_lang`; default from `Accept-Language`; fallback French).
-UI language is independent of YouTube title / description / tag language.
+## Feature highlights
 
-Standalone packages also ship render agents under `dist/`:
+| Area | What you get |
+|------|----------------|
+| **Studio** | Full generation: duration presets, advanced tweaks, stems/MIDI, pack ZIP, video nodes |
+| **Styles** | Rich style pages + **15 s demo** when signed out |
+| **Library** | Browse, play, regenerate, export (signed-in) |
+| **Auth** | Setup wizard, login, optional open registration, profile 2FA |
+| **Admin** | Security (proxy/domain confirm), users, nodes, AI director, trends — **LAN + admin only** |
+| **i18n** | 800+ UI keys, Mentions / Privacy / Terms FR+EN |
 
-- `dist/soundtube-node-agent-1.20.0-windows.zip`
-- `dist/soundtube-node-agent-1.20.0-macos.zip`
+## Gallery
 
-## Features
+| Home | Styles demo (anon) | Studio |
+|:---:|:---:|:---:|
+| ![Home](docs/screenshots/home.jpg) | ![Styles demo](docs/screenshots/styles-demo.jpg) | ![Studio](docs/screenshots/studio.jpg) |
 
-- **11 instrumental styles:** Lo-fi, Ambient, Synthwave, Deep House, French Touch, Techno, Cinematic, Chiptune, Trap, Hip-Hop, Drum & Bass
-- Generative engine (WAV / MP3 / MIDI + per-instrument MIDI ZIP)
-- Long DJ mixes (15 min–4 h), track split, YouTube video (720p / 1080p / 4K)
-- Complete ZIP pack (video, mix, stems, MIDI, manifest)
-- Optional art director (Ollama) + trend watch + taste profile context
-- Distributed render nodes (Windows NVENC, macOS VideoToolbox, CT fallback)
-- Admin: nodes, routing, AI PC, YouTube channels, media library, director context
-- Lightweight i18n (JSON locales, no heavy framework)
+| Library | Admin | Login |
+|:---:|:---:|:---:|
+| ![Library](docs/screenshots/library.jpg) | ![Admin](docs/screenshots/admin.jpg) | ![Login](docs/screenshots/login.jpg) |
 
+| 404 | TOTP enrolment | Mobile demo |
+|:---:|:---:|:---:|
+| ![404](docs/screenshots/error-404.jpg) | ![2FA](docs/screenshots/totp-2fa.jpg) | ![Mobile](docs/screenshots/styles-demo-mobile.jpg) |
 
-
-## What's new in v1.20.0
-
-- Separate Admin Ollama settings for trend watch (optional URL, model from `/api/tags`, Test button, fall back to director with a notice)
-- Autonomous public RSS crawl (optional DuckDuckGo HTML discovery off by default); SSRF-safe; fenced untrusted content in the watch prompt
-- Director path unchanged; engine fingerprint `696de0f4125a`
-
-## What's new in v1.18.0
-
-- UI i18n French / English; English manuals under `docs/en/`
-
-## Nouveautés v1.17.0 — macOS Apple Silicon render node
-
-Historical note (French heading kept for release-test compatibility): official macOS arm64 agent with VideoToolbox; see [docs/NODES.md](docs/NODES.md) § 6bis and [README.fr.md](README.fr.md).
-
-## Sample bank
-
-The public repository ships `assets/samples/` (FLAC, ~120 MB, CC0 + Salamander **CC BY 3.0**).  
-Licences and attributions: [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md).  
-**Not included:** `jrhodes/` (jRhodes3d, CC BY-NC 4.0) — Rhodes falls back to synthesis.  
-`./install.sh` installs the bank under `/opt/soundtube/app/assets/samples`; `GET /api/health` → `samples: true`.
-
-
-## AI models + trend watch (v1.20.0)
-
-Admin › **03 AI models**: Director and Watch side by side; `?v=` cache-bust. 
-
-Separate Ollama **watch model** (falls back to the director) and autonomous RSS crawl (optional DuckDuckGo, SSRF-safe). See [docs/en/OPERATIONS.md](docs/en/OPERATIONS.md).
-## i18n (v1.20.0)
-
-| Piece | Path / API |
-|---|---|
-| Locales | `public/i18n/fr.json`, `public/i18n/en.json` (identical key sets) |
-| Client | `public/js/i18n.js` |
-| API | `GET` / `PUT` `/api/ui/lang` |
-| YouTube content lang | `GET` / `PUT` `/api/youtube/lang` — **unchanged**, separate from UI lang |
-
-## Tests
+## Quick start (3 steps)
 
 ```bash
-npm test          # includes test/v1180.js (i18n + engine fingerprint)
+# 1) Extract the standalone release
+tar -xzf soundtube-1.20.4-standalone.tar.gz
+cd soundtube
+
+# 2) Install (Debian 13 LXC / bare metal — as root)
+./deploy/install.sh --port 8080
+
+# 3) Open the LAN setup wizard
+#    http://<host>:8080/setup   → username + password only (no OTP nag)
 ```
 
-## Further reading
+Behind **Nginx Proxy Manager**: point the Proxy Host at the CT, paste `deploy/npm-admin-block.conf`, then confirm proxy + domain in **Admin → Security**.
 
-Styles · Theory · Nodes · YouTube · Pack · Director · API — see [docs/README.md](docs/README.md).  
-Interactive OpenAPI UI: `/docs` when the server is running (`/api/openapi.json`).
+**Upgrade patch** (flat archive):
 
+```bash
+tar xzf soundtube-1.20.4-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+# restart the soundtube service
+```
 
-## Sécurité / Internet (v1.20.0)
+More detail: [QUICKSTART.md](QUICKSTART.md) · [docs/en/INSTALL-MANUAL.md](docs/en/INSTALL-MANUAL.md)
 
-Voir [docs/SECURITY.md](docs/SECURITY.md) et [docs/EXPOSITION.md](docs/EXPOSITION.md).
+## Architecture
+
+```mermaid
+flowchart LR
+  Visitor -->|Styles demo 15s| DemoQueue
+  User -->|Studio / Library| API
+  Admin -->|LAN + session| AdminAPI
+  API --> JobQueue
+  DemoQueue -->|audio only| DemoDir[(data/demo purge 5min)]
+  JobQueue --> Worker[Render worker]
+  Worker --> Tracks[(data/tracks)]
+  JobQueue -.->|optional| Node[Render PC agent]
+  API --> Auth[AuthStore sessions CSRF TOTP]
+```
+
+## Manuals
+
+| | Français | English |
+|--|----------|---------|
+| User | [MANUEL-UTILISATEUR](docs/MANUEL-UTILISATEUR.md) | [USER-MANUAL](docs/en/USER-MANUAL.md) |
+| Install | [MANUEL-INSTALLATION](docs/MANUEL-INSTALLATION.md) | [INSTALL-MANUAL](docs/en/INSTALL-MANUAL.md) |
+| Operations | [EXPLOITATION](docs/EXPLOITATION.md) | [OPERATIONS](docs/en/OPERATIONS.md) |
+| Security / exposure | [SECURITY](docs/SECURITY.md) · [EXPOSITION](docs/EXPOSITION.md) | [en/SECURITY](docs/en/SECURITY.md) · [en/EXPOSITION](docs/en/EXPOSITION.md) |
+
+## Security (short)
+
+- Studio + generation APIs require **login for everyone** (no LAN bypass).
+- **Admin** = LAN **and** admin session; off-LAN → branded **404**.
+- Optional **TOTP** with server-side SVG QR (`/api/me/totp/qr.svg`), recovery codes once.
+- Styles **demo**: 15 s cap, rate-limit, preview-only (`401` on download/publish/library for demo ids).
+- CSP / COOP / COEP / HSTS-ready headers; secrets sealed at rest.
+
+## FAQ
+
+**Do I need GPU?**  
+No for short CT renders. Optional Windows/macOS **render nodes** help for long tracks / video.
+
+**Is the Styles demo free for visitors?**  
+Yes: **15 seconds, audio only, listen-only**. No YouTube, ZIP, or library save. Sign in for full tracks.
+
+**Can Admin be opened from the internet?**  
+No by design — returns the branded 404. Use LAN / VPN / Tailscale.
+
+**OTP at first setup?**  
+No. Setup is username + password. 2FA is optional later under **My profile**.
+
+**Licence?**  
+All rights reserved — see [`LICENSE`](LICENSE).
+
+## Releases
+
+Download **standalone** and **patch** archives from  
+➡️ **[GitHub Releases](https://github.com/fredcolinlux/soundtube/releases)**
+
+```
+soundtube @ v1.20.4
+```
