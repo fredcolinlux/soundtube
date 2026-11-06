@@ -1,5 +1,17 @@
 # Journal des versions
 
+## 1.21.1 — 2026-11-06
+
+### Safe updates
+- `scripts/update.sh` (root): verifies every flat `.tar.gz` **before** `systemctl stop`; backup to `/var/backups/soundtube/app-<date>.tar.gz`; extract in order; `chown`; `node --check`; **always** restarts (trap), restores backup if extract failed; waits for `/healthz` (20s) and prints version; on failure dumps `journalctl -n 40`.
+- `GET /healthz` (+ `/health`) — liveness JSON `{ ok, version }` (no auth).
+
+### API docs — LAN only
+- Nav/footer « API » links hidden when `isLocal` is false (`/api/me`, `/api/site`, `/api/auth/status`).
+- `/docs`, `/api/docs`, `/api/openapi.json` → styled **404** from the internet; API routes themselves still work with Bearer token.
+- `test/v1211.js`.
+
+
 ## 1.21.0 — 2026-11-06
 
 ### Social — Facebook Page + X/Twitter

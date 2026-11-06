@@ -1,4 +1,4 @@
-// v1.21.0 — libellés EN des réglages avancés (API /api/options).
+// v1.21.1 — libellés EN des réglages avancés (API /api/options).
 export const ADV_LABEL_EN = {
   energy: 'Energy', complexity: 'Complexity', swing: 'Swing', brightness: 'Brightness',
   space: 'Space (reverb)', width: 'Stereo width', ambience: 'Background sound',

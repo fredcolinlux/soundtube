@@ -1,12 +1,12 @@
-<!-- v1.21.0 routes: / home, /studio studio -->
-# Quick start — soundtube 1.20.4
+<!-- v1.21.1 routes: / home, /studio studio -->
+# Quick start — soundtube 1.21.1
 
 Three steps. Nothing else is required.
 
 ## 1. Install
 
 ```bash
-tar xzf soundtube-1.20.4-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.21.1-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # restart the soundtube service
 ```
 
@@ -29,3 +29,18 @@ Home, styles and legal pages stay public.
 Registration: closed by default (`Admin → Open registration`).
 
 Anonymous **Styles** pages offer a **15 s audio demo** (not stored in the library, 3 / 10 min cap). Sign in to generate full tracks.
+
+
+## Update (flat patch)
+
+Use the bundled script (**root**, no `sudo` inside the command):
+
+```bash
+/opt/soundtube/app/scripts/update.sh /path/soundtube-1.21.1-patch.tar.gz
+# or several patches in order:
+/opt/soundtube/app/scripts/update.sh /path/patch-a.tar.gz /path/patch-b.tar.gz
+```
+
+It **verifies** every archive (gzip, tar, **flat** layout — no `soundtube/` prefix) **before** stopping the service, backs up to `/var/backups/soundtube/`, extracts, runs `node --check`, **always** restarts (restores the backup if extraction failed), then waits for `http://127.0.0.1:8080/healthz`.
+
+> Do not hand-roll `systemctl stop && tar … && systemctl start`: if `tar` fails, the service stays down (502).

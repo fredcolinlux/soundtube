@@ -1,4 +1,4 @@
-// v1.21.0 — Admin › Réseaux sociaux
+// v1.21.1 — Admin › Réseaux sociaux
 import { apiFetch } from './csrf.js';
 import { t } from './i18n.js';
 const $ = (s) => document.querySelector(s);

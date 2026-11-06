@@ -1,4 +1,4 @@
-import { bootSite, mountBackground } from './site.js?v=1.21.0';
+import { bootSite, mountBackground } from './site.js?v=1.21.1';
 import { applyDom } from './i18n.js';
 
 mountBackground();

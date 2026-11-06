@@ -1,12 +1,12 @@
-<!-- v1.21.0 routes: / home, /studio studio -->
-# Démarrage rapide — soundtube 1.20.4
+<!-- v1.21.1 routes: / home, /studio studio -->
+# Démarrage rapide — soundtube 1.21.1
 
 Trois étapes. Rien d’autre n’est obligatoire.
 
 ## 1. Installer
 
 ```bash
-tar xzf soundtube-1.20.4-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.21.1-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # redémarre le service soundtube
 ```
 
@@ -29,3 +29,20 @@ Accueil, styles, mentions légales restent publics.
 Inscriptions : fermées par défaut (`Admin → Inscriptions ouvertes`).
 
 Les pages **Styles** sans compte proposent une **démo audio de 15 s** (hors bibliothèque, limite 3 / 10 min). Connecte-toi pour générer des morceaux complets.
+
+
+## Mise à jour (patch plat)
+
+Utilise le script inclus (en **root**, sans `sudo` dans la commande) :
+
+```bash
+# depuis n’importe où, avec le script déjà déployé :
+/opt/soundtube/app/scripts/update.sh /chemin/soundtube-1.21.1-patch.tar.gz
+
+# ou plusieurs patches dans l’ordre :
+/opt/soundtube/app/scripts/update.sh /chemin/patch-a.tar.gz /chemin/patch-b.tar.gz
+```
+
+Le script **vérifie** chaque archive (gzip, tar, layout **plat** sans préfixe `soundtube/`) **avant** d’arrêter le service, crée une sauvegarde dans `/var/backups/soundtube/`, applique, contrôle la syntaxe Node, redémarre **toujours** (reprise de la sauvegarde si l’extraction a échoué), puis attend `http://127.0.0.1:8080/healthz`.
+
+> Ne plus enchaîner à la main `systemctl stop && tar … && systemctl start` : si le `tar` échoue, le service reste arrêté (502).

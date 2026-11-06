@@ -3,11 +3,11 @@ import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang, syncLangSwitchers } from './i18n.js';
 import { mountSiteFooter } from './sitefoot.js';
 const i18n = t; // alias: track locals often shadow `t`
-import { apiFetch, refreshAuth } from './csrf.js';
+import { apiFetch, refreshAuth, isLocal } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.21.0';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.21.0';
-import { initPubPanel, loadPub, publishHTML, packHTML, socialHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.21.0';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.21.1';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.21.1';
+import { initPubPanel, loadPub, publishHTML, packHTML, socialHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.21.1';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
@@ -996,6 +996,17 @@ addEventListener('resize', () => { lastProg = -1; renderLibrary(); });
 async function boot() {
   await initI18n();
 await refreshAuth();
+// v1.21.1 — hide API docs links when not LAN
+if (!isLocal()) {
+  for (const a of document.querySelectorAll('a[href="/docs"], a[href="/api/docs"]')) {
+    const prev = a.previousSibling;
+    if (prev && prev.nodeType === 3 && /[·•|]/.test(prev.textContent)) prev.textContent = prev.textContent.replace(/\s*[·•|]\s*$/, '');
+    const next = a.nextSibling;
+    if (next && next.nodeType === 3 && /^\s*[·•|]/.test(next.textContent)) next.textContent = next.textContent.replace(/^\s*[·•|]\s*/, '');
+    a.remove();
+  }
+}
+
 await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
   mountLangSwitcher(document.querySelector('.topbar'));
   applyDom(document);
@@ -1016,7 +1027,7 @@ await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
     const q = new URLSearchParams(location.search), tid = q.get('track');
     const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-    if (q.get('tour') === '1') import('./tour.js?v=1.21.0').then((m) => m.startTour());
+    if (q.get('tour') === '1') import('./tour.js?v=1.21.1').then((m) => m.startTour());
   }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
 }
 function updateStatus() {

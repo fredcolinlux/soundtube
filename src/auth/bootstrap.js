@@ -12,6 +12,7 @@ const PUBLIC_ALLOW = [
   { method: 'GET', path: '/api/site' },
   { method: 'GET', path: '/api/health' },
   { method: 'GET', path: '/api/auth/status' },
+  { method: 'GET', path: '/api/me' },
   { method: 'POST', path: '/api/auth/login' },
   { method: 'POST', path: '/api/auth/setup' },
   { method: 'POST', path: '/api/auth/2fa' },

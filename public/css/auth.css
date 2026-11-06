@@ -33,7 +33,7 @@
 .totp-recovery { margin-top:1rem; padding: .8rem; border:1px solid color-mix(in oklab, var(--accent, #7dd3fc) 35%, transparent); border-radius:12px; }
 .totp-recovery-codes { white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:.95rem; margin:.5rem 0; }
 
-/* v1.21.0 — full site chrome on auth / error pages */
+/* v1.21.1 — full site chrome on auth / error pages */
 body.site.auth-body,
 body.site.err-body {
   display: flex;

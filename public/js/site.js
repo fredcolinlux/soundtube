@@ -3,9 +3,9 @@
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
 import { mountSiteFooter } from './sitefoot.js';
-import { apiFetch, refreshAuth, getAuthUser } from './csrf.js';
+import { apiFetch, refreshAuth, getAuthUser, isLocal } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
-export { t, getUiLang, refreshAuth, getAuthUser, onLangChange };
+export { t, getUiLang, refreshAuth, getAuthUser, isLocal, onLangChange };
 
 export const $ = (q, el = document) => el.querySelector(q);
 export const $$ = (q, el = document) => [...el.querySelectorAll(q)];
@@ -50,7 +50,7 @@ export function mountTopbar(current) {
       <span>sound<em>tube</em></span></a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span><b class="sr">${t('nav.menu')}</b></button>
     <nav id="siteNav">${NAV_ITEMS().map(([href, l]) => `<a href="${href}"${href === current || (href === '/styles' && current.startsWith('/styles')) ? ' aria-current="page"' : ''}>${l}</a>`).join('')}
-      <a href="/docs" target="_blank" rel="noopener">${t('nav.api')}</a></nav>
+      ${isLocal() ? `<a href="/docs" target="_blank" rel="noopener">${t('nav.api')}</a>` : ''}</nav>
     <span class="top-auth" id="topAuth"></span>
     <a class="btn btn-primary btn-mini nav-cta" href="/studio">${t('nav.openStudio')}</a>`;
     const tog = $('.nav-toggle', h); tog.addEventListener('click', () => { const o = h.classList.toggle('open'); tog.setAttribute('aria-expanded', String(o)); });
@@ -62,15 +62,30 @@ export function mountTopbar(current) {
   onLangChange(() => { paint(); applyDom(document); });
   return h;
 }
-export async function bootI18n() { await initI18n(); applyDom(document); await mountSiteFooter(); }
+export async function bootI18n() { await initI18n(); await refreshAuth().catch(() => {}); applyDom(document); hideNonLocalApiLinks(document); await mountSiteFooter(); }
 /** Initialise i18n puis la barre du haut (pages Accueil / Démarrer / Styles). */
 export async function bootSite(current) {
   await initI18n();
+  await refreshAuth().catch(() => {});
   const h = mountTopbar(current);
   applyDom(document);
+  hideNonLocalApiLinks(document);
   await mountSiteFooter();
   return h;
 }
+
+/** Retire les liens docs/API du DOM hors LAN (complément du topbar). */
+export function hideNonLocalApiLinks(root = document) {
+  if (isLocal()) return;
+  for (const a of root.querySelectorAll('a[href="/docs"], a[href="/api/docs"], a[href="/api/openapi.json"]')) {
+    const prev = a.previousSibling;
+    if (prev && prev.nodeType === 3 && /[·•|]/.test(prev.textContent)) prev.textContent = prev.textContent.replace(/\s*[·•|]\s*$/, '');
+    const next = a.nextSibling;
+    if (next && next.nodeType === 3 && /^\s*[·•|]/.test(next.textContent)) next.textContent = next.textContent.replace(/^\s*[·•|]\s*/, '');
+    a.remove();
+  }
+}
+
 
 /** Fond animé (aurore + oscilloscope du studio), teinté par style si `style` est donné. */
 export function mountBackground(style) {

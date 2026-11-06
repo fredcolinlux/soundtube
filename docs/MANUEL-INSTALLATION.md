@@ -66,12 +66,23 @@ Aucune clé API n’est requise pour le crawl RSS par défaut. Optionnel : clé 
 Les archives **patch** et **complet** v1.19.2+ sont à **plat** (pas de préfixe `soundtube/`).
 
 ```bash
-systemctl stop soundtube
-cd /opt/soundtube/app
-tar xzf /chemin/soundtube-1.19.2-patch.tar.gz --no-same-owner
-# vérifie que les fichiers sont bien ICI (pas dans app/soundtube/) :
-test -f public/admin.html && grep -q aiWatchCard public/admin.html && echo OK || echo ÉCHEC_CHEMIN
-systemctl start soundtube
+See update script below.
+
+## Mise à jour (patch plat)
+
+Utilise le script inclus (en **root**, sans `sudo` dans la commande) :
+
+```bash
+# depuis n’importe où, avec le script déjà déployé :
+/opt/soundtube/app/scripts/update.sh /chemin/soundtube-1.21.1-patch.tar.gz
+
+# ou plusieurs patches dans l’ordre :
+/opt/soundtube/app/scripts/update.sh /chemin/patch-a.tar.gz /chemin/patch-b.tar.gz
+```
+
+Le script **vérifie** chaque archive (gzip, tar, layout **plat** sans préfixe `soundtube/`) **avant** d’arrêter le service, crée une sauvegarde dans `/var/backups/soundtube/`, applique, contrôle la syntaxe Node, redémarre **toujours** (reprise de la sauvegarde si l’extraction a échoué), puis attend `http://127.0.0.1:8080/healthz`.
+
+> Ne plus enchaîner à la main `systemctl stop && tar … && systemctl start` : si le `tar` échoue, le service reste arrêté (502).
 curl -s localhost:8080/api/health
 ```
 

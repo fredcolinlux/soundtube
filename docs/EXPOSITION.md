@@ -43,3 +43,6 @@ Voir `deploy/fail2ban/soundtube-auth.conf`. Oriente `logpath` vers la journalisa
 - Quotas + file équitable : protège le PC GPU.
 - Fichiers : liens signés hors LAN.
 - Le dépôt GitHub public ne doit contenir ni domaine perso, ni IP, ni secrets.
+
+### Documentation API (v1.21.1)
+`/docs`, `/api/docs` et `/api/openapi.json` sont **réservés au LAN** (404 stylée depuis internet). L’API elle-même reste utilisable à distance avec un jeton Bearer.

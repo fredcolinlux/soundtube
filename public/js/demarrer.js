@@ -1,4 +1,4 @@
-import { $, $$, esc, bootSite, mountBackground, reveal, colorOf, t, onLangChange } from './site.js?v=1.21.0';
+import { $, $$, esc, bootSite, mountBackground, reveal, colorOf, t, onLangChange } from './site.js?v=1.21.1';
 
 mountBackground(); await bootSite('/demarrer');
 function buildSteps() {
