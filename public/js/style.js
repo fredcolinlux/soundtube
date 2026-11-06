@@ -1,5 +1,5 @@
 // v1.10.0+ : page d'un style — démo anonyme 15 s (v1.20.3) ou génération complète si connecté.
-import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser } from './site.js?v=1.20.4';
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser, onLangChange } from './site.js?v=1.20.5';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
 await bootSite('/styles/' + id);
@@ -36,8 +36,8 @@ function renderPreset() {
     const cta = $('#demoLoginCta'); if (cta) cta.href = '/login?next=' + encodeURIComponent(location.pathname);
   } else {
     const n = Object.keys(tweaks()).length;
-    $('#pTweaks').textContent = n ? `${n} retouche${n > 1 ? 's' : ''} mémorisée${n > 1 ? 's' : ''} pour ce style (page Studio → Avancé) : utilisée${n > 1 ? 's' : ''} aussi ici.` : 'Valeurs du style par défaut ; les retouches faites dans le studio (Avancé) sont reprises ici.';
-    $('#openStudio').href = `/?style=${encodeURIComponent(id)}#settings`;
+    $('#pTweaks').textContent = n ? t(n > 1 ? 'style.tweaks_plural' : 'style.tweaks', { n }) : t('style.tweaksNone');
+    $('#openStudio').href = `/studio?style=${encodeURIComponent(id)}#settings`;
   }
 }
 $('#preset').addEventListener('click', (e) => {
@@ -134,10 +134,10 @@ $('#sLib').addEventListener('click', async (e) => {
 });
 $('#sMore').addEventListener('click', () => loadLib(false));
 
-(async () => {
+async function paintStyle() {
   let s;
   try { [s, S.opt] = await Promise.all([api('/api/styles/' + encodeURIComponent(id)), api('/api/options')]); }
-  catch (e) { $('#sTitle').textContent = t('style.notFound'); $('#sTag').innerHTML = `${esc(e.message)} — <a href="/styles">voir tous les styles</a>`; return; }
+  catch (e) { $('#sTitle').textContent = t('style.notFound'); $('#sTag').innerHTML = `${esc(e.message)} — <a href="/styles">${t('style.allStyles')}</a>`; return; }
   S.style = s; document.title = `soundtube — ${s.label}`;
   S.opt.keys.forEach((k) => (S.labels.key[k.id] = k.label)); S.opt.moods.forEach((m) => (S.labels.mood[m.id] = m.label));
   const root = document.documentElement; root.style.setProperty('--c', colorOf(id)); root.style.setProperty('--c2', color2Of(id));
@@ -145,13 +145,15 @@ $('#sMore').addEventListener('click', () => loadLib(false));
   $('#sCrumb').textContent = s.label; $('#sGenre').textContent = s.genre; $('#sTitle').innerHTML = `${esc(s.label)}<span>${esc((STYLE_WORDS[id] || []).join(' · '))}</span>`;
   $('#sTag').textContent = s.tagline; $('#sLibName').textContent = s.label;
   const scales = (S.opt.styles.find((x) => x.id === id)?.scales || []).map((x) => S.opt.scales.find((y) => y.id === x)?.label?.split(' (')[0]).filter(Boolean);
-  $('#sFacts').innerHTML = [[`${s.bpm[0]}–${s.bpm[1]}`, 'BPM'], [scales.slice(0, 3).join(' · ') || '—', 'gammes'], [s.variants ? Object.keys(s.variants.options).length : '1', s.variants ? 'variantes' : 'variante'], [String(s.tracks), 'morceaux']]
+  $('#sFacts').innerHTML = [[`${s.bpm[0]}–${s.bpm[1]}`, 'BPM'], [scales.slice(0, 3).join(' · ') || '—', t('style.factScales')], [s.variants ? Object.keys(s.variants.options).length : '1', s.variants ? t('style.factVariants') : t('style.factVariant')], [String(s.tracks), t('style.factTracks')]]
     .map(([v, l]) => `<li><b>${esc(v)}</b><span>${esc(l)}</span></li>`).join('');
   $('#sPulse').innerHTML = Array.from({ length: 32 }, (_, k) => `<i style="--k:${k}"></i>`).join('');
   $('#sDoc').innerHTML = s.html || `<p>${esc(s.tagline)}</p>`;
-  $('#sMach').innerHTML = s.machines.length ? s.machines.map((m) => `<span class="mach-chip">${esc(m)}</span>`).join('') : '<span class="hint">Instruments propres au style.</span>';
-  const keep = (s.facts || []).filter((f) => /batterie|instrument|machine|basse|son|lead|synth|kit|boucle/i.test(f.label));
+  $('#sMach').innerHTML = s.machines.length ? s.machines.map((m) => `<span class="mach-chip">${esc(m)}</span>`).join('') : `<span class="hint">${t('style.machHint')}</span>`;
+  const keep = (s.facts || []).filter((f) => /batterie|instrument|machine|basse|son|lead|synth|kit|boucle|drum|bass|sound|loop/i.test(f.label));
   $('#sFiche').innerHTML = keep.map((f) => `<div><dt>${esc(f.label)}</dt><dd>${f.html}</dd></div>`).join('');
-  $('#sNext').innerHTML = `<span class="hint">Autres styles</span>` + s.neighbours.map((n) => `<a href="/styles/${n}" style="--c:${colorOf(n)}">${esc(S.opt.styles.find((x) => x.id === n)?.label || n)}</a>`).join('');
-  renderPreset(); await loadLib(true); reveal();
-})();
+  $('#sNext').innerHTML = `<span class="hint">${t('style.otherStyles')}</span>` + s.neighbours.map((n) => `<a href="/styles/${n}" style="--c:${colorOf(n)}">${esc(S.opt.styles.find((x) => x.id === n)?.label || n)}</a>`).join('');
+  renderPreset();
+}
+onLangChange(() => { paintStyle().then(() => loadLib(true)).catch(() => {}); });
+(async () => { await paintStyle(); await loadLib(true); reveal(); })();

@@ -30,7 +30,7 @@ export function securityHeaders() {
     const https = req.clientMeta?.proto === 'https' || req.secure;
     if (https) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     // Pages authentifiées / HTML : pas de cache partagé
-    if (req.path.endsWith('.html') || req.path === '/' || req.path === '/admin' || req.path === '/login' || req.path === '/setup' || req.path === '/legal') {
+    if (req.path.endsWith('.html') || req.path === '/' || req.path === '/studio' || req.path === '/admin' || req.path === '/login' || req.path === '/setup' || req.path === '/legal') {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       res.setHeader('Pragma', 'no-cache');
     }

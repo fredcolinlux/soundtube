@@ -48,6 +48,10 @@ async function loadSecurity() {
   if ($('#secPubEmail')) $('#secPubEmail').value = pub.email || '';
   if ($('#secPubHost')) $('#secPubHost').value = pub.host || '';
   if ($('#secOpenReg')) $('#secOpenReg').checked = !!s.openRegistration;
+  try {
+    const site = await api('GET', '/api/site');
+    if ($('#siteGithubUrl')) $('#siteGithubUrl').value = site.githubUrl || site.githubDefault || '';
+  } catch {}
   if ($('#secRegApproval')) $('#secRegApproval').checked = !!s.registrationRequireApproval;
   // One-click suggestions
   const box = $('#secSuggest');
@@ -140,6 +144,14 @@ export async function bootAdminAuth() {
   $('#secConfirmDomain')?.addEventListener('click', async () => {
     try { await api('POST', '/api/admin/auth/security/confirm', { domain: true }); toast(t('admin.sec.domainConfirmed')); loadSecurity(); }
     catch (e) { toast(e.message); }
+  });
+  $('#siteGithubSave')?.addEventListener('click', async () => {
+    try {
+      const r = await api('PUT', '/api/admin/site', { githubUrl: $('#siteGithubUrl')?.value?.trim() || '' });
+      if ($('#siteGithubUrl')) $('#siteGithubUrl').value = r.githubUrl || '';
+      if ($('#siteGithubMsg')) $('#siteGithubMsg').textContent = r.githubUrl || '';
+      toast(t('admin.sec.saved'));
+    } catch (e) { toast(e.message); }
   });
 
   $('#tokenAdd')?.addEventListener('click', async () => {

@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>soundtube — style</title>
+  <title data-i18n="title.style">soundtube — style</title>
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.20.4">
-  <link rel="stylesheet" href="/css/site.css?v=1.20.4">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.5">
+  <link rel="stylesheet" href="/css/site.css?v=1.20.5">
 </head>
 <body class="site page-style">
   <header class="style-hero" id="sHero">
     <div class="style-hero-in">
-      <nav class="crumbs" aria-label="Fil d’Ariane"><a href="/styles">Styles</a><span aria-hidden="true">/</span><span id="sCrumb">…</span></nav>
+      <nav class="crumbs" aria-label="Fil d’Ariane" data-i18n-aria="style.crumbAria"><a href="/styles">Styles</a><span aria-hidden="true">/</span><span id="sCrumb">…</span></nav>
       <p class="kicker" id="sGenre">&nbsp;</p>
       <h1 class="mega mega-2" id="sTitle">&nbsp;</h1>
       <p class="lead" id="sTag"></p>
@@ -24,9 +24,9 @@
   <main class="site-wrap style-body">
     <div class="style-cols">
       <section class="style-doc" aria-labelledby="hSound">
-        <div class="sec-head"><h2 id="hSound"><span class="num">01</span>Le son</h2></div>
+        <div class="sec-head"><h2 id="hSound"><span class="num">01</span><span data-i18n="style.secSound">Le son</span></h2></div>
         <div class="doc" id="sDoc"></div>
-        <div class="sec-head"><h2 id="hMach"><span class="num">02</span>Instruments &amp; machines</h2><span class="hint">Tous synthétisés en JavaScript (ou instruments libres CC0) : aucun échantillon de machine.</span></div>
+        <div class="sec-head"><h2 id="hMach"><span class="num">02</span><span data-i18n="style.secMach">Instruments &amp; machines</span></h2><span class="hint" data-i18n="style.machHintLong">Tous synthétisés en JavaScript (ou instruments libres CC0) : aucun échantillon de machine.</span></div>
         <div class="mach" id="sMach"></div>
         <dl class="fiche" id="sFiche"></dl>
       </section>
@@ -36,14 +36,14 @@
           <p data-i18n="style.demoBanner">Aperçu gratuit : 15 secondes max, audio seul. Connectez-vous pour créer des morceaux complets.</p>
           <a class="btn btn-primary btn-mini" id="demoLoginCta" href="/login?next=" data-i18n="style.demoCta">Connectez-vous pour créer des morceaux complets</a>
         </div>
-        <div class="module-head"><h2 id="hPreset"><span class="num">03</span>Préréglage</h2><a class="btn btn-ghost btn-mini" id="openStudio" href="/">Tous les réglages</a></div>
-        <div class="field" id="pVarField" hidden><label>Variante</label><div class="chips" id="pVar"></div></div>
-        <div class="field"><label>Ambiance</label><div class="chips" id="pMood"></div></div>
-        <div class="field"><label>Fond sonore <span class="opt">(synthétisé)</span></label><div class="chips" id="pAmb"></div>
-          <div class="amb-vol" id="pAmbVolRow" hidden><label for="pAmbVol">Volume</label><input type="range" id="pAmbVol" min="0" max="100" step="1" value="50"><span class="amb-vol-val" id="pAmbVolVal">50</span></div></div>
-        <div class="field"><label>Durée</label><div class="chips" id="pDur"></div></div>
-        <div class="field"><label for="pIdea">Idée (facultatif, directeur artistique)</label>
-          <div class="row"><input type="text" id="pIdea" maxlength="300" placeholder="Ex. : fin de soirée, lumière orange, basse ronde"><button class="btn btn-mini" type="button" id="pAsk">Proposer</button></div>
+        <div class="module-head"><h2 id="hPreset"><span class="num">03</span><span data-i18n="style.secPreset">Préréglage</span></h2><a class="btn btn-ghost btn-mini" id="openStudio" href="/studio" data-i18n="style.allSettings">Tous les réglages</a></div>
+        <div class="field" id="pVarField" hidden><label data-i18n="style.labelVariant">Variante</label><div class="chips" id="pVar"></div></div>
+        <div class="field"><label data-i18n="style.labelMood">Ambiance</label><div class="chips" id="pMood"></div></div>
+        <div class="field"><label><span data-i18n="style.labelAmb">Fond sonore</span> <span class="opt" data-i18n="style.ambSynth">(synthétisé)</span></label><div class="chips" id="pAmb"></div>
+          <div class="amb-vol" id="pAmbVolRow" hidden><label for="pAmbVol" data-i18n="style.labelVol">Volume</label><input type="range" id="pAmbVol" min="0" max="100" step="1" value="50"><span class="amb-vol-val" id="pAmbVolVal">50</span></div></div>
+        <div class="field"><label data-i18n="style.labelDur">Durée</label><div class="chips" id="pDur"></div></div>
+        <div class="field"><label for="pIdea" data-i18n="style.labelIdea">Idée (facultatif, directeur artistique)</label>
+          <div class="row"><input type="text" id="pIdea" maxlength="300" placeholder="Ex. : fin de soirée, lumière orange, basse ronde" data-i18n-placeholder="style.ideaPh"><button class="btn btn-mini" type="button" id="pAsk" data-i18n="style.propose">Proposer</button></div>
           <p class="hint" id="pAiOut" hidden></p></div>
         <p class="hint" id="pTweaks"></p>
         <button class="btn btn-primary btn-lg" type="button" id="pGo" data-i18n="style.generate">Générer dans ce style</button>
@@ -54,36 +54,36 @@
     <section class="style-lib" aria-labelledby="hLib">
       <div class="sec-head"><h2 id="hLib"><span class="num">04</span><span data-i18n="style.library">Bibliothèque</span> <span id="sLibName"></span></h2><span class="hint" id="sLibCount"></span></div>
       <ul class="tr-list" id="sLib"></ul>
-      <button class="btn btn-ghost" type="button" id="sMore" hidden>Afficher plus</button>
+      <button class="btn btn-ghost" type="button" id="sMore" hidden data-i18n="style.showMore">Afficher plus</button>
     </section>
 
     <section class="pub-panel panel module" id="publish" aria-labelledby="hPub">
-      <div class="module-head"><h2 id="hPub"><span class="num">05</span>Publication YouTube</h2><span class="hint" id="pubMode"></span></div>
-      <div class="pub-state" id="pubState">Chargement…</div>
+      <div class="module-head"><h2 id="hPub"><span class="num">05</span><span data-i18n="style.secPub">Publication YouTube</span></h2><span class="hint" id="pubMode"></span></div>
+      <div class="pub-state" id="pubState" data-i18n="style.pubLoading">Chargement…</div>
       <div class="pub-grid">
-        <div class="field"><label for="pubChannel">Chaîne de ce style</label><select id="pubChannel"></select></div>
-        <div class="field"><label for="pubVis">Visibilité</label><select id="pubVis"></select></div>
-        <div class="field full"><label for="pubTitle">Titre <span class="opt">(gabarit, 100 car. max)</span></label><input type="text" id="pubTitle" maxlength="100"></div>
-        <div class="field full"><label for="pubDesc">Description <span class="opt">(gabarit)</span></label><textarea id="pubDesc" maxlength="5000"></textarea>
-          <p class="hint">Variables : {titre} {titre_en} {style} {bpm} {tonalite} {duree} {chaine} {description} (= description automatique, avec tempo et tonalité). BPM et tonalité vont dans le texte, jamais sur l’image.</p></div>
-        <div class="field"><label for="pubTags">Tags ajoutés <span class="opt">(séparés par des virgules)</span></label><input type="text" id="pubTags" placeholder="lofi, étudier"></div>
-        <div class="field"><label>Options</label><div class="row"><label class="toggle"><input type="checkbox" id="pubAutoTags"><span>Tags automatiques</span></label><label class="toggle"><input type="checkbox" id="pubThumb"><span>Miniature soundtube</span></label></div></div>
-        <div class="field"><label for="pubPlaylist">Playlist <span class="opt">(ID, facultatif)</span></label><input type="text" id="pubPlaylist" placeholder="PLxxxxxxxx" spellcheck="false"></div>
-        <div class="field"><label for="pubSched">Programmation</label><div class="row"><select id="pubSched"><option value="none">Tout de suite</option><option value="delay">Délai après la génération</option><option value="at">À une date</option></select><input type="number" id="pubDelay" min="1" max="1440" step="1" title="heures" hidden><input type="datetime-local" id="pubAt" hidden></div></div>
+        <div class="field"><label for="pubChannel" data-i18n="style.pubChannel">Chaîne de ce style</label><select id="pubChannel"></select></div>
+        <div class="field"><label for="pubVis" data-i18n="style.pubVis">Visibilité</label><select id="pubVis"></select></div>
+        <div class="field full"><label for="pubTitle"><span data-i18n="style.pubTitle">Titre</span> <span class="opt" data-i18n="style.pubTitleOpt">(gabarit, 100 car. max)</span></label><input type="text" id="pubTitle" maxlength="100"></div>
+        <div class="field full"><label for="pubDesc"><span data-i18n="style.pubDesc">Description</span> <span class="opt" data-i18n="style.pubDescOpt">(gabarit)</span></label><textarea id="pubDesc" maxlength="5000"></textarea>
+          <p class="hint" data-i18n="style.pubVars">Variables : {titre} {titre_en} {style} {bpm} {tonalite} {duree} {chaine} {description} (= description automatique, avec tempo et tonalité). BPM et tonalité vont dans le texte, jamais sur l’image.</p></div>
+        <div class="field"><label for="pubTags"><span data-i18n="style.pubTags">Tags ajoutés</span> <span class="opt" data-i18n="style.pubTagsOpt">(séparés par des virgules)</span></label><input type="text" id="pubTags" placeholder="lofi, étudier" data-i18n-placeholder="style.pubTagsPh"></div>
+        <div class="field"><label data-i18n="style.pubOptions">Options</label><div class="row"><label class="toggle"><input type="checkbox" id="pubAutoTags"><span data-i18n="style.pubAutoTags">Tags automatiques</span></label><label class="toggle"><input type="checkbox" id="pubThumb"><span data-i18n="style.pubThumb">Miniature soundtube</span></label></div></div>
+        <div class="field"><label for="pubPlaylist"><span data-i18n="style.pubPlaylist">Playlist</span> <span class="opt" data-i18n="style.pubPlaylistOpt">(ID, facultatif)</span></label><input type="text" id="pubPlaylist" placeholder="PLxxxxxxxx" spellcheck="false"></div>
+        <div class="field"><label for="pubSched" data-i18n="style.pubSched">Programmation</label><div class="row"><select id="pubSched"><option value="none" data-i18n="style.pubSchedNone">Tout de suite</option><option value="delay" data-i18n="style.pubSchedDelay">Délai après la génération</option><option value="at" data-i18n="style.pubSchedAt">À une date</option></select><input type="number" id="pubDelay" min="1" max="1440" step="1" title="heures" hidden><input type="datetime-local" id="pubAt" hidden></div></div>
       </div>
       <div class="pub-auto">
-        <label class="toggle"><input type="checkbox" id="pubAuto"><span>Auto-publication : envoyer chaque nouvelle génération de ce style</span></label>
-        <p class="hint">Désactivée par défaut. Rien n’est publié tant que cette case n’est pas cochée et enregistrée avec la confirmation ci-dessous.</p>
-        <div class="pub-confirm" id="pubConfirmRow" hidden><span class="hint">Pour activer, tape <b id="pubWord">PUBLIER</b> :</span><input type="text" id="pubConfirm" autocomplete="off" spellcheck="false"></div>
+        <label class="toggle"><input type="checkbox" id="pubAuto"><span data-i18n="style.pubAuto">Auto-publication : envoyer chaque nouvelle génération de ce style</span></label>
+        <p class="hint" data-i18n="style.pubAutoHint">Désactivée par défaut. Rien n’est publié tant que cette case n’est pas cochée et enregistrée avec la confirmation ci-dessous.</p>
+        <div class="pub-confirm" id="pubConfirmRow" hidden><span class="hint" data-i18n="style.pubConfirm">Pour activer, tape PUBLIER :</span><b id="pubWord" hidden>PUBLIER</b><input type="text" id="pubConfirm" autocomplete="off" spellcheck="false"></div>
       </div>
       <div class="row"><button class="btn btn-primary" id="pubSave" type="button" data-i18n="style.saveProfile">Enregistrer le profil</button><button class="btn btn-ghost" id="pubReset" type="button" data-i18n="style.defaults">Valeurs par défaut</button><span class="hint" id="pubMsg"></span></div>
-      <div class="field" style="margin-top:18px"><label>File de publication de ce style</label><div class="yt-queue" id="pubQueue"></div></div>
+      <div class="field" style="margin-top:18px"><label data-i18n="style.pubQueue">File de publication de ce style</label><div class="yt-queue" id="pubQueue"></div></div>
     </section>
 
     <nav class="style-next" aria-label="Autres styles" id="sNext"></nav>
   </main>
-  <footer class="site-foot"><span>Fiche tirée de <code>docs/STYLES.md</code></span><a href="/styles">Tous les styles</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></footer>
-  <script type="module" src="/js/style.js?v=1.20.4"></script>
-  <script type="module" src="/js/stylepublish.js?v=1.20.4"></script>
+  <footer class="site-foot"><span><span data-i18n="style.footDoc">Fiche tirée de</span> <code>docs/STYLES.md</code></span><a href="/styles" data-i18n="style.allStylesLink">Tous les styles</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></footer>
+  <script type="module" src="/js/style.js?v=1.20.5"></script>
+  <script type="module" src="/js/stylepublish.js?v=1.20.5"></script>
 </body>
 </html>

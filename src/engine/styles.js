@@ -11,26 +11,26 @@ export const INSTRUMENTS = {
 };
 
 export const MOODS = {
-  auto:        { label: 'Auto (selon le style)' },
-  calme:       { label: 'Calme', scales: ['major', 'lydian', 'dorian'], bpm: -8, density: 0.75, bright: 0.85, reverb: 1.25 },
-  joyeux:      { label: 'Joyeux', scales: ['major', 'mixolydian', 'lydian'], bpm: 6, density: 1.1, bright: 1.15, reverb: 0.9 },
-  melancolique:{ label: 'Mélancolique', scales: ['minor', 'dorian'], bpm: -6, density: 0.85, bright: 0.85, reverb: 1.2 },
-  sombre:      { label: 'Sombre', scales: ['phrygian', 'harmonic_minor', 'minor'], bpm: 0, density: 0.9, bright: 0.7, reverb: 1.15 },
-  epique:      { label: 'Épique', scales: ['minor', 'harmonic_minor', 'dorian'], bpm: 4, density: 1.15, bright: 1.05, reverb: 1.3 },
-  reveur:      { label: 'Rêveur', scales: ['lydian', 'major', 'dorian'], bpm: -4, density: 0.8, bright: 0.95, reverb: 1.4 },
-  energique:   { label: 'Énergique', scales: ['minor', 'dorian', 'mixolydian'], bpm: 10, density: 1.25, bright: 1.2, reverb: 0.8 },
+  auto:        { label: 'Auto (selon le style)', labelEn: 'Auto (per style)' },
+  calme:       { label: 'Calme', labelEn: 'Calm', scales: ['major', 'lydian', 'dorian'], bpm: -8, density: 0.75, bright: 0.85, reverb: 1.25 },
+  joyeux:      { label: 'Joyeux', labelEn: 'Joyful', scales: ['major', 'mixolydian', 'lydian'], bpm: 6, density: 1.1, bright: 1.15, reverb: 0.9 },
+  melancolique:{ label: 'Mélancolique', labelEn: 'Melancholic', scales: ['minor', 'dorian'], bpm: -6, density: 0.85, bright: 0.85, reverb: 1.2 },
+  sombre:      { label: 'Sombre', labelEn: 'Dark', scales: ['phrygian', 'harmonic_minor', 'minor'], bpm: 0, density: 0.9, bright: 0.7, reverb: 1.15 },
+  epique:      { label: 'Épique', labelEn: 'Epic', scales: ['minor', 'harmonic_minor', 'dorian'], bpm: 4, density: 1.15, bright: 1.05, reverb: 1.3 },
+  reveur:      { label: 'Rêveur', labelEn: 'Dreamy', scales: ['lydian', 'major', 'dorian'], bpm: -4, density: 0.8, bright: 0.95, reverb: 1.4 },
+  energique:   { label: 'Énergique', labelEn: 'Energetic', scales: ['minor', 'dorian', 'mixolydian'], bpm: 10, density: 1.25, bright: 1.2, reverb: 0.8 },
   // v1.5 : ambiances supplémentaires (tous styles). Champs optionnels : swing (+), vintage (min), sidechain (×), delay (×),
   // ambience (fond sonore par défaut), drift (pleurage ×)
-  chill:       { label: 'Chill', scales: ['dorian', 'major', 'mixolydian'], bpm: -5, density: 0.8, bright: 0.88, reverb: 1.15, swing: 0.04, vintage: 0.25, sidechain: 0.8 },
-  nocturne:    { label: 'Nocturne', scales: ['minor', 'dorian', 'lydian'], bpm: -3, density: 0.8, bright: 0.78, reverb: 1.35, delay: 1.3, ambience: 'nuit' },
-  cinematique: { label: 'Cinématique', scales: ['minor', 'harmonic_minor', 'lydian'], bpm: -2, density: 0.95, bright: 0.95, reverb: 1.5, delay: 0.8 },
-  mysterieux:  { label: 'Mystérieux', scales: ['phrygian', 'harmonic_minor', 'dorian'], bpm: -4, density: 0.75, bright: 0.75, reverb: 1.4, delay: 1.35 },
-  nostalgique: { label: 'Nostalgique', scales: ['major', 'mixolydian', 'dorian'], bpm: -4, density: 0.85, bright: 0.82, reverb: 1.2, vintage: 0.55, ambience: 'vinyle' },
-  pluvieux:    { label: 'Pluvieux', scales: ['minor', 'dorian'], bpm: -6, density: 0.78, bright: 0.8, reverb: 1.3, vintage: 0.3, ambience: 'pluie' },
-  hypnotique:  { label: 'Hypnotique', scales: ['minor', 'phrygian', 'dorian'], bpm: 2, density: 0.85, bright: 0.92, reverb: 1.1, delay: 1.4, sidechain: 1.2 },
-  solaire:     { label: 'Solaire', scales: ['major', 'lydian', 'mixolydian'], bpm: 3, density: 1.05, bright: 1.15, reverb: 1.0, ambience: 'vagues' },
-  urbain:      { label: 'Urbain', scales: ['minor', 'dorian', 'phrygian'], bpm: 0, density: 1.0, bright: 0.95, reverb: 0.9, swing: 0.03, ambience: 'ville' },
-  aerien:      { label: 'Aérien', scales: ['lydian', 'major'], bpm: -6, density: 0.7, bright: 1.05, reverb: 1.6, delay: 1.25, ambience: 'vent' },
+  chill:       { label: 'Chill', labelEn: 'Chill', scales: ['dorian', 'major', 'mixolydian'], bpm: -5, density: 0.8, bright: 0.88, reverb: 1.15, swing: 0.04, vintage: 0.25, sidechain: 0.8 },
+  nocturne:    { label: 'Nocturne', labelEn: 'Nocturnal', scales: ['minor', 'dorian', 'lydian'], bpm: -3, density: 0.8, bright: 0.78, reverb: 1.35, delay: 1.3, ambience: 'nuit' },
+  cinematique: { label: 'Cinématique', labelEn: 'Cinematic', scales: ['minor', 'harmonic_minor', 'lydian'], bpm: -2, density: 0.95, bright: 0.95, reverb: 1.5, delay: 0.8 },
+  mysterieux:  { label: 'Mystérieux', labelEn: 'Mysterious', scales: ['phrygian', 'harmonic_minor', 'dorian'], bpm: -4, density: 0.75, bright: 0.75, reverb: 1.4, delay: 1.35 },
+  nostalgique: { label: 'Nostalgique', labelEn: 'Nostalgic', scales: ['major', 'mixolydian', 'dorian'], bpm: -4, density: 0.85, bright: 0.82, reverb: 1.2, vintage: 0.55, ambience: 'vinyle' },
+  pluvieux:    { label: 'Pluvieux', labelEn: 'Rainy', scales: ['minor', 'dorian'], bpm: -6, density: 0.78, bright: 0.8, reverb: 1.3, vintage: 0.3, ambience: 'pluie' },
+  hypnotique:  { label: 'Hypnotique', labelEn: 'Hypnotic', scales: ['minor', 'phrygian', 'dorian'], bpm: 2, density: 0.85, bright: 0.92, reverb: 1.1, delay: 1.4, sidechain: 1.2 },
+  solaire:     { label: 'Solaire', labelEn: 'Sunny', scales: ['major', 'lydian', 'mixolydian'], bpm: 3, density: 1.05, bright: 1.15, reverb: 1.0, ambience: 'vagues' },
+  urbain:      { label: 'Urbain', labelEn: 'Urban', scales: ['minor', 'dorian', 'phrygian'], bpm: 0, density: 1.0, bright: 0.95, reverb: 0.9, swing: 0.03, ambience: 'ville' },
+  aerien:      { label: 'Aérien', labelEn: 'Airy', scales: ['lydian', 'major'], bpm: -6, density: 0.7, bright: 1.05, reverb: 1.6, delay: 1.25, ambience: 'vent' },
 };
 /** Fonds sonores synthétisés (aucun enregistrement) : réglage « Fond sonore ». */
 export const AMBIENCES = { none: 'Aucun', vinyle: 'Vinyle (craquements)', pluie: 'Pluie', vagues: 'Vagues', vent: 'Vent', nuit: 'Nuit d’été (grillons)', feu: 'Feu de cheminée', ville: 'Ville lointaine',
@@ -39,7 +39,8 @@ export const AMBIENCES = { none: 'Aucun', vinyle: 'Vinyle (craquements)', pluie:
 export const STYLES = {
   lofi: {
     label: 'Lo-fi Hip-Hop', tagline: 'Rhodes feutré, boom-bap paresseux, craquements de vinyle.',
-    genre: 'Chill beats & étude', bpm: [70, 88], swing: 0.22,
+    taglineEn: 'Felt Rhodes, lazy boom-bap, vinyl crackle.',
+    genre: 'Chill beats & étude', genreEn: 'Chill beats & study', bpm: [70, 88], swing: 0.22,
     scales: { dorian: 3, minor: 2, major: 2, mixolydian: 1 },
     progressions: [[1, 4, 0, 5], [0, 5, 3, 4], [3, 2, 1, 0], [5, 3, 0, 4], [1, 4, 2, 5], [0, 3, 6, 2]],
     chordSize: 4, chordBars: 1,
@@ -145,7 +146,8 @@ export const STYLES = {
   },
   ambient: {
     label: 'Ambient', tagline: 'Nappes flottantes, cloches célestes, sans rythme.',
-    genre: 'Méditation & espace', bpm: [60, 76], swing: 0,
+    taglineEn: 'Floating pads, celestial bells, no beat.',
+    genre: 'Méditation & espace', genreEn: 'Meditation & space', bpm: [60, 76], swing: 0,
     scales: { lydian: 3, major: 2, dorian: 2, minor: 1 },
     progressions: [[0, 3, 5, 4], [0, 4, 5, 3], [0, 5, 3, 0], [3, 0, 4, 5], [0, 1, 0, 3]],
     chordSize: 5, chordBars: 2,
@@ -159,7 +161,8 @@ export const STYLES = {
   },
   synthwave: {
     label: 'Synthwave', tagline: 'Supersaws désaccordées, pads Juno, batterie 80s « gated », lead chantant.',
-    genre: 'Retrowave & outrun', bpm: [96, 118], swing: 0,
+    taglineEn: 'Detuned supersaws, Juno pads, gated 80s drums, neon nights.',
+    genre: 'Retrowave & outrun', genreEn: 'Retrowave & outrun', bpm: [96, 118], swing: 0,
     scales: { minor: 4, dorian: 2, harmonic_minor: 1 },
     progressions: [[0, 5, 2, 6], [0, 5, 3, 4], [5, 3, 0, 4], [0, 2, 5, 6], [0, 6, 5, 6], [0, 3, 6, 5], [0, 5, 6, 4], [3, 4, 0, 0], [0, 6, 3, 4]],
     chordSize: 4, chordBars: 2,
@@ -177,7 +180,8 @@ export const STYLES = {
   },
   house: {
     label: 'Deep House', tagline: 'Four-on-the-floor, stabs d\'accords et basse en contretemps.',
-    genre: 'Club & groove', bpm: [118, 126], swing: 0.08,
+    taglineEn: 'Four-on-the-floor, chord stabs and off-beat bass.',
+    genre: 'Club & groove', genreEn: 'Club & groove', bpm: [118, 126], swing: 0.08,
     scales: { minor: 3, dorian: 3, mixolydian: 1 },
     progressions: [[0, 3, 4, 3], [1, 4, 0, 5], [0, 5, 3, 4], [0, 6, 5, 4], [0, 0, 3, 3]],
     chordSize: 4, chordBars: 1,
@@ -197,7 +201,8 @@ export const STYLES = {
   // résonant qu'on ouvre et ferme sur des montées de 8 à 16 mesures, pompe du sidechain, phaser, talkbox / vocodeur.
   frenchtouch: {
     label: 'French Touch', tagline: 'Boucle disco filtrée, pompe du sidechain, talkbox et balayages de filtre.',
-    genre: 'Club & disco filtrée', bpm: [118, 126], swing: 0.04,
+    taglineEn: 'Filtered disco loop, sidechain pump, talkbox and filter sweeps.',
+    genre: 'Club & disco filtrée', genreEn: 'Club & filtered disco', bpm: [118, 126], swing: 0.04,
     scales: { dorian: 3, minor: 2, mixolydian: 2, major: 1 },
     // boucles d'accords disco (7e / 9e) : i7–IV7 dorien, ii–V, vi–ii–V–I, montée IV–V–vi…
     progressions: [[0, 3], [0, 3, 0, 3], [1, 4], [1, 4, 0, 0], [5, 1, 4, 0], [3, 4, 5, 5], [0, 6, 5, 6], [0, 5, 3, 4]],
@@ -217,7 +222,8 @@ export const STYLES = {
   },
   techno: {
     label: 'Techno', tagline: 'Kick martelé, acid bass résonante, hypnose minimaliste.',
-    genre: 'Warehouse & hypnotique', bpm: [126, 136], swing: 0,
+    taglineEn: 'Pounding kick, resonant acid bass, minimal hypnosis.',
+    genre: 'Warehouse & hypnotique', genreEn: 'Warehouse & hypnotic', bpm: [126, 136], swing: 0,
     scales: { phrygian: 3, minor: 3, dorian: 1 },
     progressions: [[0, 0, 0, 0], [0, 0, 5, 0], [0, 1, 0, 6], [0, 0, 6, 5]],
     chordSize: 3, chordBars: 2,
@@ -234,8 +240,9 @@ export const STYLES = {
     defaults: { drums: true, bass: true, chords: true, lead: false, arp: true, texture: true },
   },
   cinematic: {
-    label: 'Cinématique', tagline: 'Cordes amples, ostinatos, percussions épiques et montées.',
-    genre: 'Bande originale & épique', bpm: [80, 100], swing: 0,
+    label: 'Cinématique', labelEn: 'Cinematic', tagline: 'Cordes amples, ostinatos, percussions épiques et montées.',
+    taglineEn: 'Wide strings, ostinatos, epic percussion and builds.',
+    genre: 'Bande originale & épique', genreEn: 'Soundtrack & epic', bpm: [80, 100], swing: 0,
     scales: { minor: 3, harmonic_minor: 2, dorian: 1, major: 1 },
     progressions: [[0, 5, 2, 6], [0, 3, 5, 4], [5, 3, 0, 4], [0, 6, 5, 4], [0, 4, 5, 3]],
     chordSize: 3, chordBars: 1,
@@ -253,7 +260,8 @@ export const STYLES = {
   },
   chiptune: {
     label: 'Chiptune', tagline: 'Ondes carrées 8-bit, arpèges éclairs, nostalgie console.',
-    genre: '8-bit & rétro gaming', bpm: [130, 156], swing: 0,
+    taglineEn: '8-bit square waves, lightning arpeggios, console nostalgia.',
+    genre: '8-bit & rétro gaming', genreEn: '8-bit & retro gaming', bpm: [130, 156], swing: 0,
     scales: { major: 3, minor: 2, mixolydian: 1, dorian: 1 },
     progressions: [[0, 4, 5, 3], [0, 5, 3, 4], [5, 3, 0, 4], [0, 3, 4, 4], [0, 6, 5, 4]],
     chordSize: 3, chordBars: 1,
@@ -270,8 +278,9 @@ export const STYLES = {
     defaults: { drums: true, bass: true, chords: true, lead: true, arp: false, texture: false },
   },
   trap: {
-    label: 'Trap instrumental', tagline: '808 glissantes, charlestons en rafales, ambiance sombre.',
-    genre: 'Hip-hop moderne', bpm: [130, 150], swing: 0,
+    label: 'Trap instrumental', labelEn: 'Instrumental Trap', tagline: '808 glissantes, charlestons en rafales, ambiance sombre.',
+    taglineEn: 'Sliding 808s, rapid-fire hats, dark atmosphere.',
+    genre: 'Hip-hop moderne', genreEn: 'Modern hip-hop', bpm: [130, 150], swing: 0,
     scales: { harmonic_minor: 3, minor: 3, phrygian: 2 },
     progressions: [[0, 5, 3, 4], [0, 0, 5, 6], [0, 3, 5, 4], [0, 1, 0, 5], [0, 5, 0, 6]],
     chordSize: 3, chordBars: 2,
@@ -289,7 +298,8 @@ export const STYLES = {
   },
   hiphop: {
     label: 'Hip-Hop', tagline: 'Boom-bap swingué, lo-fi poussiéreux ou trap aux 808 glissantes : Rhodes jazzy, 7e et 9e.',
-    genre: 'Beats & instrumentaux rap', bpm: [70, 150], swing: 0.16,
+    taglineEn: 'Swung boom-bap, dusty lo-fi or trap with sliding 808s.',
+    genre: 'Beats & instrumentaux rap', genreEn: 'Beats & rap instrumentals', bpm: [70, 150], swing: 0.16,
     scales: { dorian: 3, minor: 3, harmonic_minor: 1, mixolydian: 1, major: 1 },
     progressions: [[1, 4, 0, 0], [0, 5, 1, 4], [0, 3, 0, 4], [5, 4, 0, 0], [0, 6, 5, 4], [3, 2, 1, 0], [0, 2, 3, 4], [1, 4, 2, 5]],
     chordSize: 4, chordBars: 1,
@@ -332,7 +342,8 @@ export const STYLES = {
   },
   dnb: {
     label: 'Drum & Bass', tagline: 'Breakbeats reconstruits, reese, sub profond et nappes liquides.',
-    genre: 'Jungle, liquid & neuro', bpm: [166, 176], swing: 0.03,
+    taglineEn: 'Rebuilt breakbeats, reese, deep sub and liquid pads.',
+    genre: 'Jungle, liquid & neuro', genreEn: 'Jungle, liquid & neuro', bpm: [166, 176], swing: 0.03,
     scales: { minor: 4, dorian: 3, harmonic_minor: 1, phrygian: 1 },
     progressions: [[0, 5, 3, 4], [0, 3, 5, 4], [1, 4, 0, 0], [0, 6, 5, 6], [5, 3, 0, 4], [0, 2, 5, 4], [0, 5, 1, 4]],
     chordSize: 4, chordBars: 2,

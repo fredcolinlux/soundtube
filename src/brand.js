@@ -41,3 +41,30 @@ export function setBrand({ name, hidden } = {}) {
 }
 /** Texte réellement dessiné : '' si masqué, sinon le nom ou « soundtube ». */
 export const brandText = (b = getBrand()) => (b.hidden ? '' : (b.name || DEFAULT_BRAND));
+
+/** URL GitHub publique du projet (pied de page). Vide = défaut soundtube upstream. */
+export const DEFAULT_GITHUB = 'https://github.com/fredcolinlux/soundtube';
+export function getGithubUrl() {
+  const s = readAll().site || {};
+  const u = String(s.githubUrl || '').trim();
+  if (!u) return DEFAULT_GITHUB;
+  try {
+    const x = new URL(u);
+    if (x.protocol !== 'http:' && x.protocol !== 'https:') return DEFAULT_GITHUB;
+    return x.toString().replace(/\/$/, '');
+  } catch { return DEFAULT_GITHUB; }
+}
+export function setGithubUrl(url) {
+  const all = readAll();
+  let next = '';
+  if (url !== undefined && url !== null && String(url).trim()) {
+    try {
+      const x = new URL(String(url).trim());
+      if (x.protocol === 'http:' || x.protocol === 'https:') next = x.toString().replace(/\/$/, '');
+    } catch { next = ''; }
+  }
+  all.site = { ...(all.site || {}), githubUrl: next };
+  fs.mkdirSync(config.dataDir, { recursive: true });
+  const tmp = file() + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(all, null, 2)); fs.renameSync(tmp, file());
+  return getGithubUrl();
+}

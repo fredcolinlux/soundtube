@@ -29,6 +29,9 @@
 
 ---
 
+
+> **Routes :** `/` accueil public · `/studio` générateur (connexion) · `/styles` catalogue · `/accueil` → `/`.
+
 ## Pourquoi soundtube ?
 
 La plupart des outils « IA musique » sont des SaaS fermés. **soundtube** tourne sur *ton* matériel :

@@ -53,3 +53,7 @@
 @media (prefers-reduced-motion: reduce) {
   .err-disc-spin, .err-wave b { animation: none; }
 }
+
+body.site.err-body { display: flex; flex-direction: column; min-height: 100vh; }
+body.site.err-body > main { margin: 48px auto 32px; }
+body.site.err-body > footer.site-foot { margin-top: auto; }

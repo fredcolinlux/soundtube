@@ -1,15 +1,22 @@
-import { AuroraField } from './aurora.js';
-import { initI18n, t, mountLangSwitcher, applyDom } from './i18n.js';
+import { bootSite, mountBackground, t } from './site.js?v=1.20.5';
+import { applyDom } from './i18n.js';
 import { apiFetch, refreshAuth } from './csrf.js';
 
-await initI18n(); applyDom(); mountLangSwitcher(document.getElementById('langHost'));
-try { new AuroraField(document.getElementById('bgCanvas')); } catch {}
+mountBackground();
+await bootSite('/login');
+applyDom(document);
 
 const st = await refreshAuth();
 if (st?.setupRequired && st.local) location.replace('/setup');
-const next = new URLSearchParams(location.search).get('next') || '/';
+const next = new URLSearchParams(location.search).get('next') || '/studio';
 if (st?.authenticated) location.replace(next);
-if (st?.openRegistration) { const a = document.createElement('a'); a.href='/register'; a.className='hint'; a.style.display='block'; a.style.marginTop='.6rem'; a.dataset.i18n='nav.register'; a.textContent='Register'; document.querySelector('.auth-foot')?.before(a); }
+if (st?.openRegistration) {
+  const a = document.createElement('a');
+  a.href = '/register'; a.className = 'hint'; a.style.display = 'block'; a.style.marginTop = '.6rem';
+  a.dataset.i18n = 'nav.register'; a.textContent = t('nav.register');
+  document.querySelector('.auth-foot')?.before(a);
+  applyDom(document);
+}
 
 const $ = (s) => document.querySelector(s);
 function show(el, msg) { el.hidden = !msg; el.textContent = msg || ''; }

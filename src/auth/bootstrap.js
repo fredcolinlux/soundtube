@@ -9,6 +9,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const PUBLIC_ALLOW = [
+  { method: 'GET', path: '/api/site' },
   { method: 'GET', path: '/api/health' },
   { method: 'GET', path: '/api/auth/status' },
   { method: 'POST', path: '/api/auth/login' },

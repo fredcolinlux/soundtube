@@ -21,7 +21,8 @@ import { splitPlan, splitAvailability, zipEntries, zipStream, SPLIT_MODES, SPLIT
 import { SplitQueue, readManifest, splitDir, splitOptions } from './splitqueue.js';
 import { RenderNodes, normAiUrl } from './nodes.js';
 import { ensureSamples, ensureVerified } from './nodeaudio.js';
-import { getBrand, setBrand, brandText, DEFAULT_BRAND, BRAND_MAX } from './brand.js';
+import { getBrand, setBrand, brandText, DEFAULT_BRAND, BRAND_MAX, getGithubUrl, setGithubUrl, DEFAULT_GITHUB } from './brand.js';
+import { localizeAdvanced, VIS_LABEL_EN } from './i18n-advanced.js';
 import { resolveParams, LIMITS, ADVANCED } from './engine/composer.js';
 import { samplesAvailable } from './engine/sampler.js';
 import { STYLES, MOODS, INSTRUMENTS, VARIANT_KEY, styleDef } from './engine/styles.js';
@@ -156,6 +157,7 @@ app.use(express.json({ limit: `${auth.security.bodyLimitKb || 64}kb` }));
 
 const AUTH_ALLOW = [
   { method: 'GET', path: '/health' },
+  { method: 'GET', path: '/site' },
   { method: 'GET', path: '/legal' },
   { method: 'GET', path: '/ui/lang' },
   { method: 'PUT', path: '/ui/lang' },
@@ -267,7 +269,7 @@ function createJob(input, parentId = null, extraMeta = null) {
 const awrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const wrap = (fn) => (req, res, next) => { try { fn(req, res, next); } catch (e) { next(e); } };
 
-app.get('/api/health', (req, res) => res.json({ ok: true, version: VERSION, storage: store.kind, mp3: jobs.hasFfmpeg, samples: samplesAvailable(), running: jobs.running, queued: jobs.pending }));
+app.get('/api/health', (req, res) => res.json({ ok: true, version: VERSION, githubUrl: getGithubUrl(), storage: store.kind, mp3: jobs.hasFfmpeg, samples: samplesAvailable(), running: jobs.running, queued: jobs.pending }));
 
 // v1.8.0 : ordre d'affichage (la French Touch à côté de la house) et sons / boîtes par défaut de chaque style
 const STYLE_ORDER = (() => { const k = Object.keys(STYLES).filter((x) => x !== 'frenchtouch'); k.splice(k.indexOf('house') + 1, 0, 'frenchtouch'); return k.filter((x) => STYLES[x]); })();
@@ -281,18 +283,22 @@ const STYLE_DEFAULTS = (() => {
   }
   return out;
 })();
-app.get('/api/options', (req, res) => res.json({
-  engine: 21, styleDefaults: STYLE_DEFAULTS,
-  styles: STYLE_ORDER.map((id) => [id, STYLES[id]]).map(([id, s]) => ({ id, label: s.label, tagline: s.tagline, genre: s.genre, bpm: s.bpm, defaults: s.defaults, scales: Object.keys(s.scales),
+const INSTRUMENTS_EN = { drums: 'Drums', bass: 'Bass', chords: 'Chords / pads', lead: 'Lead', arp: 'Arpeggios', texture: 'Textures & ambience' };
+app.get('/api/options', (req, res) => {
+  const lang = uiLangFromReq(req), en = lang === 'en';
+  res.json({
+  engine: 21, styleDefaults: STYLE_DEFAULTS, lang,
+  styles: STYLE_ORDER.map((id) => [id, STYLES[id]]).map(([id, s]) => ({ id, label: en && s.labelEn ? s.labelEn : s.label, tagline: en && s.taglineEn ? s.taglineEn : s.tagline, genre: en && s.genreEn ? s.genreEn : s.genre, bpm: s.bpm, defaults: s.defaults, scales: Object.keys(s.scales),
     variants: VARIANT_KEY[id] && ADVANCED[VARIANT_KEY[id]] ? { key: VARIANT_KEY[id], options: ADVANCED[VARIANT_KEY[id]].options } : null })),
-  moods: Object.entries(MOODS).map(([id, m]) => ({ id, label: m.label, ambience: m.ambience || null })),
+  moods: Object.entries(MOODS).map(([id, m]) => ({ id, label: en && m.labelEn ? m.labelEn : m.label, ambience: m.ambience || null })),
   keys: NOTE_NAMES.map((k, i) => ({ id: k, label: NOTE_NAMES_FR[i] })),
   scales: Object.entries(SCALES).map(([id, s]) => ({ id, label: s.label })),
-  instruments: Object.entries(INSTRUMENTS).map(([id, label]) => ({ id, label })),
+  instruments: Object.entries(INSTRUMENTS).map(([id, label]) => ({ id, label: en ? (INSTRUMENTS_EN[id] || label) : label })),
   limits: { ...LIMITS, maxDuration: Math.min(LIMITS.maxDuration, config.maxDuration) },
-  advanced: ADVANCED,
+  advanced: localizeAdvanced(ADVANCED, lang),
   mp3: jobs.hasFfmpeg, samples: samplesAvailable(), wavDefault: config.keepWav,
-}));
+});
+});
 
 /** Vérifie, avant génération, si les réglages produiraient un doublon (même graine…) ou un morceau très proche. */
 // v1.9.0 : valeurs réelles des réglages avancés pour ce style / cette graine (formulaire pré-rempli)
@@ -627,8 +633,8 @@ app.put('/api/admin/youtube/bindings', wrap((req, res) => {
   const b = req.body || {}; if (!STYLE_IDS().includes(b.style)) return res.status(400).json({ error: i18nMsg(req, 'unknownStyle') });
   channels.bind(b.style, b.channelId || null); res.json(ytAdminView());
 }));
-const stylePublishView = (id) => { const ch = channels.forStyle(id); return { style: id, label: STYLES[id].label, profile: channels.profile(id), defaults: DEFAULT_PROFILE, channelId: channels.s.bindings[id] || null, channel: ch ? channels.publicChannel(ch) : null, ready: channels.ready(ch), reason: channels.missing(ch), channels: channels.view().channels, transport: ytTransport.kind, confirmWord: CONFIRM_WORD, visibilities: VISIBILITIES.map((v) => ({ id: v, label: VIS_LABEL[v] })), queue: publisher.list({ style: id }).slice(0, 50) }; };
-app.get('/api/styles/:id/publish', wrap((req, res) => { if (!STYLE_IDS().includes(req.params.id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') }); res.json(stylePublishView(req.params.id)); }));
+const stylePublishView = (id, lang = 'fr') => { const ch = channels.forStyle(id); const VL = lang === 'en' ? VIS_LABEL_EN : VIS_LABEL; return { style: id, label: STYLES[id].label, profile: channels.profile(id), defaults: DEFAULT_PROFILE, channelId: channels.s.bindings[id] || null, channel: ch ? channels.publicChannel(ch) : null, ready: channels.ready(ch), reason: channels.missing(ch, lang), channels: channels.view().channels, transport: ytTransport.kind, confirmWord: CONFIRM_WORD, visibilities: VISIBILITIES.map((v) => ({ id: v, label: VL[v] })), queue: publisher.list({ style: id }).slice(0, 50) }; };
+app.get('/api/styles/:id/publish', wrap((req, res) => { if (!STYLE_IDS().includes(req.params.id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') }); res.json(stylePublishView(req.params.id, uiLangFromReq(req))); }));
 app.put('/api/styles/:id/publish', wrap((req, res) => {
   const id = req.params.id, b = req.body || {}; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') });
   if ('channelId' in b) channels.bind(id, b.channelId || null);
@@ -637,7 +643,7 @@ app.put('/api/styles/:id/publish', wrap((req, res) => {
 }));
 app.get('/api/tracks/:id/publish', wrap((req, res) => {
   const t = store.get(req.params.id); if (!t || t.status !== 'done') return res.status(404).json({ error: 'Morceau introuvable ou pas terminé' });
-  res.json({ ...publisher.draft(t, req.query.channelId ? { channelId: req.query.channelId } : {}), channels: channels.view().channels, visibilities: VISIBILITIES.map((v) => ({ id: v, label: VIS_LABEL[v] })), confirmWord: CONFIRM_WORD, published: t.meta?.published || [], queue: publisher.items.filter((x) => x.trackId === t.id).map((x) => publisher.view(x)) });
+  res.json({ ...publisher.draft(t, req.query.channelId ? { channelId: req.query.channelId } : {}), channels: channels.view().channels, visibilities: VISIBILITIES.map((v) => ({ id: v, label: (uiLangFromReq(req) === 'en' ? VIS_LABEL_EN : VIS_LABEL)[v] })), confirmWord: CONFIRM_WORD, published: t.meta?.published || [], queue: publisher.items.filter((x) => x.trackId === t.id).map((x) => publisher.view(x)) });
 }));
 app.post('/api/tracks/:id/publish', wrap((req, res) => {
   const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
@@ -715,6 +721,12 @@ app.get('/api/tracks/:id/pack.zip', awrap(async (req, res) => {
 }));
 
 // nom affiché sur les miniatures / vidéos (ex. le nom de la chaîne) ; vide = « soundtube », hidden = aucun nom
+app.get('/api/site', (req, res) => res.json({ version: VERSION, githubUrl: getGithubUrl(), githubDefault: DEFAULT_GITHUB }));
+app.put('/api/admin/site', requireAdminSession, wrap((req, res) => {
+  const b = req.body || {};
+  if (b.githubUrl !== undefined) setGithubUrl(b.githubUrl);
+  res.json({ version: VERSION, githubUrl: getGithubUrl(), githubDefault: DEFAULT_GITHUB });
+}));
 app.get('/api/youtube/brand', (req, res) => res.json(brandInfo()));
 app.put('/api/youtube/brand', wrap((req, res) => {
   const b = req.body || {};
@@ -867,17 +879,26 @@ app.post('/api/admin/ai/test', awrap(async (req, res) => {
 
 // v1.10.0 : fiches de style (pages /styles et /styles/:id), texte tiré de docs/STYLES.md
 const STYLE_IDS = () => STYLE_ORDER.filter((id) => STYLES[id]);
-function styleCard(id) {
-  const s = STYLES[id], d = stylesDoc().sections[id] || null;
+function styleCard(id, lang = 'fr') {
+  const s = STYLES[id], d = stylesDoc(lang).sections[id] || null;
   const vk = VARIANT_KEY[id], variants = vk && ADVANCED[vk] ? { key: vk, options: ADVANCED[vk].options } : null;
   let count = 0; try { count = store.list({ style: id, status: 'done', limit: 1, offset: 0 }).total || 0; } catch {}
-  return { id, label: s.label, tagline: s.tagline, genre: s.genre, bpm: s.bpm, variants, machines: d?.machines || [], title: d?.title || s.label, tracks: count };
+  const en = lang === 'en';
+  const label = en && s.labelEn ? s.labelEn : s.label;
+  const tagline = en && s.taglineEn ? s.taglineEn : s.tagline;
+  const genre = en && s.genreEn ? s.genreEn : s.genre;
+  return { id, label, tagline, genre, bpm: s.bpm, variants, machines: d?.machines || [], title: d?.title || label, tracks: count };
 }
-app.get('/api/styles', (req, res) => { const d = stylesDoc(); res.json({ styles: STYLE_IDS().map(styleCard), roadmap: d.roadmap || null, ai: d.ai || null }); });
+app.get('/api/styles', (req, res) => {
+  const lang = uiLangFromReq(req);
+  const d = stylesDoc(lang);
+  res.json({ styles: STYLE_IDS().map((id) => styleCard(id, lang)), roadmap: d.roadmap || null, ai: d.ai || null });
+});
 app.get('/api/styles/:id', (req, res) => {
   const id = req.params.id; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') });
-  const d = stylesDoc().sections[id] || null;
-  res.json({ ...styleCard(id), html: d?.html || '', facts: d?.facts || [], neighbours: STYLE_IDS().filter((x) => x !== id) });
+  const lang = uiLangFromReq(req);
+  const d = stylesDoc(lang).sections[id] || null;
+  res.json({ ...styleCard(id, lang), html: d?.html || '', facts: d?.facts || [], neighbours: STYLE_IDS().filter((x) => x !== id) });
 });
 // Pages de l'interface (v1.10.0) : /styles/<style> → page de style (le style est lu dans l'adresse par le navigateur)
 app.get('/styles/:id', (req, res) => {
@@ -925,13 +946,27 @@ app.get(['/profile', '/profile.html'], (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'profile.html'));
 });
-app.get(['/', '/index.html'], (req, res) => {
+// v1.20.5 — '/' = accueil public ; Studio à '/studio' (auth). '/accueil' → 301 '/'.
+app.get(['/accueil', '/accueil.html'], (req, res) => {
+  const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  res.redirect(301, '/' + q);
+});
+app.get(['/studio', '/studio.html', '/index.html'], (req, res) => {
   if (!req.authUser) {
-    const q = req.url.includes('?') ? '&' : '?';
-    return res.redirect('/login?next=' + encodeURIComponent('/'));
+    const dest = '/studio' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+    return res.redirect('/login?next=' + encodeURIComponent(dest));
   }
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'index.html'));
+});
+app.get('/', (req, res) => {
+  // Anciens liens studio sur la racine → /studio
+  if (req.query.style != null || req.query.tour != null || req.query.track != null) {
+    const u = new URL(req.originalUrl, 'http://local');
+    return res.redirect(302, '/studio' + u.search);
+  }
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'accueil.html'));
 });
 
 // HTML toujours revalidé (les CSS/JS sont versionnés par ?v=) : une mise à jour de l'interface est visible tout de suite.

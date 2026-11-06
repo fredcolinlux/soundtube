@@ -32,3 +32,32 @@
 .totp-secret { display:inline-block; font-size:1.05rem; letter-spacing:.06em; user-select:all; word-break:break-all; }
 .totp-recovery { margin-top:1rem; padding: .8rem; border:1px solid color-mix(in oklab, var(--accent, #7dd3fc) 35%, transparent); border-radius:12px; }
 .totp-recovery-codes { white-space:pre-wrap; font-family:ui-monospace,monospace; font-size:.95rem; margin:.5rem 0; }
+
+/* v1.20.5 — full site chrome on auth / error pages */
+body.site.auth-body,
+body.site.err-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 100vh;
+  padding: 0;
+  place-items: unset;
+}
+body.site.auth-body > main.auth-card,
+body.site.err-body > main.err-card,
+body.site.auth-body > main,
+body.site.err-body > main {
+  margin: 48px auto 32px;
+  width: min(420px, calc(100% - 32px));
+}
+body.site.err-body > main.err-card { width: min(520px, calc(100% - 32px)); }
+body.site.auth-body > footer.site-foot,
+body.site.err-body > footer.site-foot {
+  margin-top: auto;
+}
+body.site.auth-body .bg-canvas,
+body.site.err-body .bg-canvas { z-index: 0; }
+body.site.auth-body .site-top,
+body.site.err-body .site-top { position: relative; z-index: 2; }
+body.site.auth-body > main,
+body.site.err-body > main { position: relative; z-index: 1; }

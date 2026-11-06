@@ -28,8 +28,3 @@ fondu de fin, **normalisation par instrument** (les écarts de vélocité d'orig
 batterie (direct + overheads + room, voir `tools/premix-drums.mjs`), conversion FLAC 16 bits 44,1 kHz.
 Textes des licences : `licenses/` et `CC0-1.0-legalcode.txt`. Détail fichier par fichier : `manifest.json`.
 Reconstruction : `node tools/build-sample-pack.mjs [--extra-only]`.
-
-
-## Dépôt public soundtube
-
-Le dossier `jrhodes/` (jRhodes3d, **CC BY-NC 4.0**) **n’est pas** publié dans le dépôt GitHub public : la licence des échantillons limite la redistribution au non-commercial. Sans ce dossier, soundtube utilise la synthèse Rhodes. Le reste du pack ci-dessous est redistribuable (CC0 + Salamander CC-BY 3.0 avec attribution).

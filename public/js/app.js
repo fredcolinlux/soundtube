@@ -1,12 +1,13 @@
 // soundtube — interface web (vanilla JS, sans build).
 import { AuroraField } from './aurora.js';
-import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
+import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang, syncLangSwitchers } from './i18n.js';
+import { mountSiteFooter } from './sitefoot.js';
 const i18n = t; // alias: track locals often shadow `t`
 import { apiFetch, refreshAuth } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.20.1';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.20.1';
-import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.20.1';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.20.5';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.20.5';
+import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.20.5';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
@@ -104,6 +105,7 @@ function drawWaveProgress() {
 }
 
 // ---------- options & formulaire
+let optionsBound = false;
 async function loadOptions() {
   const o = await api('/api/options'); state.options = o;
   o.keys.forEach((k) => (KEY_FR[k.id] = k.label)); o.scales.forEach((s) => (SCALE_FR[s.id] = s.label));
@@ -117,34 +119,34 @@ async function loadOptions() {
       <div class="style-meta"><span>${s.bpm[0]}–${s.bpm[1]} BPM</span><span>${s.scales.slice(0, 2).map((x) => esc(SCALE_FR[x].split(' ')[0])).join(' · ')}</span></div>
     </button>`).join('');
   if ($('#statStyles')) $('#statStyles').textContent = o.styles.length;
-  $('#stylesGrid').addEventListener('click', (e) => { const c = e.target.closest('.style-card'); if (c) selectStyle(c.dataset.style); });
-  $('#moodChips').innerHTML = o.moods.map((m) => `<button type="button" class="chip" data-mood="${m.id}">${esc(m.label.replace(' (selon le style)', ''))}</button>`).join('');
-  $('#moodChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; state.mood = c.dataset.mood; renderChips(); refreshDefaults(); });
-  // variante du style et fond sonore : raccourcis des réglages avancés correspondants (même état, synchronisés)
-  const setAdvKey = (k, v) => { if (!state.advDefs?.[k]) return; state.adv[k] = v === 'auto' ? null : v; state.advSession = false; readAdvanced(); saveTweaks(); refreshDefaults(); };
-  $('#variantChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; const s = state.options.styles.find((x) => x.id === state.style); if (s?.variants) setAdvKey(s.variants.key, c.dataset.v); });
-  $('#ambChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) setAdvKey('ambience', c.dataset.v); });
-  // v1.6.3 : variation (Moyenne = auto) et styles proches dans les mix — raccourcis des réglages avancés
-  // v1.11.0 : en lo-fi (moteur 20), la variation est « Forte » par défaut ; « Moyenne » devient un choix explicite
-  $('#varietyChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; const v = c.dataset.v; setAdvKey('variety', lofi20() ? (v === 'auto' ? 'medium' : v === 'high' ? 'auto' : v) : v); });
-  // v1.11.0 : volume du fond sonore (raccourci du réglage avancé « Volume du fond sonore » ; 50 = niveau habituel)
-  $('#ambVol').addEventListener('input', (e) => { $('#ambVolVal').textContent = e.target.value; });
-  $('#ambVol').addEventListener('change', (e) => setAdvKey('ambienceLevel', +e.target.value === 50 ? 'auto' : +e.target.value));
-  $('#mixRelated').addEventListener('change', (e) => setAdvKey('mixStyles', e.target.checked ? 'related' : 'auto'));
+  $('#moodChips').innerHTML = o.moods.map((m) => `<button type="button" class="chip" data-mood="${m.id}">${esc(m.label.replace(/ \((selon le style|per style)\)/, ''))}</button>`).join('');
   $('#keySel').innerHTML = '<option value="auto">Auto</option>' + o.keys.map((k) => `<option value="${k.id}">${esc(k.label)} (${k.id})</option>`).join('');
-  $('#scaleSel').innerHTML = '<option value="auto">Auto (selon style & ambiance)</option>' + o.scales.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
-  $('#filterStyle').innerHTML += o.styles.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
+  $('#scaleSel').innerHTML = `<option value="auto">${esc(t('form.scaleAuto') || 'Auto')}</option>` + o.scales.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
+  const curFilter = $('#filterStyle')?.value || '';
+  $('#filterStyle').innerHTML = `<option value="">${esc(t('lib.allStyles'))}</option>` + o.styles.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
+  if (curFilter) $('#filterStyle').value = curFilter;
   state.maxDur = o.limits.maxDuration; state.minDur = o.limits.minDuration;
   renderDurations();
-  $('#durPresets').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) setDuration(+c.dataset.dur); });
   $('#wavOn').checked = o.wavDefault !== false;
   buildAdvanced(o.advanced || {});
-  setDuration(DUR_DEFAULT);
-  $('#instChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; state.instruments[c.dataset.inst] = !state.instruments[c.dataset.inst]; renderChips(); refreshDefaults(); });
-  ['#keySel', '#scaleSel', '#bpmAuto'].forEach((q) => $(q).addEventListener('change', refreshDefaults)); $('#bpmIn').addEventListener('change', refreshDefaults);
-  // v1.10.0 : /?style=<id> (pages de style) présélectionne le style
+  if (!optionsBound) {
+    $('#stylesGrid').addEventListener('click', (e) => { const c = e.target.closest('.style-card'); if (c) selectStyle(c.dataset.style); });
+    $('#moodChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; state.mood = c.dataset.mood; renderChips(); refreshDefaults(); });
+    const setAdvKey = (k, v) => { if (!state.advDefs?.[k]) return; state.adv[k] = v === 'auto' ? null : v; state.advSession = false; readAdvanced(); saveTweaks(); refreshDefaults(); };
+    $('#variantChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; const s = state.options.styles.find((x) => x.id === state.style); if (s?.variants) setAdvKey(s.variants.key, c.dataset.v); });
+    $('#ambChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) setAdvKey('ambience', c.dataset.v); });
+    $('#varietyChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; const v = c.dataset.v; setAdvKey('variety', lofi20() ? (v === 'auto' ? 'medium' : v === 'high' ? 'auto' : v) : v); });
+    $('#ambVol').addEventListener('input', (e) => { $('#ambVolVal').textContent = e.target.value; });
+    $('#ambVol').addEventListener('change', (e) => setAdvKey('ambienceLevel', +e.target.value === 50 ? 'auto' : +e.target.value));
+    $('#mixRelated').addEventListener('change', (e) => setAdvKey('mixStyles', e.target.checked ? 'related' : 'auto'));
+    $('#durPresets').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) setDuration(+c.dataset.dur); });
+    $('#instChips').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; state.instruments[c.dataset.inst] = !state.instruments[c.dataset.inst]; renderChips(); refreshDefaults(); });
+    ['#keySel', '#scaleSel', '#bpmAuto'].forEach((q) => $(q).addEventListener('change', refreshDefaults)); $('#bpmIn').addEventListener('change', refreshDefaults);
+    optionsBound = true;
+  }
+  if (!state.style) setDuration(DUR_DEFAULT);
   const qs = new URLSearchParams(location.search).get('style');
-  selectStyle(qs && o.styles.some((x) => x.id === qs) ? qs : 'lofi');
+  selectStyle(state.style || (qs && o.styles.some((x) => x.id === qs) ? qs : 'lofi'));
 }
 function selectStyle(id) {
   state.style = id;
@@ -588,7 +590,7 @@ function detailsHTML(t) {
 
 /** v1.12.0 : lien « régénéré en v1.12.0 » entre un ancien morceau et sa nouvelle version. */
 function regenHtml(t) {
-  const lk = (x) => `<a href="/?track=${encodeURIComponent(x.id)}#library" data-goto="${esc(x.id)}">« ${esc(x.title || 'morceau supprimé')} »</a>`;
+  const lk = (x) => `<a href="/studio?track=${encodeURIComponent(x.id)}#library" data-goto="${esc(x.id)}">« ${esc(x.title || 'morceau supprimé')} »</a>`;
   if (t.regen_of) return `<div class="tregen">↻ régénéré en v${esc(t.regen_of.version || '1.12.0')} · depuis ${lk(t.regen_of)}</div>`;
   if (t.regenerations?.length) return `<div class="tregen">↻ version régénérée (v1.12.0) : ${t.regenerations.map(lk).join(', ')}</div>`;
   return '';
@@ -996,7 +998,14 @@ await refreshAuth();
 await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
   mountLangSwitcher(document.querySelector('.topbar'));
   applyDom(document);
-  onLangChange(() => { applyDom(document); renderLibrary(); updateStatus(); });
+  await mountSiteFooter();
+  onLangChange(async () => {
+    applyDom(document);
+    syncLangSwitchers();
+    try { await loadOptions(); } catch {}
+    try { renderLibrary(); } catch {}
+    updateStatus();
+  });
   initPubPanel({ api, toast, rerender: () => { if (!document.activeElement?.closest?.('[data-pubform]')) renderLibrary(); } });
   initGenForm({ api, toast, esc }).then(() => { if (state.style) genStyle(state.style); });
   ['input', 'change'].forEach((ev) => $('#libraryList').addEventListener(ev, onPubInput));
@@ -1006,7 +1015,7 @@ await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
     const q = new URLSearchParams(location.search), tid = q.get('track');
     const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-    if (q.get('tour') === '1') import('./tour.js?v=1.20.1').then((m) => m.startTour());
+    if (q.get('tour') === '1') import('./tour.js?v=1.20.5').then((m) => m.startTour());
   }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
 }
 function updateStatus() {

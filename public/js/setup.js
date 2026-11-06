@@ -1,10 +1,13 @@
-import { AuroraField } from './aurora.js';
-import { initI18n, t, mountLangSwitcher, applyDom } from './i18n.js';
+import { bootSite, mountBackground, t } from './site.js?v=1.20.5';
+import { applyDom } from './i18n.js';
 import { apiFetch, refreshAuth } from './csrf.js';
-await initI18n(); applyDom(); mountLangSwitcher(document.getElementById('langHost'));
-try { new AuroraField(document.getElementById('bgCanvas')); } catch {}
+
+mountBackground();
+await bootSite('/setup');
+applyDom(document);
+
 const st = await refreshAuth();
-if (!st?.local) { document.body.innerHTML = '<p class="wrap">404</p>'; throw new Error('local only'); }
+if (!st?.local) { document.querySelector('main').innerHTML = '<p class="hint">404</p>'; throw new Error('local only'); }
 if (!st.setupRequired) location.replace('/login');
 const $ = (s) => document.querySelector(s);
 $('#setupForm').addEventListener('submit', async (e) => {

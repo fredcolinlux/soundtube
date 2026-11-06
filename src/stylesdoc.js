@@ -4,9 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { config } from './config.js';
 
-const FILE = path.join(config.root, 'docs', 'STYLES.md');
+const FILE_FR = path.join(config.root, 'docs', 'STYLES.md');
+const FILE_EN = path.join(config.root, 'docs', 'en', 'STYLES.md');
+const fileFor = (lang) => (lang === 'en' && fs.existsSync(FILE_EN) ? FILE_EN : FILE_FR);
 const HEAD_ID = [[/^Lo-fi/i, 'lofi'], [/^Ambient/i, 'ambient'], [/^Synthwave/i, 'synthwave'], [/^Deep House/i, 'house'], [/^French Touch/i, 'frenchtouch'],
-  [/^Techno/i, 'techno'], [/^Cin[ée]matique/i, 'cinematic'], [/^Chiptune/i, 'chiptune'], [/^Trap/i, 'trap'], [/^Hip-Hop/i, 'hiphop'], [/^Drum/i, 'dnb']];
+  [/^Techno/i, 'techno'], [/^Cin[ée]matique|^Cinematic/i, 'cinematic'], [/^Chiptune/i, 'chiptune'], [/^Trap|^Instrumental Trap/i, 'trap'], [/^Hip-Hop/i, 'hiphop'], [/^Drum/i, 'dnb']];
 /** Machines et synthés reconnus dans le texte d'une fiche (tous synthétisés en JS, aucun échantillon de machine). */
 export const MACHINES = [
   ['TR-909', /TR-909|\b909\b/], ['TR-808', /TR-808|\b808\b/], ['TR-707', /TR-707/], ['TR-606', /TR-606/], ['DR-110', /DR-110/], ['TB-303', /TB-303|\b303\b/],
@@ -56,21 +58,24 @@ function factsOf(md) {
   return facts.map((t) => { const m = t.match(/^\*\*([^*]+)\*\*\s*(.*)$/); return m ? { label: m[1].replace(/[:\s]+$/, ''), html: inline(m[2].replace(/^[—:–-]\s*/, '')) } : { label: '', html: inline(t) }; });
 }
 
-let cache = { mtime: 0, data: null };
+const cache = { fr: { mtime: 0, data: null }, en: { mtime: 0, data: null } };
 /** { sections: {styleId: {title, md, html, facts, machines}}, roadmap: html|null, intro: html } — relu si le fichier change. */
-export function stylesDoc() {
+export function stylesDoc(lang = 'fr') {
+  const L = lang === 'en' ? 'en' : 'fr';
+  const FILE = fileFor(L);
   let st; try { st = fs.statSync(FILE); } catch { return { sections: {}, roadmap: null, intro: '' }; }
-  if (cache.data && cache.mtime === st.mtimeMs) return cache.data;
+  const slot = cache[L];
+  if (slot.data && slot.mtime === st.mtimeMs) return slot.data;
   const md = fs.readFileSync(FILE, 'utf8'); const parts = md.split(/\n(?=## )/);
   const sections = {}; let roadmap = null; let ai = null;
   for (const p of parts) {
     const m = p.match(/^## (.+)\n([\s\S]*)$/); if (!m) continue;
     const title = m[1].trim(), body = m[2].trim();
-    if (/^Feuille de route/i.test(title)) { roadmap = mdToHtml(body); continue; }
-    if (/^Directeur artistique/i.test(title)) { ai = mdToHtml(body); continue; }
+    if (/^(Feuille de route|Roadmap)/i.test(title)) { roadmap = mdToHtml(body); continue; }
+    if (/^(Directeur artistique|Art director)/i.test(title)) { ai = mdToHtml(body); continue; }
     const id = HEAD_ID.find(([rx]) => rx.test(title))?.[1]; if (!id || sections[id]) continue;
     sections[id] = { title, html: mdToHtml(body), facts: factsOf(body), machines: MACHINES.filter(([, rx]) => rx.test(body)).map(([n]) => n) };
   }
-  cache = { mtime: st.mtimeMs, data: { sections, roadmap, ai } };
-  return cache.data;
+  slot.mtime = st.mtimeMs; slot.data = { sections, roadmap, ai };
+  return slot.data;
 }

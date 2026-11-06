@@ -1,3 +1,4 @@
+<!-- v1.20.5 routes: / home, /studio studio -->
 # Manuel utilisateur — soundtube 1.18.0
 
 L’interface web est en **français** et en **anglais** (**FR | EN** dans la barre du haut). Le choix est stocké dans le navigateur (`localStorage` + cookie `soundtube_ui_lang`). La génération des titres / descriptions / tags YouTube (FR+EN) est **indépendante** de la langue d’interface (`/api/youtube/lang`).
