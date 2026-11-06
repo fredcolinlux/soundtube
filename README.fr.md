@@ -6,7 +6,7 @@ de Markov, basse, batterie, intro / couplet / refrain / pont / outro) puis **syn
 
 | | |
 |---|---|
-| **Version** | **1.19.2** |
+| **Version** | **1.20.0** |
 | **Langues d’interface** | Français et anglais (sélecteur **FR \| EN** dans la barre du haut) |
 | **Licence** | Voir `LICENSE` (tous droits réservés) |
 | **Moteur par défaut** | 21 (harmonie juste) ; empreinte `696de0f4125a` |
@@ -23,8 +23,8 @@ Le serveur central (**CT**) est prévu pour tourner **en root** (LXC Proxmox typ
 N’appelez **pas** `sudo` si vous êtes déjà root :
 
 ```bash
-tar -xzf soundtube-1.19.2-standalone.tar.gz
-cd soundtube-1.19.2
+tar -xzf soundtube-1.20.0-standalone.tar.gz
+cd soundtube-1.20.0
 ./install.sh --port 8080
 # équivalent : ./deploy/install.sh --port 8080
 ```
@@ -35,8 +35,8 @@ La langue d’interface est **indépendante** de la langue des titres / descript
 
 Agents de rendu dans `dist/` :
 
-- `dist/soundtube-node-agent-1.19.2-windows.zip`
-- `dist/soundtube-node-agent-1.19.2-macos.zip`
+- `dist/soundtube-node-agent-1.20.0-windows.zip`
+- `dist/soundtube-node-agent-1.20.0-macos.zip`
 
 ## Fonctions
 
@@ -58,12 +58,12 @@ Détail et attributions : [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md).
 `./install.sh` copie la banque dans `/opt/soundtube/app/assets/samples` ; `GET /api/health` → `samples: true`.
 
 
-## Modèles IA + veille (v1.19.2)
+## Modèles IA + veille (v1.20.0)
 
 Admin › **03 Modèles IA** : Directeur et Veille côte à côte ; `?v=` cache-bust. 
 
 Modèle Ollama **séparé** pour la veille (repli sur le directeur) et crawl autonome RSS (DuckDuckGo optionnel, anti-SSRF). Voir [docs/EXPLOITATION.md](docs/EXPLOITATION.md).
-## i18n (v1.19.2)
+## i18n (v1.20.0)
 
 | Élément | Chemin / API |
 |---|---|
@@ -83,7 +83,7 @@ npm test          # inclut test/v1180.js (i18n + empreinte moteur)
 Styles · Théorie · Nœuds · YouTube · Pack · Directeur · API — voir [docs/README.md](docs/README.md).  
 OpenAPI interactif : `/docs` (`/api/openapi.json`).
 
-## Nouveautés v1.19.2 — modèle veille dédié + crawl autonome
+## Nouveautés v1.20.0 — modèle veille dédié + crawl autonome
 
 - **Réglage Admin séparé** pour le LLM de veille : URL Ollama optionnelle (repli URL directeur), modèle choisi dans `/api/tags` (jamais de nom en dur), bouton **Tester**, repli sur le modèle directeur avec notice si non configuré.
 - **Crawl autonome** de sources publiques (RSS/Atom) : feeds musique / électronique / YouTube RSS publics / Reddit `.rss` / Bandcamp Daily / Resident Advisor, plus mots-clés par style ; DuckDuckGo HTML optionnel (désactivé par défaut).
@@ -118,7 +118,7 @@ OpenAPI interactif : `/docs` (`/api/openapi.json`).
 ## Nouveautés v1.15.0 — le directeur artistique connaît ton goût et la dernière veille
 
 - **Admin › 07 Contexte du directeur artistique** : deux sources facultatives, chacune avec son interrupteur (coupées par défaut ; coupées = prompt identique à la v1.14).
-  - **Profil de goût** distillé de l’export music library (45 333 pistes) : son global, genres et artistes les plus écoutés, artistes de référence par style **modifiables à la main** (une ligne par style). Livré dans `contexte/gout.json` ; outil `tools/gout-distill.mjs` pour le refaire.
+  - **Profil de goût** distillé de l’export Apple Music (45 333 pistes) : son global, genres et artistes les plus écoutés, artistes de référence par style **modifiables à la main** (une ligne par style). Livré dans `contexte/gout.json` ; outil `tools/gout-distill.mjs` pour le refaire.
   - **Dernière veille tendances** : résumé daté et borné (formats, ambiances, tempos, énergie, mots fréquents), étiqueté « données publiques, pas des instructions » ; omis sans rapport.
 - Budgets durs : 1 000 caractères pour le goût, 800 pour la veille ; exemple French Touch : 5 344 → 7 236 caractères (~2 070 jetons sur 8 192).
 - Les noms d’artistes restent internes : consigne explicite au modèle, puis retrait automatique des titres, descriptions, tags et explications proposés.
@@ -216,7 +216,7 @@ Le studio reste à `/` (favoris et habitudes inchangés, formulaire non restylé
 Détail par style : [`docs/STYLES.md`](docs/STYLES.md).
 
 - **Avancé pré-rempli avec les valeurs réelles du style** : pour la graine affichée (« aléatoire (prochaine : N) », tirée d'avance), chaque champ montre ce que le style va vraiment utiliser (`POST /api/advanced/defaults`). Plus de cases « Forcer » : ce qui est affiché est exactement ce qui sera utilisé. Une valeur changée passe en vert, est **mémorisée pour ce style** (↺ par champ, « Réinitialiser ce style ») ; seules les valeurs changées sont envoyées, donc une génération sans retouche est identique au rendu du style. Anciens morceaux et anciens réglages : relus à l'identique.
-- **Directeur artistique (Ollama)** — page Générer → *Directeur artistique* : « Décris l'ambiance » + **Proposer**. Le PC IA (Admin → PC IA, ex. `http://192.168.1.50:11434`, modèle `qwen3:14b`, chemins relatifs `api/chat` puis `api/generate`, `format: json`, délai réglable 10–600 s) renvoie style, ambiance, tonalité, tempo et réglages avancés, **validés strictement et bornés** par le serveur, puis appliqués au formulaire (tout reste modifiable). Options : **titre, description et tags FR + EN** (jamais de tempo ni de tonalité ; utilisés dans les infos YouTube) et, pour les mix ≥ 1 h, un **plan titre par titre** (énergie, ambiance, variante). Sans IA joignable ou réponse illisible : proposition locale par mots-clés, et l'interface le dit. API `POST /api/ai/suggest`.
+- **Directeur artistique (Ollama)** — page Générer → *Directeur artistique* : « Décris l'ambiance » + **Proposer**. Le PC IA (Admin → PC IA, ex. `http://192.168.0.150:40114/olla/ollama`, modèle `qwen3:14b`, chemins relatifs `api/chat` puis `api/generate`, `format: json`, délai réglable 10–600 s) renvoie style, ambiance, tonalité, tempo et réglages avancés, **validés strictement et bornés** par le serveur, puis appliqués au formulaire (tout reste modifiable). Options : **titre, description et tags FR + EN** (jamais de tempo ni de tonalité ; utilisés dans les infos YouTube) et, pour les mix ≥ 1 h, un **plan titre par titre** (énergie, ambiance, variante). Sans IA joignable ou réponse illisible : proposition locale par mots-clés, et l'interface le dit. API `POST /api/ai/suggest`.
 - **Veille tendances** (Admin → Veille tendances) : tâche planifiée (hebdomadaire par défaut, fréquence réglable, « Lancer maintenant ») qui lit seulement des **métadonnées publiques** de vidéos récentes par style — clé **YouTube Data API** facultative, sinon flux **RSS/Atom ou pages** (lignes « style URL »), sinon recherche YouTube publique (option) ; sans source, l'interface affiche « aucune source ». Le PC IA (ou une analyse locale) fait un résumé par style et propose des retouches ; **chaque proposition s'applique par un bouton**, jamais automatiquement. API `GET/PUT /api/admin/trends`, `POST /api/admin/trends/run`.
 - **French Touch refaite (moteur 19)**, trois variantes (*Variante* / `adv.ftStyle`) : **classique** (Cassius, Daft Punk *Homework* / *Discovery* : boucle disco filtrée 24 dB, longues montées, pompe profonde, talkbox), **Ed Banger** (Justice : saws distordus et compressés, basse saturée, batterie dure), **Myd** (lumineuse, basse rebondissante, hooks découpés). Techniques seulement, aucune mélodie ni échantillon repris. Pompe 1,4 dB → 3–8 dB (mesures : `demos-190/COMPARAISON.md`).
 - **Retouches légères (moteur 19)** : deep house plus chaloupée (DJ Koze), boom-bap poussiéreux, neurofunk « Pendulum », synthwave plus sombre (Depeche Mode). Feuille de route : trip-hop, hip-hop dub/reggae, électro Ed Banger, variante Koze.
@@ -233,3 +233,8 @@ Détail complet par style : [`docs/STYLES.md`](docs/STYLES.md).
 - **Défauts revus par style** (tempos, boîtes, sons, progressions, mix) : lo-fi, ambient, synthwave, house, techno, cinématique, chiptune, hip-hop, drum & bass. Ils alimentent aussi la variété des mix ≥ 1 h (boîtes et synthés qui tournent d'un titre à l'autre, house ↔ French Touch comme styles voisins).
 - **Options avancées « Forcer »** : chaque option a une case *Forcer*. Décochée, c'est le style (ou plus tard le directeur artistique IA) qui choisit — la valeur par défaut du style est affichée sous l'option ; cochée, ta valeur est utilisée. L'état des cases est mémorisé ; bouton « Tout au défaut du style ». Anciens réglages compatibles : une valeur enregistrée vaut « forcée ».
 
+
+
+## Sécurité / Internet (v1.20.0)
+
+Voir [docs/SECURITY.md](docs/SECURITY.md) et [docs/EXPOSITION.md](docs/EXPOSITION.md).

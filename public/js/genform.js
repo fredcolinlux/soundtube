@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 // v1.14.0 : formulaire de génération — choix de l'animation de la vidéo (par style) et paquet ZIP coché d'avance.
 let D = null; // { api, toast, esc, style() }
 let media = { items: [] }, cur = { style: null, media: null }, shown = null; // shown = { trackId, media, scope, override }
@@ -45,18 +46,18 @@ function tile(id, label, img, video, kind) {
 }
 function renderAnim() {
   const el = $('#animPick'); if (!el || !cur.style) return;
-  const items = media.items || [], label = (id) => items.find((m) => m.id === id)?.name || 'Fond du style';
-  const tiles = [tile(null, 'Fond du style', `/api/youtube/base.jpg?style=${encodeURIComponent(cur.style)}`, null, 'dégradé généré'),
-    ...items.map((m) => tile(m.id, m.name, `/api/media/${m.id}/poster.jpg`, m.kind === 'video' || m.kind === 'gif' ? `/api/media/${m.id}/file` : null, m.kind === 'video' ? `vidéo${m.duration ? ' · ' + Math.round(m.duration) + ' s' : ''}` : m.kind === 'gif' ? 'GIF' : 'image'))];
+  const items = media.items || [], label = (id) => items.find((m) => m.id === id)?.name || t('anim.styleBg');
+  const tiles = [tile(null, t('anim.styleBg'), `/api/youtube/base.jpg?style=${encodeURIComponent(cur.style)}`, null, t('anim.gradient')),
+    ...items.map((m) => tile(m.id, m.name, `/api/media/${m.id}/poster.jpg`, m.kind === 'video' || m.kind === 'gif' ? `/api/media/${m.id}/file` : null, m.kind === 'video' ? `${t('anim.kindVideo')}${m.duration ? ' · ' + Math.round(m.duration) + ' s' : ''}` : m.kind === 'gif' ? 'GIF' : t('anim.kindImage')))];
   let note = '';
   if (shown) {
     note = shown.override
-      ? `<p class="an-note warn">Morceau rechargé : sa vidéo utilise « ${D.esc(shown.item?.name || 'Fond du style')} », <b>remplacée pour ce morceau</b> dans son panneau YouTube. Le choix ci-dessous vaut pour les prochaines générations.</p>`
-      : `<p class="an-note">Morceau rechargé : sa vidéo utilise « ${D.esc(shown.item?.name || 'Fond du style')} »${shown.scope === 'generation' ? ' (choisie à sa génération)' : ' (réglage commun)'}.</p>`;
+      ? `<p class="an-note warn">${D.esc(t('anim.noteOverride', { name: shown.item?.name || t('anim.styleBg') }))}</p>`
+      : `<p class="an-note">${D.esc(t('anim.noteReload', { name: shown.item?.name || t('anim.styleBg'), scope: shown.scope === 'generation' ? t('anim.scopeGen') : t('anim.scopeCommon') }))}</p>`;
   }
-  el.innerHTML = `<div class="an-head"><b>Animation de la vidéo</b><span class="hint">mémorisée pour ce style · utilisée par la vidéo longue et par chaque vidéo de morceau · modifiable ensuite dans le panneau YouTube (pour ce morceau seulement)</span></div>
-    <div class="an-grid" role="radiogroup" aria-label="Animation de la vidéo">${tiles.join('')}</div>
-    ${items.length ? '' : `<p class="an-empty">Aucune animation dans la bibliothèque. <a href="/admin#media">Importer une animation dans Admin →</a></p>`}
+  el.innerHTML = `<div class="an-head"><b>${t('anim.title')}</b><span class="hint">mémorisée pour ce style · utilisée par la vidéo longue et par chaque vidéo de morceau · modifiable ensuite dans le panneau YouTube (pour ce morceau seulement)</span></div>
+    <div class="an-grid" role="radiogroup" aria-label="${t('anim.aria')}">${tiles.join('')}</div>
+    ${items.length ? '' : `<p class="an-empty">${t('media.empty')} <a href="/admin#media">${t('anim.importLink')}</a></p>`}
     <p class="hint an-cur">Choix pour ce style : <b>${D.esc(label(cur.media))}</b></p>${note}`;
 }
 async function onPick(e) {
@@ -64,7 +65,7 @@ async function onPick(e) {
   const id = c.dataset.anim || null;
   play(c, 4000);
   if ((cur.media || null) === id) return;
-  try { const r = await D.api(`/api/styles/${cur.style}/animation`, { method: 'PUT', body: JSON.stringify({ media: id }) }); cur.media = r.media || null; renderAnim(); D.toast(`Animation « ${id ? media.items.find((m) => m.id === id)?.name : 'Fond du style'} » mémorisée pour ce style.`); }
+  try { const r = await D.api(`/api/styles/${cur.style}/animation`, { method: 'PUT', body: JSON.stringify({ media: id }) }); cur.media = r.media || null; renderAnim(); D.toast(t('anim.saved', { name: id ? media.items.find((m) => m.id === id)?.name : t('anim.styleBg') })); }
   catch (err) { D.toast(err.message); }
 }
 // aperçu : quelques secondes du vrai mouvement au survol ou au clic
@@ -81,17 +82,17 @@ function stop(c) { clearTimeout(c._t); c.querySelectorAll('.an-media video, .an-
 function renderPackOpts() {
   const el = $('#packOpts'); if (!el) return; const o = loadPack();
   const ck = (k, label, extra = '') => `<label class="toggle small"><input type="checkbox" data-pk="${k}" ${o[k] ? 'checked' : ''} ${extra}><span>${label}</span></label>`;
-  const res = (k) => `<select data-pk="${k}" aria-label="Résolution">${[['720p', '720p'], ['1080p', '1080p'], ['2160p', '4K']].map(([v, l]) => `<option value="${v}" ${o[k] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const res = (k) => `<select data-pk="${k}" aria-label="${t('pack.resAria')}">${[['720p', '720p'], ['1080p', '1080p'], ['2160p', '4K']].map(([v, l]) => `<option value="${v}" ${o[k] === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   el.innerHTML = `<label>Paquet ZIP</label>
-    <div class="row">${ck('on', '<b>Préparer le ZIP complet à la fin du rendu</b>')}</div>
-    <div class="row pk-pc">${ck('pc', '<b>Faire la musique et la vidéo en même temps sur le PC / Mac</b>')}<span class="hint">${o.pc ? 'Activé : la musique est rendue sur le nœud (PC Windows ou Mac), la vidéo longue y démarre dès que le mix existe, puis un seul ZIP (vidéo, mix MP3 + WAV, morceaux, MIDI, samples) est prêt à télécharger. Si le nœud tombe, le CT reprend.' : 'Désactivé : le CT décide (nœud capable en priorité à partir du seuil réglé dans Admin, 15 min par défaut).'}</span></div>
+    <div class="row">${ck('on', '<b>' + t('pack.prepare') + '</b>')}</div>
+    <div class="row pk-pc">${ck('pc', '<b>' + t('pack.pcCombo') + '</b>')}<span class="hint">${o.pc ? t('pack.pcOn') : t('pack.pcOff')}</span></div>
     <div class="pk-more" ${o.on ? '' : 'hidden'}>
-      <div class="row">${ck('video', 'Vidéo longue')} ${res('videoRes')}</div>
-      <div class="row">${ck('pieces', 'Morceaux découpés (MP3 + TXT par morceau, MIDI/)')}</div>
-      <div class="row pk-sub">${ck('pieceVideo', 'Une vidéo par morceau', o.pieces ? '' : 'disabled')} ${res('pieceRes')}<span class="hint warn">long à rendre, 720p par défaut ; chaque morceau est aussi ajouté à la bibliothèque</span></div>
-      <div class="row pk-sub">${ck('stems', 'Samples : un WAV par groupe d’instruments et par morceau', o.pieces ? '' : 'disabled')}<span class="hint">batterie, basse, accords, mélodie-pads, percussions · 5 rendus supplémentaires</span></div>
+      <div class="row">${ck('video', t('pack.longVideo'))} ${res('videoRes')}</div>
+      <div class="row">${ck('pieces', t('pack.piecesDetail'))}</div>
+      <div class="row pk-sub">${ck('pieceVideo', t('pack.pieceVideo'), o.pieces ? '' : 'disabled')} ${res('pieceRes')}<span class="hint warn">${t('pack.pieceVideoHint')}</span></div>
+      <div class="row pk-sub">${ck('stems', t('pack.stems'), o.pieces ? '' : 'disabled')}<span class="hint">${t('pack.stemsHint')}</span></div>
       <div class="row">${ck('wav', 'WAV (mix + morceaux)')} ${ck('midi', 'MIDI')} ${ck('txt', 'TXT par morceau')}</div>
-      <p class="hint">Arborescence : <code>nom-du-morceau/ LISEZMOI.txt · manifest.json · video/ · mix/ · morceaux/</code>. Morceaux seulement pour un mix DJ ou une génération de plus de 30 min. Le ZIP attend les vidéos de morceaux et le dit ; il n’omet jamais un fichier demandé. Un lien apparaît ici dès qu’il est prêt.</p>
+      <p class="hint">${t('pack.treeHint')}</p>
     </div><div id="packWatch" class="pk-watch"></div>`;
 }
 function onPackInput(e) {
@@ -112,12 +113,12 @@ const mb = (n) => `${(n / 1048576).toFixed(n > 1e8 ? 0 : 1).replace('.', ',')} M
 async function tick(id) {
   const b = boxes.get(id); if (!b) return;
   let r = null, wait = 2500;
-  try { r = await D.api(`/api/tracks/${id}/pack`); } catch (e) { if (/introuvable|pas terminé/i.test(e.message)) { let st = ''; try { st = (await D.api(`/api/jobs/${id}`)).stage || ''; } catch {} b.html = `<div class="pk-job"><b>${D.esc(b.title)}</b> · ${st ? D.esc(st) : 'rendu de la musique en cours'}, le ZIP suivra…</div>`; } }
+  try { r = await D.api(`/api/tracks/${id}/pack`); } catch (e) { if (/introuvable|pas terminé/i.test(e.message)) { let st = ''; try { st = (await D.api(`/api/jobs/${id}`)).stage || ''; } catch {} b.html = `<div class="pk-job"><b>${D.esc(b.title)}</b> · ${st ? D.esc(st) : t('pack.waitingMusic')}, ${t('pack.waiting')}</div>`; } }
   const s = r?.state;
   if (r && !s) b.html = `<div class="pk-job"><b>${D.esc(b.title)}</b> · ZIP en attente…</div>`;
   if (s?.status === 'running') b.html = `<div class="pk-job"><b>ZIP complet de « ${D.esc(b.title)} »</b> · ${D.esc(s.stage || '')}${/%/.test(s.stage || '') ? '' : ` · ${Math.round((s.progress || 0) * 100)} %`}<div class="bar"><i style="width:${Math.round((s.progress || 0) * 100)}%"></i></div></div>`;
-  if (s?.status === 'done') { const rw = r.render ? (r.render.where === 'node' ? `musique rendue sur le PC « ${D.esc(r.render.node || '')} »${r.render.combo ? ' (musique + vidéo)' : ''} · ` : r.render.fallback ? 'musique reprise sur le CT (PC en panne) · ' : '') : ''; b.html = `<div class="pk-job ok"><b>ZIP complet de « ${D.esc(b.title)} » prêt</b> · ${rw}${s.pieces || 1} morceau${(s.pieces || 1) > 1 ? 'x' : ''} · ${mb(s.size || 0)} · <a class="btn btn-mini btn-primary" href="${s.url}" download>Télécharger le ZIP</a> <button class="btn btn-mini btn-ghost" type="button" data-pkclose="${id}">Masquer</button></div>`; if (!b.announced) { b.announced = true; D.toast(`ZIP complet de « ${b.title} » prêt ✨`, 6000); } wait = 0; }
-  if (s?.status === 'error') { b.html = `<div class="pk-job error"><b>ZIP complet de « ${D.esc(b.title)} »</b> · erreur : ${D.esc(s.error || '')} <button class="btn btn-mini btn-ghost" type="button" data-pkclose="${id}">Masquer</button></div>`; wait = 0; }
+  if (s?.status === 'done') { const rw = r.render ? (r.render.where === 'node' ? t('pack.renderNode', { node: r.render.node || '', combo: r.render.combo ? t('pack.renderCombo') : '' }) : r.render.fallback ? t('pack.renderFallback') : '') : ''; const n = s.pieces || 1; const pc = n > 1 ? t('pack.pieceCount_plural', { n }) : t('pack.pieceCount', { n }); b.html = `<div class="pk-job ok"><b>${D.esc(t('pack.readyHtml', { title: b.title }))}</b> · ${rw}${pc} · ${mb(s.size || 0)} · <a class="btn btn-mini btn-primary" href="${s.url}" download>${t('pack.download')}</a> <button class="btn btn-mini btn-ghost" type="button" data-pkclose="${id}">${t('pack.hide')}</button></div>`; if (!b.announced) { b.announced = true; D.toast(t('pack.readyToast', { title: b.title }), 6000); } wait = 0; }
+  if (s?.status === 'error') { b.html = `<div class="pk-job error"><b>ZIP complet de « ${D.esc(b.title)} »</b> · erreur : ${D.esc(s.error || '')} <button class="btn btn-mini btn-ghost" type="button" data-pkclose="${id}">${t('pack.hide')}</button></div>`; wait = 0; }
   renderWatch(); if (wait) setTimeout(() => tick(id), wait);
 }
 function renderWatch() {

@@ -1,10 +1,11 @@
+import { t } from './i18n.js';
 // v1.15.0 : Admin › Contexte du directeur artistique — interrupteurs, profil de goût, dernière veille, aperçu du prompt (diff) et test Ollama.
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const toast = (m) => { const t = $('#toast'); if (!t) return; t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 3500); };
 async function api(method, url, body) {
-  const r = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
-  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || `Erreur ${r.status}`); return d;
+  const r = await apiFetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || t('err.generic', { status: r.status })); return d;
 }
 const n = (x) => Number(x || 0).toLocaleString('fr-FR');
 const tok = (c) => Math.ceil(c / 3.5);
@@ -12,22 +13,22 @@ let V = null;
 function render(v) {
   V = v; const s = v.settings, p = v.profile;
   $('#dirTaste').checked = s.taste; $('#dirTrends').checked = s.trends;
-  $('#dirState').textContent = `${s.taste ? 'goût : activé' : 'goût : coupé'} · ${s.trends ? 'veille : activée' : 'veille : coupée'}`;
+  $('#dirState').textContent = `${s.taste ? t('dir.tasteOn') : t('dir.tasteOff')} · ${s.trends ? t('dir.trendsOn') : t('dir.trendsOff')}`;
   $('#dirProfMeta').textContent = p ? `${p.source} · ${n(p.stats.tracks)} pistes · ${n(p.stats.plays)} écoutes · distillé le ${p.builtAt}${s.edited ? ' · références modifiées' : ''}` : 'profil absent (contexte/gout.json)';
   $('#dirProfile').innerHTML = p ? `<div><b>Artistes les plus écoutés</b><ol>${p.topArtists.slice(0, 10).map((a) => `<li>${esc(a.name)} <span class="hint">${n(a.plays)}</span></li>`).join('')}</ol></div>
     <div><b>Genres</b><ol>${p.topGenres.slice(0, 8).map((g) => `<li>${esc(g.name)} <span class="hint">${n(g.plays)} · ${String(g.share).replace('.', ',')} %</span></li>`).join('')}</ol></div>` : '';
   if (document.activeElement !== $('#dirRefs')) $('#dirRefs').value = v.refsText || '';
   $('#dirTasteText').textContent = v.taste || '—'; $('#dirTasteMeta').textContent = `${v.style} · ${n(v.taste.length)} / ${n(v.budget.taste)} caractères · ~${tok(v.taste.length)} jetons${s.taste ? '' : ' · coupé : non envoyé'}`;
-  $('#dirTrText').textContent = v.trends?.text || 'Aucun rapport de veille : rien n’est ajouté.';
+  $('#dirTrText').textContent = v.trends?.text || t('dir.noTrends');
   $('#dirTrMeta').textContent = v.trends ? `rapport du ${v.trends.date} · ${n(v.trends.text.length)} / ${n(v.budget.trends)} caractères · ~${tok(v.trends.text.length)} jetons${s.trends ? '' : ' · coupé : non envoyé'}` : '';
   $('#dirTrText').classList.toggle('muted', !v.trends);
 }
 async function load() { try { render(await api('GET', '/api/admin/director')); } catch (e) { $('#dirMsg').textContent = e.message; } }
 async function put(b, msg) { try { render(await api('PUT', '/api/admin/director', b)); if (msg) toast(msg); } catch (e) { toast(e.message); $('#dirMsg').textContent = e.message; } }
 $('#dirTaste').addEventListener('change', (e) => put({ taste: e.target.checked }, e.target.checked ? 'Profil de goût activé.' : 'Profil de goût coupé.'));
-$('#dirTrends').addEventListener('change', (e) => put({ trends: e.target.checked }, e.target.checked ? 'Veille activée dans le prompt.' : 'Veille coupée du prompt.'));
-$('#dirSave').addEventListener('click', () => { $('#dirMsg').textContent = ''; put({ refsText: $('#dirRefs').value }, 'Références enregistrées.'); });
-$('#dirReset').addEventListener('click', () => { if (confirm('Revenir aux artistes de référence du profil livré ?')) { $('#dirRefs').blur(); put({ reset: true }, 'Profil livré rétabli.'); } });
+$('#dirTrends').addEventListener('change', (e) => put({ trends: e.target.checked }, e.target.checked ? t('dir.trendsOn') : t('dir.trendsOff')));
+$('#dirSave').addEventListener('click', () => { $('#dirMsg').textContent = ''; put({ refsText: $('#dirRefs').value }, t('dir.saved')); });
+$('#dirReset').addEventListener('click', () => { if (confirm(t('confirm.dirReset'))) { $('#dirRefs').blur(); put({ reset: true }, t('toast.dirResetOk')); } });
 
 function diffHTML(d) {
   const out = []; let i = 0;

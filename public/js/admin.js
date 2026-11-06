@@ -1,13 +1,15 @@
 // Page Admin : nœuds de rendu musique + vidéo (v1.16.0 : capacité musicale, moteur, historique ; état en direct, ajout / retrait, activation, nœud forcé), CT local, PC IA (Ollama).
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom } from './i18n.js';
+import { apiFetch, refreshAuth } from './csrf.js';
 await initI18n();
+await refreshAuth();
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function toast(msg, ms = 3200) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (el.hidden = true), ms); }
 try { new AuroraField($('#bgCanvas')); } catch {}
 async function api(method, url, body) {
-  const r = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+  const r = await apiFetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
   const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || t('err.generic', { status: r.status })); return d;
 }
 const STATUS_L = () => ({ up: [t('admin.st.up'), 'up'], down: [t('admin.st.down'), 'down'], disabled: [t('admin.st.off'), 'off'], unknown: [t('admin.st.test'), 'off'] });
@@ -19,10 +21,10 @@ const HSTAT = new Proxy({}, { get: (_, k) => ({ done: [t('admin.h.done'), 'ok'],
 const parisTime = (iso) => { try { return new Date(iso).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return iso; } };
 const dur = (ms) => (ms == null ? '' : ms < 60000 ? `${Math.round(ms / 1000)} s` : `${Math.floor(ms / 60000)} min ${String(Math.round(ms / 1000) % 60).padStart(2, '0')}`);
 function histTable(list, showNode = false) {
-  if (!list.length) return '<p class="hint">Aucun rendu pour l’instant.</p>';
-  return `<table class="hist"><thead><tr><th>Quand (Paris)</th><th>Type</th>${showNode ? '<th>Où</th>' : ''}<th>Morceau</th><th>Résultat</th><th class="c-dur">Durée</th></tr></thead><tbody>${list.map((h) => {
+  if (!list.length) return `<p class="hint">${t('admin.histEmpty')}</p>`;
+  return `<table class="hist"><thead><tr><th>${t('admin.histWhen')}</th><th>${t('admin.histType')}</th>${showNode ? `<th>${t('admin.histWhere')}</th>` : ''}<th>${t('admin.histTrack')}</th><th>${t('admin.histResult')}</th><th class="c-dur">${t('admin.histDur')}</th></tr></thead><tbody>${list.map((h) => {
     const [lab, cls] = HSTAT[h.status] || [h.status, ''];
-    return `<tr><td>${esc(parisTime(h.at))}</td><td>${esc(KIND[h.kind] || h.kind)}</td>${showNode ? `<td>${esc(h.nodeName || 'CT (local)')}</td>` : ''}<td>${esc(h.title || '—')}</td><td><span class="hist-st ${cls}">${esc(lab)}</span>${h.note ? `<div class="hint">${esc(h.note)}</div>` : ''}</td><td class="c-dur">${esc(dur(h.ms))}</td></tr>`;
+    return `<tr><td>${esc(parisTime(h.at))}</td><td>${esc(KIND[h.kind] || h.kind)}</td>${showNode ? `<td>${esc(h.nodeName || t('admin.ctLocal'))}</td>` : ''}<td>${esc(h.title || '—')}</td><td><span class="hist-st ${cls}">${esc(lab)}</span>${h.note ? `<div class="hint">${esc(h.note)}</div>` : ''}</td><td class="c-dur">${esc(dur(h.ms))}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
 function audioLine(n) {
@@ -34,7 +36,7 @@ function audioLine(n) {
 function render(v) {
   V = v;
   const up = v.nodes.filter((n) => n.status === 'up').length;
-  $('#statusText').textContent = v.nodes.length ? `${up}/${v.nodes.length} nœud${v.nodes.length > 1 ? 's' : ''} en ligne` : 'CT seul';
+  $('#statusText').textContent = v.nodes.length ? (v.nodes.length > 1 ? t('admin.nodesOnline_plural', { up, total: v.nodes.length }) : t('admin.nodesOnline', { up, total: v.nodes.length })) : t('admin.ctOnly');
   $('#statusPill').classList.toggle('busy', v.active.length > 0);
   $('#nodesList').innerHTML = v.nodes.length ? v.nodes.map((n) => {
     const [lab, cls] = STATUS[n.status] || STATUS.unknown;
@@ -55,18 +57,18 @@ function render(v) {
         <button class="btn btn-mini" data-act="rename" type="button">Renommer</button>
         <button class="btn btn-mini btn-danger" data-act="remove" type="button">Retirer</button>
       </div></div>`;
-  }).join('') : '<p class="hint nodes-empty">Aucun nœud : les vidéos sont rendues sur le CT (libx264). Lance l’agent sur le PC Windows ou le Mac mini puis ajoute son adresse ci-dessous (ex. http://192.168.1.50:8765).</p>';
+  }).join('') : `<p class="hint nodes-empty">${t('admin.nodesEmpty')}</p>`;
   const sel = $('#forceSel');
-  sel.innerHTML = '<option value="">Automatique (meilleur nœud libre)</option>' + v.nodes.map((n) => `<option value="${esc(n.url)}" ${n.forced ? 'selected' : ''}>${esc(n.name || n.url)}</option>`).join('');
+  sel.innerHTML = `<option value="">${t('admin.forceAuto')}</option>` + v.nodes.map((n) => `<option value="${esc(n.url)}" ${n.forced ? 'selected' : ''}>${esc(n.name || n.url)}</option>`).join('');
   $('#localSel').value = v.localMode;
-  $('#localHint').textContent = `Rendus simultanés sur le CT : ${v.local.slots} (en cours : ${v.local.running}, ${v.local.cpus} cœurs).`;
-  $('#orderHint').textContent = v.forceUrl ? `Nœud forcé : ${v.forceUrl}` : v.order.length ? `Ordre actuel : ${v.order.join(' → ')} → CT` : 'Ordre actuel : CT seul';
+  $('#localHint').textContent = t('admin.localSlots', { slots: v.local.slots, running: v.local.running, cpus: v.local.cpus });
+  $('#orderHint').textContent = v.forceUrl ? t('admin.orderForced', { url: v.forceUrl }) : v.order.length ? t('admin.orderList', { order: v.order.join(' → ') }) : t('admin.orderCtOnly');
   if (!editing && document.activeElement !== $('#audioMin')) $('#audioMin').value = Math.round(v.audioMinSec / 60);
   $('#ctEngine').textContent = `Moteur du CT : ${v.engine.version} · ${v.engine.hash}`;
   const capable = v.nodes.filter((n) => n.audio?.capable).map((n) => n.name || n.url);
-  $('#audioHint').textContent = capable.length ? `Musique sur nœud : ${capable.join(', ')}. Une génération de ${Math.round(v.audioMinSec / 60)} min ou plus y part en priorité (moins chargé, puis le plus rapide mesuré) ; les plus courtes restent sur le CT sauf s’il est saturé.` : 'Aucun nœud ne peut rendre la musique pour l’instant : tout est rendu sur le CT.';
+  $('#audioHint').textContent = capable.length ? `Musique sur nœud : ${capable.join(', ')}. Une génération de ${Math.round(v.audioMinSec / 60)} min ou plus y part en priorité (moins chargé, puis le plus rapide mesuré) ; les plus courtes restent sur le CT sauf s’il est saturé.` : t('admin.audioNone');
   $('#histAll').innerHTML = histTable(v.history || [], true);
-  $('#activeJobs').innerHTML = v.active.length ? 'En cours : ' + v.active.map((a) => `<span class="node-tag">${esc(a.title || 'vidéo')} → ${esc(a.name)} (${esc(a.encoder || '')}) ${Math.round(a.progress * 100)} %</span>`).join(' ') : (v.waiting ? `${v.waiting} vidéo(s) en attente d’un nœud libre` : '');
+  $('#activeJobs').innerHTML = v.active.length ? t('admin.activeJobs') +  + v.active.map((a) => `<span class="node-tag">${esc(a.title || 'vidéo')} → ${esc(a.name)} (${esc(a.encoder || '')}) ${Math.round(a.progress * 100)} %</span>`).join(' ') : (v.waiting ? `${v.waiting} vidéo(s) en attente d’un nœud libre` : '');
 }
 async function load() { if (editing) return; try { render(await api('GET', '/api/admin/nodes')); } catch (e) { $('#statusText').textContent = 'Serveur injoignable'; } }
 
@@ -74,38 +76,38 @@ $('#nodesList').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-act]'); if (!b || b.tagName === 'INPUT') return;
   const id = b.closest('.node-row').dataset.id, n = V.nodes.find((x) => x.id === id);
   try {
-    if (b.dataset.act === 'remove') { if (!confirm(`Retirer le nœud ${n.name || n.url} ?`)) return; render(await api('DELETE', `/api/admin/nodes/${id}`)); toast('Nœud retiré.'); }
+    if (b.dataset.act === 'remove') { if (!confirm(t('confirm.nodeRemove', { name: n.name || n.url }))) return; render(await api('DELETE', `/api/admin/nodes/${id}`)); toast(t('toast.nodeRemoved')); }
     if (b.dataset.act === 'detail') { open.has(id) ? open.delete(id) : open.add(id); render(V); return; }
-    if (b.dataset.act === 'verify') { b.disabled = true; toast('Vérification : rendu de référence sur le CT et sur le PC…', 60000); const r = await fetch(`/api/admin/nodes/${id}/verify`, { method: 'POST' }).then((x) => x.json()); toast(r.ok ? `Identique au bit près (WAV ${r.ct}…).` : `Écart : ${r.error}`, 8000); load(); return; }
+    if (b.dataset.act === 'verify') { b.disabled = true; toast(t('toast.nodeVerify'), 60000); const r = await fetch(`/api/admin/nodes/${id}/verify`, { method: 'POST' }).then((x) => x.json()); toast(r.ok ? t('toast.nodeIdentical', { ct: r.ct }) : (r.error || t('err.generic', { status: '' })), 8000); load(); return; }
     if (b.dataset.act === 'rename') { const name = prompt('Nom du nœud', n.name || ''); if (name == null) return; render(await api('PATCH', `/api/admin/nodes/${id}`, { name })); }
   } catch (err) { toast(err.message); }
 });
 $('#nodesList').addEventListener('change', async (e) => {
   const id = e.target.closest('.node-row')?.dataset.id;
-  if (e.target.dataset.act === 'audio') { try { render(await api('PATCH', `/api/admin/nodes/${id}`, { audio: e.target.checked })); toast(e.target.checked ? 'Musique autorisée sur ce nœud.' : 'Musique désactivée sur ce nœud : vidéo seulement.'); } catch (err) { toast(err.message); } return; }
+  if (e.target.dataset.act === 'audio') { try { render(await api('PATCH', `/api/admin/nodes/${id}`, { audio: e.target.checked })); toast(e.target.checked ? t('toast.nodeAudioOn') : t('toast.nodeAudioOff')); } catch (err) { toast(err.message); } return; }
   if (e.target.dataset.act !== 'enable') return;
-  try { render(await api('PATCH', `/api/admin/nodes/${id}`, { enabled: e.target.checked })); toast(e.target.checked ? 'Nœud activé.' : 'Nœud désactivé.'); } catch (err) { toast(err.message); }
+  try { render(await api('PATCH', `/api/admin/nodes/${id}`, { enabled: e.target.checked })); toast(e.target.checked ? t('toast.nodeOn') : t('toast.nodeOff')); } catch (err) { toast(err.message); }
 });
 $('#addBtn').addEventListener('click', async () => {
   const url = $('#nodeUrl').value.trim(); if (!url) return toast(t('toast.needNodeUrl'));
-  $('#addBtn').disabled = true; $('#addMsg').textContent = 'Connexion…';
+  $('#addBtn').disabled = true; $('#addMsg').textContent = t('common.connecting');
   try {
     const v = await api('POST', '/api/admin/nodes', { url, name: $('#nodeName').value.trim(), token: $('#nodeToken').value.trim() }); render(v);
     const n = v.nodes[v.nodes.length - 1]; $('#addMsg').textContent = n.status === 'up' ? `Ajouté : ${n.encoderLabel}` : `Ajouté, mais hors ligne : ${n.error || ''}`;
     $('#nodeUrl').value = ''; $('#nodeName').value = ''; $('#nodeToken').value = '';
   } catch (err) { $('#addMsg').textContent = err.message; } finally { $('#addBtn').disabled = false; }
 });
-$('#refreshBtn').addEventListener('click', async () => { $('#refreshBtn').disabled = true; try { render(await api('POST', '/api/admin/nodes/check')); toast('Nœuds testés.'); } catch (e) { toast(e.message); } finally { $('#refreshBtn').disabled = false; } });
-$('#forceSel').addEventListener('change', async (e) => { try { render(await api('PUT', '/api/admin/render', { forceUrl: e.target.value || null })); toast(e.target.value ? 'Nœud forcé.' : 'Répartition automatique.'); } catch (err) { toast(err.message); } });
-$('#forceBtn').addEventListener('click', async () => { const u = $('#forceUrl').value.trim(); if (!u) return toast('Indique une adresse.'); try { render(await api('PUT', '/api/admin/render', { forceUrl: u })); $('#forceUrl').value = ''; toast('Nœud forcé.'); } catch (err) { toast(err.message); } });
+$('#refreshBtn').addEventListener('click', async () => { $('#refreshBtn').disabled = true; try { render(await api('POST', '/api/admin/nodes/check')); toast(t('toast.nodesChecked')); } catch (e) { toast(e.message); } finally { $('#refreshBtn').disabled = false; } });
+$('#forceSel').addEventListener('change', async (e) => { try { render(await api('PUT', '/api/admin/render', { forceUrl: e.target.value || null })); toast(e.target.value ? t('toast.nodeForced') : t('toast.nodeAuto')); } catch (err) { toast(err.message); } });
+$('#forceBtn').addEventListener('click', async () => { const u = $('#forceUrl').value.trim(); if (!u) return toast(t('toast.needAddress')); try { render(await api('PUT', '/api/admin/render', { forceUrl: u })); $('#forceUrl').value = ''; toast(t('toast.nodeForced')); } catch (err) { toast(err.message); } });
 $('#audioMin').addEventListener('change', async (e) => { try { render(await api('PUT', '/api/admin/render', { audioMinSec: Math.round(+e.target.value * 60) })); toast(`Seuil : ${e.target.value} min.`); } catch (err) { toast(err.message); } });
 $('#localSel').addEventListener('change', async (e) => { try { render(await api('PUT', '/api/admin/render', { localMode: e.target.value })); } catch (err) { toast(err.message); } });
 $('#discoverBtn').addEventListener('click', async () => {
-  const box = $('#discovered'); box.hidden = false; box.innerHTML = '<p class="hint">Recherche des agents sur le réseau local…</p>';
+  const box = $('#discovered'); box.hidden = false; box.innerHTML = `<p class="hint">${t('admin.discovering')}</p>`;
   try {
     const { found } = await api('POST', '/api/admin/discover');
-    box.innerHTML = found.length ? found.map((f) => `<div class="row node-found"><span><b>${esc(f.name)}</b> · ${esc(f.url)} · ${esc(f.encoderLabel || '')}</span>${f.known ? '<span class="hint">déjà ajouté</span>' : `<button class="btn btn-mini" data-url="${esc(f.url)}" data-name="${esc(f.name)}" type="button">Ajouter</button>`}</div>`).join('')
-      : '<p class="hint">Aucun agent trouvé (diffusion UDP 47811 bloquée par le pare-feu ?). Ajoute l’adresse à la main.</p>';
+    box.innerHTML = found.length ? found.map((f) => `<div class="row node-found"><span><b>${esc(f.name)}</b> · ${esc(f.url)} · ${esc(f.encoderLabel || '')}</span>${f.known ? `<span class="hint">${t('common.alreadyAdded')}</span>` : `<button class="btn btn-mini" data-url="${esc(f.url)}" data-name="${esc(f.name)}" type="button">${t('common.add')}</button>`}</div>`).join('')
+      : `<p class="hint">${t('admin.discoverNone')}</p>`;
   } catch (e) { box.innerHTML = `<p class="hint">${esc(e.message)}</p>`; }
 });
 $('#discovered').addEventListener('click', async (e) => { const b = e.target.closest('button[data-url]'); if (!b) return; try { render(await api('POST', '/api/admin/nodes', { url: b.dataset.url, name: b.dataset.name })); b.replaceWith(Object.assign(document.createElement('span'), { className: 'hint', textContent: 'ajouté' })); } catch (err) { toast(err.message); } });
@@ -136,7 +138,7 @@ $('#aiSave').addEventListener('click', async () => {
       url: $('#aiUrl').value.trim(), model: $('#aiModel').value.trim(), timeout: +$('#aiTimeout').value || 120,
       watchUrl: $('#watchUrl').value.trim(), watchModel: $('#watchModel').value.trim(),
     });
-    $('#aiModel').value = a.model; paintWatch(a.watch); toast('Réglages IA enregistrés.');
+    $('#aiModel').value = a.model; paintWatch(a.watch); toast(t('admin.aiSaved'));
   } catch (e) { toast(e.message); }
 });
 $('#aiTest').addEventListener('click', async () => {
@@ -193,18 +195,18 @@ async function loadTrends() { try { const v = await api('GET', '/api/admin/trend
     $('#trHistory').innerHTML = h.length ? ('Historique : ' + h.slice(0, 8).map((x) => `${esc(x.at || x.file)} · ${esc(x.sourceLabel || x.source || '')}${x.errors?.length ? ' · ' + x.errors.length + ' err.' : ''}`).join(' · ')) : '';
   } } catch (e) { $('#trMsg').textContent = e.message; } }
 $('#trFeedsReset')?.addEventListener('click', async () => {
-  try { const v = await api('PUT', '/api/admin/trends', { resetFeeds: true }); $('#trFeeds').value = v.feeds || v.settings?.feeds || ''; toast('Sources par défaut restaurées.'); loadTrends(); }
+  try { const v = await api('PUT', '/api/admin/trends', { resetFeeds: true }); $('#trFeeds').value = v.feeds || v.settings?.feeds || ''; toast(t('toast.trendsFeedsReset')); loadTrends(); }
   catch (e) { toast(e.message); }
 });
 $('#trStyles').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) c.classList.toggle('on'); });
 $('#trSave').addEventListener('click', async () => {
   const b = { enabled: $('#trOn').checked, intervalDays: +$('#trEvery').value, perStyle: +$('#trPer').value, html: $('#trHtml').checked, crawl: $('#trCrawl')?.checked !== false, discover: !!$('#trDiscover')?.checked, allowPrivateSources: !!$('#trPrivate')?.checked, feeds: $('#trFeeds').value, styles: [...document.querySelectorAll('#trStyles .chip.on')].map((c) => c.dataset.id) };
   if ($('#trKey').value.trim()) b.ytKey = $('#trKey').value.trim();
-  try { await api('PUT', '/api/admin/trends', b); $('#trKey').value = ''; toast('Veille enregistrée.'); loadTrends(); } catch (e) { toast(e.message); }
+  try { await api('PUT', '/api/admin/trends', b); $('#trKey').value = ''; toast(t('toast.trendsSaved')); loadTrends(); } catch (e) { toast(e.message); }
 });
-$('#trKeyDel').addEventListener('click', () => { if (confirm('Effacer la clé YouTube enregistrée ?')) api('PUT', '/api/admin/trends', { ytKey: '' }).then(loadTrends).catch((e) => toast(e.message)); });
+$('#trKeyDel').addEventListener('click', () => { if (confirm(t('confirm.trendsKeyDel'))) api('PUT', '/api/admin/trends', { ytKey: '' }).then(loadTrends).catch((e) => toast(e.message)); });
 $('#trRun').addEventListener('click', async () => {
-  try { await api('POST', '/api/admin/trends/run'); toast('Veille lancée.'); $('#trRun').disabled = true; clearInterval(trPoll);
+  try { await api('POST', '/api/admin/trends/run'); toast(t('toast.trendsRun')); $('#trRun').disabled = true; clearInterval(trPoll);
     trPoll = setInterval(async () => { const v = await api('GET', '/api/admin/trends').catch(() => null); if (v) renderTrends(v); if (v && !v.settings.running) clearInterval(trPoll); }, 2000);
   } catch (e) { toast(e.message, 5000); }
 });
@@ -214,8 +216,8 @@ $('#trReport').addEventListener('click', (e) => {
   let all = {}; try { all = JSON.parse(localStorage.getItem(TWEAKS_KEY) || '{}') || {}; } catch { all = {}; }
   all[id] = { ...(all[id] || {}), ...g.adv };
   localStorage.setItem(TWEAKS_KEY, JSON.stringify(all));
-  b.textContent = 'Appliqué ✓'; b.disabled = true;
-  toast(`Retouches enregistrées pour ${TR.r.styles[id].label || id} : elles apparaissent en vert dans « Avancé » (page Générer).${g.mood ? ` Ambiance conseillée : ${g.mood}.` : ''}`, 6000);
+  b.textContent = t('admin.applied'); b.disabled = true;
+  toast(t('toast.trendsApplied', { label: TR.r.styles[id].label || id, mood: g.mood ? t('toast.trendsMood', { mood: g.mood }) : '' }), 6000);
 });
 loadTrends();
 

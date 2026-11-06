@@ -110,3 +110,6 @@ Hard-refresh Admin: pill **v1.19.2**, section **03 AI models** (Director | Watch
 
 > If an older archive created `/opt/soundtube/app/soundtube/`, the server ignores it. Remove that nested folder after applying a flat patch, or extract with `--strip-components=1`.
 
+## v1.20.0 — Security & public exposure
+
+See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).

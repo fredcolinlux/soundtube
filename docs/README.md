@@ -21,3 +21,8 @@
 Live OpenAPI UI while the server runs: **`/docs`** · machine-readable: **`/api/openapi.json`**.
 
 UI pages: `/accueil` · `/demarrer` · `/styles` · `/styles/<id>` · `/` (Studio) · `/admin` · `/docs`.
+
+## v1.20.0 — sécurité / exposition
+
+- [SECURITY.md](./SECURITY.md)
+- [EXPOSITION.md](./EXPOSITION.md)

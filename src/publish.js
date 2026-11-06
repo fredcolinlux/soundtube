@@ -11,6 +11,13 @@ export const STATUS_LABEL = { queued: 'En attente', video: 'Vidéo en préparati
 export const CONFIRM_WORD = 'PUBLIER';
 export const DEFAULT_PROFILE = Object.freeze({ title: '{titre}', description: '{description}', tags: [], autoTags: true, thumbnail: 'auto', visibility: 'private', playlistId: '', schedule: { mode: 'none', at: '', delayHours: 24 }, autoPublish: false });
 const SECRET_KEYS = ['clientSecret', 'refreshToken'];
+
+/** Branche le chiffrement au repos (AES-GCM) fourni par AuthStore — optionnel. */
+let _seal = (v) => v, _open = (v) => v;
+export function setSecretCodec({ seal, open }) { if (typeof seal === 'function') _seal = seal; if (typeof open === 'function') _open = open; }
+function sealSecret(v) { return v ? _seal(String(v)) : v; }
+function openSecret(v) { return v ? _open(String(v)) : v; }
+
 const str = (v, max = 200) => String(v ?? '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, max);
 const text = (v, max) => String(v ?? '').replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f]/g, '').trim().slice(0, max);
 const httpErr = (status, msg) => Object.assign(new Error(msg), { status });
@@ -50,7 +57,7 @@ export function mockTransport(logFile) {
   return {
     kind: 'mock',
     async upload({ channel, video, thumb, snippet, status, playlistId }) {
-      if (!channel.refreshToken) throw httpErr(412, 'Aucun jeton');
+      if (!channel?.refreshToken) throw httpErr(412, 'Aucun jeton');
       const id = 'mock-' + crypto.randomBytes(5).toString('hex');
       const rec = { at: new Date().toISOString(), channel: channel.id, channelName: channel.name, videoId: id, video: path.basename(video), videoBytes: fs.statSync(video).size, thumb: thumb ? path.basename(thumb) : null, snippet, status, playlistId: playlistId || null };
       if (logFile) fs.appendFileSync(logFile, JSON.stringify(rec) + '\n');
@@ -92,12 +99,24 @@ export class Channels {
     this.s = { channels: [], defaultId: null, bindings: {}, profiles: {} };
     try { if (this.file && fs.existsSync(this.file)) { Object.assign(this.s, JSON.parse(fs.readFileSync(this.file, 'utf8'))); fs.chmodSync(this.file, 0o600); } } catch (e) { console.error('[youtube] réglages des chaînes illisibles'); }
   }
-  save() { if (this.file) writePrivate(this.file, JSON.stringify(this.s, null, 1)); }
+  save() {
+    if (!this.file) return;
+    const copy = JSON.parse(JSON.stringify(this.s));
+    for (const c of copy.channels || []) for (const k of SECRET_KEYS) if (c[k] && !String(c[k]).startsWith('v1:')) c[k] = sealSecret(c[k]);
+    writePrivate(this.file, JSON.stringify(copy, null, 1));
+  }
+  /** Secrets en clair pour l'usage interne (upload). */
+  unlocked(c) {
+    if (!c) return null;
+    const o = { ...c };
+    for (const k of SECRET_KEYS) if (o[k]) o[k] = openSecret(o[k]);
+    return o;
+  }
   /** Les secrets connus, pour les masquer dans tout message d'erreur. */
   scrub(msg) { let m = String(msg || ''); for (const c of this.s.channels) for (const k of ['clientId', ...SECRET_KEYS]) if (c[k] && c[k].length >= 6) m = m.split(c[k]).join('•••'); return m; }
   get(id) { return this.s.channels.find((c) => c.id === id) || null; }
-  ready(c) { return !!(c && c.clientId && c.clientSecret && c.refreshToken); }
-  missing(c) { if (!c) return 'Aucune chaîne YouTube configurée : ajoute-en une dans Admin › Chaînes YouTube.'; const m = []; if (!c.clientId) m.push('client ID'); if (!c.clientSecret) m.push('client secret'); if (!c.refreshToken) m.push('jeton d\'actualisation'); return m.length ? `Chaîne « ${c.name} » : ${m.join(', ')} manquant${m.length > 1 ? 's' : ''}. Renseigne-${m.length > 1 ? 'les' : 'le'} dans Admin › Chaînes YouTube.` : null; }
+  ready(c) { const u = this.unlocked(c); return !!(u && u.clientId && u.clientSecret && u.refreshToken); }
+  missing(c) { c = this.unlocked(c); if (!c) return 'Aucune chaîne YouTube configurée : ajoute-en une dans Admin › Chaînes YouTube.'; const m = []; if (!c.clientId) m.push('client ID'); if (!c.clientSecret) m.push('client secret'); if (!c.refreshToken) m.push('jeton d\'actualisation'); return m.length ? `Chaîne « ${c.name} » : ${m.join(', ')} manquant${m.length > 1 ? 's' : ''}. Renseigne-${m.length > 1 ? 'les' : 'le'} dans Admin › Chaînes YouTube.` : null; }
   /** Vue publique : aucun secret, seulement « présent » / masque du client ID. */
   publicChannel(c) { return { id: c.id, name: c.name, channelId: c.channelId, clientId: mask(c.clientId), hasClientId: !!c.clientId, hasClientSecret: !!c.clientSecret, hasRefreshToken: !!c.refreshToken, ready: this.ready(c), isDefault: this.s.defaultId === c.id, styles: Object.entries(this.s.bindings).filter(([, v]) => v === c.id).map(([k]) => k), created: c.created }; }
   view() { return { channels: this.s.channels.map((c) => this.publicChannel(c)), defaultId: this.s.defaultId, bindings: { ...this.s.bindings } }; }
@@ -190,7 +209,7 @@ export class PublishQueue {
       const dir = path.join(this.tracksDir, t.id), video = path.join(dir, t.files.mp4), thumb = it.thumbnail === 'auto' && t.files?.thumb ? path.join(dir, t.files.thumb) : null;
       it.status = 'uploading'; this.save();
       const status = { privacyStatus: it.publishAt ? 'private' : it.visibility, selfDeclaredMadeForKids: false, ...(it.publishAt ? { publishAt: it.publishAt } : {}) };
-      const r = await this.transport.upload({ channel: ch, video, thumb, snippet: { title: it.title, description: it.description, tags: it.tags, categoryId: '10', defaultLanguage: 'fr' }, status, playlistId: it.playlistId });
+      const r = await this.transport.upload({ channel: this.channels.unlocked(ch), video, thumb, snippet: { title: it.title, description: it.description, tags: it.tags, categoryId: '10', defaultLanguage: 'fr' }, status, playlistId: it.playlistId });
       Object.assign(it, { status: 'done', progress: 1, videoId: r.videoId, url: r.url, warnings: r.warnings || [], finished: new Date().toISOString() });
       const now = this.store.get(t.id); if (now) this.store.update(t.id, { meta: { ...(now.meta || {}), published: [...(now.meta?.published || []), { channelId: ch.id, channelName: ch.name, videoId: r.videoId, url: r.url, at: it.finished, mock: !!r.mock }] } });
     } catch (e) { Object.assign(it, { status: 'error', error: this.channels.scrub(e.message).slice(0, 400) }); console.error('[publication]', it.id, it.error); }

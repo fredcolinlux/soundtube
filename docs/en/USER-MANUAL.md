@@ -65,3 +65,6 @@ Pianos, strings, acoustic drums, etc. from `assets/samples/` (see [SAMPLES-LICEN
 
 In **Admin**, configure public RSS sources (defaults provided) and optionally a **dedicated watch model**. Run manually or on a schedule. Proposals appear with an **Apply** button (they never apply themselves). Artist names are scrubbed from generated text.
 
+## v1.20.0 — Security & public exposure
+
+See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).

@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.19.2">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.0">
 </head>
 <body>
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -24,6 +24,7 @@
       <a href="/#library" data-i18n="nav.library">Bibliothèque</a>
       <a href="/admin" aria-current="page" data-i18n="nav.admin">Admin</a>
       <a href="/demarrer" data-i18n="nav.help">Aide</a>
+      <a href="/login" data-i18n="nav.login">Connexion</a>
       <a href="/docs" target="_blank" rel="noopener" data-i18n="nav.api">API</a>
     </nav>
     <span class="status-pill ver-pill" id="appVersion" title="version">…</span>
@@ -113,7 +114,7 @@
 
     <section class="module panel" id="trends">
       <div class="module-head">
-        <h2><span class="num">04</span>Veille tendances</h2>
+        <h2><span class="num">04</span><span data-i18n="admin.trendsTitle">Veille tendances</span></h2>
         <span class="hint" id="trSource">—</span>
       </div>
       <p class="hint" data-i18n="admin.trendsHint">Crawl autonome de métadonnées publiques (RSS, pages), résumé par le modèle veille, propositions de retouches. Rien n’est appliqué tout seul : bouton « Appliquer » par proposition. Pas de téléchargement audio, pas de connexion à des comptes.</p>
@@ -124,21 +125,21 @@
       </div>
       <div class="field"><label for="trFeeds">Sources RSS / pages : une ligne « style URL » (<code>*</code> = tous). Bouton « Remettre les sources par défaut » ci-dessous.</label><textarea id="trFeeds" rows="6" spellcheck="false" placeholder="* https://www.reddit.com/r/edmproduction/.rss"></textarea></div>
       <div class="row tr-opts">
-        <label class="toggle"><input type="checkbox" id="trOn"><span>Veille planifiée</span></label>
-        <label class="toggle"><input type="checkbox" id="trCrawl" checked><span>Crawl des sources listées</span></label>
-        <label class="toggle"><input type="checkbox" id="trHtml"><span>Compléter via recherche YouTube publique</span></label>
-        <label class="toggle"><input type="checkbox" id="trDiscover"><span>Découverte DuckDuckGo (désactivée par défaut)</span></label>
-        <label class="toggle"><input type="checkbox" id="trPrivate"><span>Autoriser IPs privées pour sources listées seulement</span></label>
+        <label class="toggle"><input type="checkbox" id="trOn"><span data-i18n="admin.trendsOn">Veille planifiée</span></label>
+        <label class="toggle"><input type="checkbox" id="trCrawl" checked><span data-i18n="admin.trendsCrawl">Crawl des sources listées</span></label>
+        <label class="toggle"><input type="checkbox" id="trHtml"><span data-i18n="admin.trendsHtml">Compléter via recherche YouTube publique</span></label>
+        <label class="toggle"><input type="checkbox" id="trDiscover"><span data-i18n="admin.trendsDiscover">Découverte DuckDuckGo (désactivée par défaut)</span></label>
+        <label class="toggle"><input type="checkbox" id="trPrivate"><span data-i18n="admin.trendsPrivate">Autoriser IPs privées pour sources listées seulement</span></label>
       </div>
       <div class="field"><label>Styles suivis</label><div class="chips" id="trStyles"></div></div>
-      <div class="row"><button class="btn btn-primary" id="trSave" type="button">Enregistrer</button><button class="btn" id="trRun" type="button">Lancer la veille</button><button class="btn btn-ghost btn-mini" id="trFeedsReset" type="button">Sources par défaut</button><button class="btn btn-ghost btn-mini" id="trKeyDel" type="button" hidden>Effacer la clé</button><span class="hint" id="trMsg"></span></div>
+      <div class="row"><button class="btn btn-primary" id="trSave" type="button" data-i18n="common.save">Enregistrer</button><button class="btn" id="trRun" type="button" data-i18n="admin.trendsRun">Lancer la veille</button><button class="btn btn-ghost btn-mini" id="trFeedsReset" type="button" data-i18n="admin.trendsFeedsReset">Sources par défaut</button><button class="btn btn-ghost btn-mini" id="trKeyDel" type="button" hidden data-i18n="admin.trendsKeyDel">Effacer la clé</button><span class="hint" id="trMsg"></span></div>
       <div id="trHistory" class="tr-history hint"></div>
       <div id="trReport" class="tr-report"></div>
     </section>
 
     <section class="module panel" id="youtube">
       <div class="module-head">
-        <h2><span class="num">05</span>Chaînes YouTube</h2>
+        <h2><span class="num">05</span><span data-i18n="admin.ytTitle">Chaînes YouTube</span></h2>
         <span class="hint" id="ytMode">—</span>
       </div>
       <p class="hint">Une chaîne par style (une chaîne peut servir plusieurs styles) ; la chaîne par défaut sert aux styles sans liaison. Pas de connexion Google depuis le navigateur : colle le client ID, le client secret et le jeton d’actualisation obtenus une fois (voir <code>docs/YOUTUBE.md</code>). Les secrets sont enregistrés sur le CT (fichier lisible par soundtube seul), jamais réaffichés ni journalisés.</p>
@@ -154,7 +155,7 @@
           <div class="field"><label class="toggle"><input type="checkbox" id="ytDefault"><span>Chaîne par défaut</span></label></div>
         </div>
         <p class="hint" id="ytFormHint">Champ secret laissé vide = valeur enregistrée inchangée.</p>
-        <div class="row"><button class="btn btn-primary" id="ytSave" type="submit">Ajouter la chaîne</button><button class="btn btn-ghost" id="ytCancel" type="button" hidden>Annuler</button><span class="hint" id="ytMsg"></span></div>
+        <div class="row"><button class="btn btn-primary" id="ytSave" type="submit" data-i18n="admin.ytAdd">Ajouter la chaîne</button><button class="btn btn-ghost" id="ytCancel" type="button" hidden>Annuler</button><span class="hint" id="ytMsg"></span></div>
       </form>
       <div class="field"><label>Chaîne de chaque style</label><div id="ytBindings" class="yt-bindings"></div></div>
       <div class="field"><label>File de publication <span class="opt">(tous styles)</span></label><div id="ytQueue" class="yt-queue"></div></div>
@@ -162,23 +163,23 @@
 
     <section class="module panel" id="media">
       <div class="module-head">
-        <h2><span class="num">06</span>Animations</h2>
+        <h2><span class="num">06</span><span data-i18n="admin.mediaTitle">Animations</span></h2>
         <span class="hint" id="mdCount">—</span>
       </div>
       <p class="hint">Bibliothèque des fonds animés des vidéos (MP4, WebM, MOV, GIF, PNG, JPG). Chaque animation importée apparaît dans le formulaire de génération (Créer → Avancé → « Animation de la vidéo ») et dans le panneau YouTube de chaque morceau.</p>
-      <div class="row"><label class="btn btn-primary">Importer une animation…<input type="file" id="mdFile" hidden></label><span class="hint" id="mdState"></span></div>
+      <div class="row"><label class="btn btn-primary"><span data-i18n="admin.mediaImport">Importer une animation…</span><input type="file" id="mdFile" hidden></label><span class="hint" id="mdState"></span></div>
       <div id="mdList" class="md-list"></div>
     </section>
 
     <section class="module panel" id="director">
       <div class="module-head">
-        <h2><span class="num">07</span>Contexte du directeur artistique</h2>
+        <h2><span class="num">07</span><span data-i18n="admin.dirTitle">Contexte du directeur artistique</span></h2>
         <span class="hint" id="dirState">—</span>
       </div>
       <p class="hint">Deux sources facultatives ajoutées au prompt du directeur artistique (Créer → « Décris l’ambiance »). Chacune a son interrupteur ; coupées, le prompt est exactement celui de la v1.14. Les noms d’artistes servent seulement à orienter le son : ils sont interdits et retirés des titres, descriptions et tags proposés.</p>
       <div class="row dir-toggles">
-        <label class="toggle"><input type="checkbox" id="dirTaste"><span>Profil de goût (music library)</span></label>
-        <label class="toggle"><input type="checkbox" id="dirTrends"><span>Dernière veille tendances</span></label>
+        <label class="toggle"><input type="checkbox" id="dirTaste"><span data-i18n="admin.dirTaste">Profil de goût (Apple Music)</span></label>
+        <label class="toggle"><input type="checkbox" id="dirTrends"><span data-i18n="admin.dirTrends">Dernière veille tendances</span></label>
       </div>
       <div class="dir-grid">
         <div class="field">
@@ -186,7 +187,7 @@
           <div id="dirProfile" class="dir-profile"></div>
           <label for="dirRefs">Artistes de référence par style <span class="opt">une ligne par style : « lofi: Chinese Man, Scratch Bandits Crew, L’Entourloop » ; ligne retirée = aucune référence</span></label>
           <textarea id="dirRefs" rows="11" spellcheck="false"></textarea>
-          <div class="row"><button class="btn btn-primary" id="dirSave" type="button">Enregistrer</button><button class="btn btn-ghost btn-mini" id="dirReset" type="button">Revenir au profil livré</button><span class="hint" id="dirMsg"></span></div>
+          <div class="row"><button class="btn btn-primary" id="dirSave" type="button" data-i18n="common.save">Enregistrer</button><button class="btn btn-ghost btn-mini" id="dirReset" type="button" data-i18n="admin.dirReset">Revenir au profil livré</button><span class="hint" id="dirMsg"></span></div>
         </div>
         <div class="field">
           <label>Texte envoyé au directeur <span class="opt" id="dirTasteMeta"></span></label>
@@ -197,10 +198,63 @@
       </div>
       <div class="field"><label>Tester le directeur</label>
         <div class="row"><select id="dirStyle"></select><input type="text" id="dirPrompt" value="Une house filtrée pour une nuit d’été, montées au filtre et basse ronde" maxlength="1200" spellcheck="false">
-          <button class="btn" id="dirPreview" type="button">Voir ce qui est envoyé</button><button class="btn btn-primary" id="dirRun" type="button">Tester avec Ollama</button></div>
+          <button class="btn" id="dirPreview" type="button" data-i18n="admin.dirPreview">Voir ce qui est envoyé</button><button class="btn btn-primary" id="dirRun" type="button" data-i18n="admin.dirRun">Tester avec Ollama</button></div>
         <span class="hint">« Voir ce qui est envoyé » ne contacte rien. « Tester avec Ollama » envoie ce prompt au PC IA d’Admin › PC IA.</span>
       </div>
       <div id="dirDiff" class="dir-diff"></div>
+    </section>
+
+
+    <section class="module panel" id="users">
+      <div class="module-head">
+        <h2><span class="num">08</span><span data-i18n="admin.users">Utilisateurs</span></h2>
+      </div>
+      <p class="hint" data-i18n="admin.usersHint">Rôles admin / creator / viewer. Quotas : générations/jour et durée max. Accessible seulement en local.</p>
+      <div class="grid-3">
+        <div class="field"><label for="newUser">Nom</label><input id="newUser" spellcheck="false" autocomplete="off"></div>
+        <div class="field"><label for="newPass">Mot de passe</label><input id="newPass" type="password" autocomplete="new-password"></div>
+        <div class="field"><label for="newRole">Rôle</label><select id="newRole"><option value="admin">admin</option><option value="creator" selected>creator</option><option value="viewer">viewer</option></select></div>
+        <div class="field"><label for="newQuota">Générations / jour</label><input type="number" id="newQuota" value="50" min="1" max="10000"></div>
+        <div class="field"><label for="newMaxDur">Durée max (s)</label><input type="number" id="newMaxDur" value="3600" min="20" max="14400"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn btn-primary" type="button" id="userAdd" data-i18n="admin.users.add">Créer</button></div>
+      </div>
+      <table class="hist"><thead><tr><th>User</th><th>Rôle</th><th>Actif</th><th>2FA</th><th>Quota</th><th></th></tr></thead><tbody id="usersList"></tbody></table>
+    </section>
+
+    <section class="module panel" id="security">
+      <div class="module-head">
+        <h2><span class="num">09</span><span data-i18n="admin.security">Sécurité & exposition</span></h2>
+      </div>
+      <p class="hint" data-i18n="admin.securityHint">Proxy de confiance (NPM), domaine public, textes légaux. Ne jamais mettre le domaine dans le dépôt GitHub.</p>
+      <div class="grid-3">
+        <div class="field span-2"><label for="secProxies">IP / CIDR du reverse proxy (une par ligne)</label><textarea id="secProxies" rows="3" spellcheck="false" placeholder="192.168.0.1&#10;10.0.0.0/8"></textarea></div>
+        <div class="field"><label for="secDomain">Domaine public</label><input id="secDomain" placeholder="soundtube.example.com" spellcheck="false"></div>
+        <div class="field span-2"><label for="secLocal">CIDR LAN supplémentaires</label><textarea id="secLocal" rows="2" spellcheck="false"></textarea></div>
+        <div class="field"><label for="secTtl">Session (h)</label><input type="number" id="secTtl" min="1" max="168"></div>
+        <div class="field"><label for="secAttempts">Tentatives max</label><input type="number" id="secAttempts" min="3" max="30"></div>
+        <div class="field"><label for="secLock">Verrouillage (min)</label><input type="number" id="secLock" min="1" max="1440"></div>
+        <div class="field"><label for="secSigned">Lien signé (s)</label><input type="number" id="secSigned" min="60" max="86400"></div>
+      </div>
+      <div class="field"><label for="secLegalFr">Mentions légales (FR)</label><textarea id="secLegalFr" rows="5"></textarea></div>
+      <div class="field"><label for="secLegalEn">Legal notice (EN)</label><textarea id="secLegalEn" rows="5"></textarea></div>
+      <div class="row"><button class="btn btn-primary" type="button" id="secSave" data-i18n="admin.save">Enregistrer</button>
+        <button class="btn" type="button" id="backupBtn" data-i18n="admin.backup">Sauvegarder users/config</button></div>
+    </section>
+
+    <section class="module panel" id="tokens">
+      <div class="module-head"><h2><span class="num">10</span><span data-i18n="admin.tokens">Jetons API</span></h2></div>
+      <div class="grid-3">
+        <div class="field"><label for="tokName">Nom</label><input id="tokName" value="api"></div>
+        <div class="field"><label for="tokUser">userId (vide = toi)</label><input id="tokUser" spellcheck="false"></div>
+        <div class="field"><label>&nbsp;</label><button class="btn btn-primary" type="button" id="tokenAdd" data-i18n="admin.tokens.create">Créer un jeton</button></div>
+      </div>
+      <table class="hist"><thead><tr><th>Nom</th><th>User</th><th>Scopes</th><th>Expire</th><th></th></tr></thead><tbody id="tokensList"></tbody></table>
+    </section>
+
+    <section class="module panel" id="audit">
+      <div class="module-head"><h2><span class="num">11</span><span data-i18n="admin.audit">Journal d’audit</span></h2>
+        <button class="btn btn-mini" type="button" id="auditRefresh" data-i18n="common.refresh">Actualiser</button></div>
+      <ul id="auditList" class="hint" style="max-height:280px;overflow:auto;padding-left:1.2em"></ul>
     </section>
 
     <footer class="foot">
@@ -208,9 +262,10 @@
     </footer>
   </main>
   <div class="toast" id="toast" hidden></div>
-  <script type="module" src="/js/admin.js?v=1.19.2"></script>
-  <script type="module" src="/js/ytadmin.js?v=1.19.2"></script>
-  <script type="module" src="/js/adminmedia.js?v=1.19.2"></script>
-  <script type="module" src="/js/admindirector.js?v=1.19.2"></script>
+  <script type="module" src="/js/admin.js?v=1.20.0"></script>
+  <script type="module" src="/js/ytadmin.js?v=1.20.0"></script>
+  <script type="module" src="/js/adminmedia.js?v=1.20.0"></script>
+  <script type="module" src="/js/admindirector.js?v=1.20.0"></script>
+  <script type="module" src="/js/adminauth.js?v=1.20.0"></script>
 </body>
 </html>

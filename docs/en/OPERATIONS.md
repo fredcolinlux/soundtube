@@ -79,3 +79,7 @@ Section **03 AI models**: two visible cards **Art director** and **Trend watch**
 ### Patch update (v1.19.2)
 
 Extract **flat** into `/opt/soundtube/app`. Check `grep aiWatchCard public/admin.html` and the Admin version pill.
+
+## v1.20.0 — Security & public exposure
+
+See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).

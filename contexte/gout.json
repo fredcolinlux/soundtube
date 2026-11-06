@@ -1,190 +1,307 @@
 {
-  "version": 1,
-  "source": "exemple (à remplacer)",
-  "builtAt": "2026-01-01",
-  "stats": {
-    "tracks": 1200,
-    "audioTracks": 1180,
-    "plays": 5000
+ "version": 1,
+ "source": "Apple Music",
+ "builtAt": "2026-11-04",
+ "stats": {
+  "tracks": 45333,
+  "audioTracks": 45229,
+  "plays": 39044
+ },
+ "topArtists": [
+  {
+   "name": "Depeche Mode",
+   "plays": 1026,
+   "tracks": 964
   },
-  "topArtists": [
-    {
-      "name": "Exemple Synth",
-      "plays": 120
-    },
-    {
-      "name": "Exemple Groove",
-      "plays": 95
-    },
-    {
-      "name": "Exemple Bass",
-      "plays": 80
-    },
-    {
-      "name": "Exemple Beat",
-      "plays": 70
-    },
-    {
-      "name": "Exemple Pad",
-      "plays": 60
-    },
-    {
-      "name": "Exemple Break",
-      "plays": 55
-    },
-    {
-      "name": "Exemple House",
-      "plays": 50
-    },
-    {
-      "name": "Exemple Chill",
-      "plays": 45
-    },
-    {
-      "name": "Exemple Dark",
-      "plays": 40
-    },
-    {
-      "name": "Exemple Funk",
-      "plays": 35
-    }
-  ],
-  "topGenres": [
-    {
-      "name": "Électronique",
-      "plays": 2000,
-      "share": 40.0
-    },
-    {
-      "name": "House",
-      "plays": 800,
-      "share": 16.0
-    },
-    {
-      "name": "Hip-Hop/Rap",
-      "plays": 600,
-      "share": 12.0
-    }
-  ],
-  "favourites": [
-    {
-      "name": "Exemple Synth",
-      "plays": 120
-    },
-    {
-      "name": "Exemple Groove",
-      "plays": 95
-    },
-    {
-      "name": "Exemple Bass",
-      "plays": 80
-    },
-    {
-      "name": "Exemple Beat",
-      "plays": 70
-    },
-    {
-      "name": "Exemple Pad",
-      "plays": 60
-    },
-    {
-      "name": "Exemple Break",
-      "plays": 55
-    },
-    {
-      "name": "Exemple House",
-      "plays": 50
-    },
-    {
-      "name": "Exemple Chill",
-      "plays": 45
-    }
-  ],
-  "sound": "Profil d'exemple générique. Remplacez-le : node tools/gout-distill.mjs bibliotheque.csv",
-  "styles": {
-    "frenchtouch": {
-      "refs": [
-        "Daft Punk",
-        "Justice",
-        "Myd",
-        "Cassius",
-        "Mr. Oizo",
-        "Ed Banger"
-      ],
-      "sound": "house filtrée et compressée, basses saturées, boucles disco hachées, montées au filtre, côté Ed Banger plus sale et ludique"
-    },
-    "lofi": {
-      "refs": [
-        "Chinese Man",
-        "Scratch Bandits Crew",
-        "L'Entourloop",
-        "Bonobo"
-      ],
-      "sound": "boom bap poussiéreux, scratchs, cuivres et samples rétro, groove chaloupé plutôt que lo-fi plat"
-    },
-    "hiphop": {
-      "refs": [
-        "IAM",
-        "NTM",
-        "Beastie Boys"
-      ],
-      "sound": "boom bap 90 chaud, caisse claire sèche, basse ronde, boucles soul et funk, énergie de crew"
-    },
-    "trap": {
-      "refs": [
-        "Action Bronson"
-      ],
-      "sound": "instrumental rap moderne mais musical, 808 tenues, mélodies sombres sans surcharge de hi-hats"
-    },
-    "house": {
-      "refs": [
-        "DJ Koze",
-        "deadmau5",
-        "Bonobo"
-      ],
-      "sound": "house profonde et organique, groove hypnotique, accords chauds, détails ludiques et progressions longues"
-    },
-    "techno": {
-      "refs": [
-        "Vitalic",
-        "Chemical Brothers"
-      ],
-      "sound": "techno et electro puissantes, synthés analogiques agressifs, gros breakbeats, montées de rave"
-    },
-    "dnb": {
-      "refs": [
-        "Pendulum"
-      ],
-      "sound": "drum & bass énergique, basses lourdes, côté rock/électro, montées épiques"
-    },
-    "synthwave": {
-      "refs": [
-        "Kavinsky",
-        "Air"
-      ],
-      "sound": "synthés 80 sombres et mélodiques, arpèges, ambiance nocturne de film"
-    },
-    "ambient": {
-      "refs": [
-        "Air",
-        "Massive Attack",
-        "Bonobo"
-      ],
-      "sound": "trip-hop et ambient chaleureux, basses profondes, nappes vintage, mélancolie douce"
-    },
-    "cinematic": {
-      "refs": [
-        "Massive Attack",
-        "Air"
-      ],
-      "sound": "cinématique sombre et texturée, tension lente, couleurs trip-hop"
-    },
-    "chiptune": {
-      "refs": [
-        "Mr. Oizo",
-        "Justice"
-      ],
-      "sound": "chiptune ludique et nerveux, côté electro sale plutôt que mignon"
-    }
+  {
+   "name": "Beastie Boys",
+   "plays": 916,
+   "tracks": 562
+  },
+  {
+   "name": "IAM",
+   "plays": 564,
+   "tracks": 601
+  },
+  {
+   "name": "Suprême NTM",
+   "plays": 541,
+   "tracks": 307
+  },
+  {
+   "name": "deadmau5",
+   "plays": 508,
+   "tracks": 233
+  },
+  {
+   "name": "Scratch Bandits Crew",
+   "plays": 495,
+   "tracks": 41
+  },
+  {
+   "name": "L'Entourloop",
+   "plays": 455,
+   "tracks": 45
+  },
+  {
+   "name": "Placebo",
+   "plays": 449,
+   "tracks": 663
+  },
+  {
+   "name": "Action Bronson",
+   "plays": 408,
+   "tracks": 108
+  },
+  {
+   "name": "Cassius",
+   "plays": 366,
+   "tracks": 177
+  },
+  {
+   "name": "Pendulum",
+   "plays": 338,
+   "tracks": 147
+  },
+  {
+   "name": "Above & Beyond",
+   "plays": 311,
+   "tracks": 232
+  },
+  {
+   "name": "Justice",
+   "plays": 307,
+   "tracks": 85
+  },
+  {
+   "name": "Charlotte Gainsbourg",
+   "plays": 291,
+   "tracks": 79
+  },
+  {
+   "name": "DJ Koze",
+   "plays": 277,
+   "tracks": 65
   }
+ ],
+ "topGenres": [
+  {
+   "name": "Électronique",
+   "plays": 7960,
+   "share": 20.4
+  },
+  {
+   "name": "Hip-Hop/Rap",
+   "plays": 6696,
+   "share": 17.1
+  },
+  {
+   "name": "Dance",
+   "plays": 4526,
+   "share": 11.6
+  },
+  {
+   "name": "Pop",
+   "plays": 3428,
+   "share": 8.8
+  },
+  {
+   "name": "Rock",
+   "plays": 2713,
+   "share": 6.9
+  },
+  {
+   "name": "Alternative",
+   "plays": 2567,
+   "share": 6.6
+  },
+  {
+   "name": "Reggae",
+   "plays": 944,
+   "share": 2.4
+  },
+  {
+   "name": "House",
+   "plays": 885,
+   "share": 2.3
+  },
+  {
+   "name": "R&B/Soul",
+   "plays": 757,
+   "share": 1.9
+  },
+  {
+   "name": "French Pop",
+   "plays": 610,
+   "share": 1.6
+  }
+ ],
+ "favourites": [
+  {
+   "name": "Depeche Mode",
+   "plays": 1026
+  },
+  {
+   "name": "Beastie Boys",
+   "plays": 916
+  },
+  {
+   "name": "IAM",
+   "plays": 564
+  },
+  {
+   "name": "NTM",
+   "plays": 541
+  },
+  {
+   "name": "Scratch Bandits Crew",
+   "plays": 495
+  },
+  {
+   "name": "deadmau5",
+   "plays": 508
+  },
+  {
+   "name": "Pendulum",
+   "plays": 338
+  },
+  {
+   "name": "L'Entourloop",
+   "plays": 455
+  },
+  {
+   "name": "DJ Koze",
+   "plays": 277
+  },
+  {
+   "name": "Bonobo",
+   "plays": 249
+  },
+  {
+   "name": "Chemical Brothers",
+   "plays": 221
+  },
+  {
+   "name": "Vitalic",
+   "plays": 193
+  },
+  {
+   "name": "Action Bronson",
+   "plays": 408
+  },
+  {
+   "name": "Biggie",
+   "plays": 275
+  },
+  {
+   "name": "Massive Attack",
+   "plays": 205
+  },
+  {
+   "name": "Air",
+   "plays": 185
+  },
+  {
+   "name": "Kavinsky",
+   "plays": 68
+  },
+  {
+   "name": "Mr. Oizo",
+   "plays": 36
+  }
+ ],
+ "sound": "électronique et rap avant tout : French Touch, house, big beat, electro, trip-hop, boom bap français et US, avec un fond new wave sombre",
+ "styles": {
+  "frenchtouch": {
+   "refs": [
+    "Daft Punk",
+    "Justice",
+    "Myd",
+    "Cassius",
+    "Mr. Oizo",
+    "Ed Banger"
+   ],
+   "sound": "house filtrée et compressée, basses saturées, boucles disco hachées, montées au filtre, côté Ed Banger plus sale et ludique"
+  },
+  "lofi": {
+   "refs": [
+    "Chinese Man",
+    "Scratch Bandits Crew",
+    "L'Entourloop",
+    "Bonobo"
+   ],
+   "sound": "boom bap poussiéreux, scratchs, cuivres et samples rétro, groove chaloupé plutôt que lo-fi plat"
+  },
+  "hiphop": {
+   "refs": [
+    "IAM",
+    "NTM",
+    "Beastie Boys",
+    "Action Bronson",
+    "Biggie",
+    "Cypress Hill"
+   ],
+   "sound": "boom bap 90 chaud, caisse claire sèche, basse ronde, boucles soul et funk, énergie de crew"
+  },
+  "trap": {
+   "refs": [
+    "Action Bronson"
+   ],
+   "sound": "instrumental rap moderne mais musical, 808 tenues, mélodies sombres sans surcharge de hi-hats"
+  },
+  "house": {
+   "refs": [
+    "DJ Koze",
+    "deadmau5",
+    "Bonobo",
+    "Booka Shade",
+    "Moderat"
+   ],
+   "sound": "house profonde et organique, groove hypnotique, accords chauds, détails ludiques et progressions longues"
+  },
+  "techno": {
+   "refs": [
+    "Vitalic",
+    "Chemical Brothers",
+    "deadmau5"
+   ],
+   "sound": "techno et electro puissantes, synthés analogiques agressifs, gros breakbeats, montées de rave"
+  },
+  "dnb": {
+   "refs": [
+    "Pendulum"
+   ],
+   "sound": "drum & bass énergique, basses lourdes, côté rock/électro, montées épiques"
+  },
+  "synthwave": {
+   "refs": [
+    "Kavinsky",
+    "Depeche Mode",
+    "Air"
+   ],
+   "sound": "synthés 80 sombres et mélodiques, arpèges, ambiance nocturne de film"
+  },
+  "ambient": {
+   "refs": [
+    "Air",
+    "Massive Attack",
+    "Bonobo"
+   ],
+   "sound": "trip-hop et ambient chaleureux, basses profondes, nappes vintage, mélancolie douce"
+  },
+  "cinematic": {
+   "refs": [
+    "Massive Attack",
+    "Air"
+   ],
+   "sound": "cinématique sombre et texturée, tension lente, couleurs trip-hop"
+  },
+  "chiptune": {
+   "refs": [
+    "Mr. Oizo",
+    "Justice"
+   ],
+   "sound": "chiptune ludique et nerveux, côté electro sale plutôt que mignon"
+  }
+ }
 }

@@ -1,4 +1,4 @@
-// v1.15.0 : distille l'export music library (CSV, en-têtes français) en un profil de goût court et borné : contexte/gout.json.
+// v1.15.0 : distille l'export Apple Music (CSV, en-têtes français) en un profil de goût court et borné : contexte/gout.json.
 // Usage : node tools/gout-distill.mjs chemin/vers/bibliotheque.csv [contexte/gout.json]
 // Le CSV n'est jamais copié : seuls des totaux d'écoutes par artiste / genre et des artistes de référence par style sont gardés.
 import fs from 'node:fs';

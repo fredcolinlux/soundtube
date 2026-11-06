@@ -1,5 +1,5 @@
 // v1.10.0 : page d'un style — en-tête coloré, fiche (docs/STYLES.md), machines, préréglage, bibliothèque du style.
-import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS } from './site.js?v=1.19.2';
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t } from './site.js?v=1.20.0';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
 await bootSite('/styles/' + id);
@@ -43,8 +43,8 @@ $('#pAmbVol').addEventListener('input', (e) => { S.ambLevel = +e.target.value; $
 
 $('#pAsk').addEventListener('click', async () => {
   const prompt = $('#pIdea').value.trim(), out = $('#pAiOut'); out.hidden = false;
-  if (prompt.length < 3) { out.textContent = 'Décris l’ambiance en quelques mots.'; return; }
-  $('#pAsk').disabled = true; out.textContent = 'Le directeur artistique réfléchit…';
+  if (prompt.length < 3) { out.textContent = t('toast.aiNeedPrompt'); return; }
+  $('#pAsk').disabled = true; out.textContent = t('toast.aiThinking');
   try {
     const r = await api('/api/ai/suggest', { method: 'POST', body: JSON.stringify({ prompt, style: id, duration: S.duration }) });
     const p = r.params || {}; const same = p.style === id;
@@ -64,7 +64,7 @@ $('#pGo').addEventListener('click', async () => {
   if (S.ambLevel != null && S.ambLevel !== 50) adv.ambienceLevel = S.ambLevel; else delete adv.ambienceLevel;
   const body = { style: id, mood: S.mood, duration: S.duration, adv, engine: S.opt.engine || 21, wav: S.opt.wavDefault !== false };
   if (S.ai?.key) body.key = S.ai.key; if (S.ai?.scale) body.scale = S.ai.scale; if (S.ai?.bpm) body.bpm = S.ai.bpm;
-  if (S.duration > 3600 && !confirm(`Morceau de ${fmt(S.duration)} : le rendu prendra plusieurs minutes. Continuer ?`)) return;
+  if (S.duration > 3600 && !confirm(t('style.longConfirm', { dur: fmt(S.duration) }))) return;
   $('#pGo').disabled = true;
   try { const j = await api('/api/generate', { method: 'POST', body: JSON.stringify(body) }); S.job = j.id; poll(); }
   catch (e) { $('#pJob').hidden = false; $('#pStage').textContent = e.message; $('#pGo').disabled = false; }
@@ -74,7 +74,7 @@ async function poll() {
   try {
     const j = await api('/api/jobs/' + S.job);
     $('#pBar').style.width = Math.round((j.progress || 0) * 100) + '%';
-    $('#pStage').textContent = j.status === 'queued' ? `En file d’attente${j.queue_position ? ' (' + j.queue_position + ')' : ''}` : j.status === 'done' ? `« ${j.title} » est prêt` : j.status === 'error' ? 'Erreur : ' + (j.error || '') : `${j.stage || 'Rendu'} · ${Math.round((j.progress || 0) * 100)} %`;
+    $('#pStage').textContent = j.status === 'queued' ? `${t('style.queued')}${j.queue_position ? ' (' + j.queue_position + ')' : ''}` : j.status === 'done' ? `${t('style.ready', { title: j.title })}` : j.status === 'error' ? t('style.err') + (j.error || '') : `${j.stage || 'Rendu'} · ${Math.round((j.progress || 0) * 100)} %`;
     if (j.status === 'done') { $('#pGo').disabled = false; await loadLib(true); const t = S.tracks.find((x) => x.id === j.id); if (t) player.play(t); return; }
     if (j.status === 'error') { $('#pGo').disabled = false; return; }
   } catch (e) { $('#pStage').textContent = e.message; }
@@ -82,7 +82,7 @@ async function poll() {
 }
 
 function renderLib() {
-  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((t) => trackRowHtml(t, player, S.labels)).join('') : `<li class="tr-empty">Aucun morceau ${esc(S.style.label)} pour l’instant — le préréglage ci-dessus en crée un en quelques secondes.</li>`;
+  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((t) => trackRowHtml(t, player, S.labels)).join('') : `<li class="tr-empty">${t('style.emptyLib', { label: esc(S.style.label) })}</li>`;
   $('#sLibCount').textContent = S.total ? `${S.total} morceau${S.total > 1 ? 'x' : ''}` : '';
   $('#sMore').hidden = S.tracks.length >= S.total;
 }
@@ -107,7 +107,7 @@ $('#sMore').addEventListener('click', () => loadLib(false));
 (async () => {
   let s;
   try { [s, S.opt] = await Promise.all([api('/api/styles/' + encodeURIComponent(id)), api('/api/options')]); }
-  catch (e) { $('#sTitle').textContent = 'Style introuvable'; $('#sTag').innerHTML = `${esc(e.message)} — <a href="/styles">voir tous les styles</a>`; return; }
+  catch (e) { $('#sTitle').textContent = t('style.notFound'); $('#sTag').innerHTML = `${esc(e.message)} — <a href="/styles">voir tous les styles</a>`; return; }
   S.style = s; document.title = `soundtube — ${s.label}`;
   S.opt.keys.forEach((k) => (S.labels.key[k.id] = k.label)); S.opt.moods.forEach((m) => (S.labels.mood[m.id] = m.label));
   const root = document.documentElement; root.style.setProperty('--c', colorOf(id)); root.style.setProperty('--c2', color2Of(id));

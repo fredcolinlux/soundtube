@@ -2,13 +2,14 @@
 // (navigation, fond animé teinté, couleurs par style, mini-lecteur, petites aides).
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
-export { t, getUiLang };
+import { apiFetch, refreshAuth, getAuthUser } from './csrf.js';
+export { t, getUiLang, refreshAuth, getAuthUser };
 
 export const $ = (q, el = document) => el.querySelector(q);
 export const $$ = (q, el = document) => [...el.querySelectorAll(q)];
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 export async function api(url, opts = {}) {
-  const r = await fetch(url, { headers: { 'content-type': 'application/json' }, ...opts });
+  const r = await apiFetch(url, { headers: { 'content-type': 'application/json' }, ...opts });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || `${t('err.generic', { status: r.status })}`);
   return j;
@@ -30,7 +31,7 @@ export const colorOf = (id) => STYLE_COLOR[id] || '#5ef2c9';
 export const color2Of = (id) => STYLE_COLOR_2[id] || '#9b8cff';
 const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
-const NAV = () => [['/accueil', t('nav.home')], ['/demarrer', t('nav.start')], ['/styles', t('nav.styles')], ['/', t('nav.studio')], ['/admin', t('nav.admin')]];
+const NAV = () => [['/accueil', t('nav.home')], ['/demarrer', t('nav.start')], ['/styles', t('nav.styles')], ['/', t('nav.studio')], ['/admin', t('nav.admin')], ['/login', t('nav.login')], ['/legal', t('nav.legal')]];
 /** Barre du haut commune ; `current` = chemin de la page (aria-current). */
 export function mountTopbar(current) {
   const h = document.createElement('header'); h.className = 'topbar site-top';

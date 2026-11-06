@@ -35,8 +35,18 @@ import { SCALES, NOTE_NAMES, NOTE_NAMES_FR } from './engine/theory.js';
 import { Channels, PublishQueue, mockTransport, liveTransport, DEFAULT_PROFILE, VISIBILITIES, VIS_LABEL, CONFIRM_WORD } from './publish.js';
 import { buildPack, packOptions, readPack, packSplit } from './pack.js';
 import { fmtTime } from './youtube.js';
+import { AuthStore } from './auth/store.js';
+import { attachAuth, requireAuthUnlessLocal, requireCsrf, localOnly, requireLocalAdmin, setSessionCookie, clearSessionCookie } from './auth/middleware.js';
+import { mountAuthRoutes } from './auth/routes.js';
+import { securityHeaders } from './security/headers.js';
+import { signPayload, verifySigned } from './security/crypto.js';
+import { setSecretCodec } from './publish.js';
+import { maybeSignUrls } from './auth/bootstrap.js';
+import { msg as i18nMsg } from './i18n-server.js';
 
 const store = openStore(config.dataDir);
+const auth = new AuthStore(config.dataDir);
+setSecretCodec({ seal: (v) => auth.seal(v), open: (v) => auth.open(v) });
 const tracksDir = path.join(config.dataDir, 'tracks');
 const renderNodes = new RenderNodes({ dataDir: config.dataDir, localSlots: config.localVideoSlots });
 const jobs = new JobQueue(store, tracksDir, renderNodes); // v1.16.0 : la musique peut aussi partir sur un PC de rendu
@@ -133,7 +143,36 @@ jobs.onAudioReady = async (t, info) => {
 };
 const app = express();
 app.disable('x-powered-by');
-app.use(express.json({ limit: '64kb' }));
+app.set('trust proxy', false);
+app.use(securityHeaders());
+app.use(attachAuth(auth));
+app.use(express.json({ limit: `${auth.security.bodyLimitKb || 64}kb` }));
+
+const AUTH_ALLOW = [
+  { method: 'GET', path: '/health' },
+  { method: 'GET', path: '/auth/status' },
+  { method: 'POST', path: '/auth/login' },
+  { method: 'POST', path: '/auth/setup' },
+  { method: 'POST', path: '/auth/2fa' },
+  { method: 'POST', path: '/auth/logout' },
+  { method: 'POST', path: '/auth/passkey/login/options' },
+  { method: 'POST', path: '/auth/passkey/login' },
+  { method: 'GET', path: '/auth/me' },
+  { method: 'GET', path: '/legal' },
+  { method: 'GET', path: '/ui/lang' },
+  { method: 'PUT', path: '/ui/lang' },
+  { method: 'GET', path: '/openapi.json' },
+  { method: 'GET', path: '/signed*' },
+  { method: '*', path: '/auth*' },
+  { method: '*', path: '/docs*' },
+];
+app.use('/api', (req, res, next) => {
+  // Admin API : local only (404 from internet)
+  if (req.path.startsWith('/admin')) return localOnly(req, res, next);
+  next();
+});
+app.use('/api', requireAuthUnlessLocal(AUTH_ALLOW));
+app.use('/api', requireCsrf);
 
 // Rattrapage des dates de création manquantes (anciens morceaux) : date de modification des fichiers
 for (const r of store.missingDates?.() || []) {
@@ -249,7 +288,7 @@ app.get('/api/options', (req, res) => res.json({
 // v1.9.0 : valeurs réelles des réglages avancés pour ce style / cette graine (formulaire pré-rempli)
 app.post('/api/advanced/defaults', wrap((req, res) => {
   const b = req.body || {};
-  if (b.style && !STYLES[b.style]) return res.status(400).json({ error: 'Style inconnu' });
+  if (b.style && !STYLES[b.style]) return res.status(400).json({ error: i18nMsg(req, 'unknownStyle') });
   res.json(resolveAdvancedDefaults({ style: b.style || 'lofi', seed: b.seed, mood: b.mood, key: b.key, scale: b.scale, bpm: b.bpm, duration: b.duration, instruments: b.instruments, adv: b.adv || {}, engine: b.engine, variation: b.variation }));
 }));
 app.post('/api/check-duplicates', wrap((req, res) => {
@@ -260,10 +299,22 @@ app.post('/api/check-duplicates', wrap((req, res) => {
   res.json({ duplicates: findSimilar(signature(P), libraryIndex(), null, 5) });
 }));
 
-app.post('/api/generate', wrap((req, res) => res.status(202).json(present(createJob(req.body || {})))));
+app.post('/api/generate', wrap((req, res) => {
+  const body = req.body || {};
+  if (!req.clientMeta?.local) {
+    if (!req.authUser) return res.status(401).json({ error: i18nMsg(req, 'authRequired') });
+    if (req.authUser.role === 'viewer') return res.status(403).json({ error: i18nMsg(req, 'readOnly') });
+    const qerr = auth.checkQuota(req.authUser, body.duration != null ? +body.duration : 90);
+    if (qerr) return res.status(429).json({ error: qerr });
+  }
+  const ownerId = req.authUser?.id || (req.clientMeta?.local ? 'local' : null);
+  const t = createJob(body, null, { ...(ownerId ? { ownerId } : {}) });
+  if (req.authUser) auth.bumpQuota(req.authUser);
+  res.status(202).json(maybeSignUrls(auth, req, t, present));
+}));
 
 app.get('/api/jobs/:id', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Tâche introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'jobNotFound') });
   const { waveform, ...rest } = present(t); res.json(t.status === 'done' ? present(t) : rest);
 }));
 
@@ -275,16 +326,16 @@ app.get('/api/tracks', wrap((req, res) => {
 }));
 
 app.get('/api/tracks/:id', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   res.json(present(t));
 }));
 
 app.patch('/api/tracks/:id', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const b = req.body || {}, hasFr = b.title !== undefined, hasEn = b.title_en !== undefined;
-  if (!hasFr && !hasEn) return res.status(400).json({ error: 'Titre vide' });
+  if (!hasFr && !hasEn) return res.status(400).json({ error: i18nMsg(req, 'emptyTitle') });
   const title = hasFr ? String(b.title || '').trim().slice(0, 120) : t.title;
-  if (!title) return res.status(400).json({ error: 'Titre vide' });
+  if (!title) return res.status(400).json({ error: i18nMsg(req, 'emptyTitle') });
   if (hasEn && b.title_en !== null && typeof b.title_en !== 'string') return res.status(400).json({ error: 'title_en doit être une chaîne' });
   // titre anglais : saisi (manuel) ; vide = traduction automatique du titre français ; sinon suit le titre français s'il n'a jamais été saisi
   const M = { ...(t.meta || {}) }, en = hasEn ? String(b.title_en || '').trim().slice(0, 120) : null;
@@ -301,7 +352,7 @@ app.patch('/api/tracks/:id', wrap((req, res) => {
 }));
 
 app.delete('/api/tracks/:id', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   if (t.status === 'running') return res.status(409).json({ error: 'Génération en cours, réessayez à la fin.' });
   if (['queued', 'running'].includes(splits.status(t.id)?.status)) return res.status(409).json({ error: 'Découpage en cours, réessayez à la fin.' });
   const qi = jobs.queue.indexOf(t.id); if (qi >= 0) jobs.queue.splice(qi, 1);
@@ -310,7 +361,7 @@ app.delete('/api/tracks/:id', wrap((req, res) => {
 }));
 
 app.post('/api/tracks/:id/variation', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const mode = req.body?.mode || 'variation';
   const p = { ...t.params, engine: t.params?.engine || 17 }; // v1.8.0 : une variation garde le moteur du morceau d'origine
   if (mode === 'variation') {
@@ -346,7 +397,7 @@ function regenCheck(t) {
  *  Moteur 20 → moteur 21 ; moteurs plus anciens : même arrangement, corrections harmoniques activées (harmonyFix).
  *  Le morceau d'origine et ses fichiers ne sont jamais modifiés : un nouveau morceau est créé à côté. */
 app.post('/api/tracks/:id/regenerate', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const c = regenCheck(t); if (!c.ok) return res.status(c.status).json({ error: c.error });
   const eng = t.params.engine || 17;
   const p = { ...settingsOf(t.params), title: `${t.title} (régénéré en v1.12.0)`.slice(0, 120) };
@@ -359,14 +410,32 @@ const MIME = { wav: 'audio/wav', mp3: 'audio/mpeg', mid: 'audio/midi', midzip: '
 function sendTrackFile(kind) {
   return wrap((req, res) => {
     const t = store.get(req.params.id);
-    if (!t || !t.files?.[kind]) return res.status(404).json({ error: 'Fichier indisponible' });
+    if (!t || !t.files?.[kind]) return res.status(404).json({ error: i18nMsg(req, 'fileUnavailable') });
+    // Internet : propriétaire ou admin, ou lien signé (route /api/signed)
+    if (!req.clientMeta?.local) {
+      const owner = t.meta?.ownerId;
+      const ok = req.authUser && (req.authUser.role === 'admin' || !owner || owner === req.authUser.id || owner === 'local');
+      if (!ok) return res.status(403).json({ error: i18nMsg(req, 'accessDenied') });
+    }
     const file = path.join(tracksDir, t.id, t.files[kind]);
-    if (!fs.existsSync(file)) return res.status(404).json({ error: 'Fichier manquant' });
+    if (!fs.existsSync(file)) return res.status(404).json({ error: i18nMsg(req, 'fileMissing') });
     res.type(MIME[kind]);
     if (req.query.download) res.attachment(t.files[kind]);
-    res.sendFile(file, { acceptRanges: true, cacheControl: true, maxAge: '7d' });
+    res.set('Cache-Control', 'private, no-store');
+    res.sendFile(file, { acceptRanges: true, cacheControl: false });
   });
 }
+app.get('/api/signed/:token', wrap((req, res) => {
+  const payload = verifySigned(auth.masterKey, req.params.token);
+  if (!payload?.trackId || !payload?.kind) return res.status(403).json({ error: i18nMsg(req, 'linkExpired') });
+  const t = store.get(payload.trackId);
+  if (!t || !t.files?.[payload.kind]) return res.status(404).json({ error: i18nMsg(req, 'fileUnavailable') });
+  const file = path.join(tracksDir, t.id, t.files[payload.kind]);
+  if (!fs.existsSync(file)) return res.status(404).json({ error: i18nMsg(req, 'fileMissing') });
+  res.type(MIME[payload.kind] || 'application/octet-stream');
+  res.set('Cache-Control', 'private, no-store');
+  res.sendFile(file, { acceptRanges: true, cacheControl: false });
+}));
 app.get('/api/tracks/:id/audio.wav', sendTrackFile('wav'));
 app.get('/api/tracks/:id/audio.mp3', sendTrackFile('mp3'));
 app.get('/api/tracks/:id/track.mid', sendTrackFile('mid'));
@@ -382,11 +451,11 @@ function splitPayload(t, mode) {
     plan, job: st ? { status: st.status, progress: +st.progress.toFixed(3), stage: st.stage, eta: st.eta ?? null, error: st.error || null, mode: st.mode, lang: st.lang, library: st.library, video: st.video || null } : null, result, videos: splitVideosPayload(t) };
 }
 app.get('/api/tracks/:id/split/videos', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   res.json(splitVideosPayload(t) || { items: [], ready: 0, total: 0, running: false, request: null, zip: null });
 }));
 app.post('/api/tracks/:id/split/videos', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   if (!jobs.hasFfmpeg) return res.status(501).json({ error: 'ffmpeg absent' });
   const b = req.body || {}, resolution = resolutionOf(b.resolution || DEFAULT_RESOLUTION); if (!resolution) return res.status(400).json({ error: 'resolution : 720p, 1080p ou 4k' });
   const lang = b.lang === 'en' || b.lang === 'fr' ? b.lang : getLang(); if (lang !== getLang()) setLang(lang);
@@ -394,7 +463,7 @@ app.post('/api/tracks/:id/split/videos', wrap((req, res) => {
   enqueuePieceVideos(t, { resolution, lang }); res.status(202).json(splitVideosPayload(t));
 }));
 app.get('/api/tracks/:id/split/videos.zip', awrap(async (req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const lang = req.query.lang === 'en' || req.query.lang === 'fr' ? req.query.lang : readManifest(tracksDir, t.id)?.videos?.lang || getLang();
   const E = await videoZipEntries(t, lang); if (!E) return res.status(404).json({ error: 'Aucune vidéo de morceau prête' });
   const z = zipStream(E), title = lang === 'en' ? titleEnOf(t) : t.title, ascii = `${slugify(title)}_videos.zip`, nice = `${title} - ${lang === 'en' ? 'videos' : 'vidéos'}.zip`;
@@ -403,22 +472,22 @@ app.get('/api/tracks/:id/split/videos.zip', awrap(async (req, res) => {
   try { await z.pipe(res); } catch (e) { res.destroy(); }
 }));
 app.get('/api/tracks/:id/split', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   if (req.query.mode && !SPLIT_MODES[req.query.mode]) return res.status(400).json({ error: 'mode : mid, full ou clean' });
   res.json(splitPayload(t, req.query.mode));
 }));
 app.post('/api/tracks/:id/split', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const o = splitOptions(req.body || {}, { hasFfmpeg: jobs.hasFfmpeg, lang: getLang() });
   splits.enqueue(t.id, o); res.status(202).json(splitPayload(t, o.mode));
 }));
 app.delete('/api/tracks/:id/split', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   if (['queued', 'running'].includes(splits.status(t.id)?.status)) return res.status(409).json({ error: 'Découpage en cours.' });
   fs.rmSync(splitDir(tracksDir, t.id), { recursive: true, force: true }); splits.state.delete(t.id); res.status(204).end();
 }));
 app.get('/api/tracks/:id/split.zip', awrap(async (req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const M = readManifest(tracksDir, t.id); if (!M) return res.status(404).json({ error: 'Aucun découpage : lance d\'abord « Découper ».' });
   const z = zipStream(zipEntries(splitDir(tracksDir, t.id), M));
   const title = M.lang === 'en' ? titleEnOf(t) : t.title, ascii = `${slugify(title)}_morceaux.zip`, nice = `${title} - ${M.lang === 'en' ? 'tracks' : 'morceaux'}.zip`;
@@ -451,7 +520,7 @@ function ytPayload(t) {
     loudness: t.meta?.loudness || null, duplicates: findSimilar(signature(t.params, t.meta), libraryIndex(), t.id, 3), ffmpeg: jobs.hasFfmpeg };
 }
 app.get('/api/tracks/:id/youtube', awrap(async (req, res) => {
-  let t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  let t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   if (t.status !== 'done') return res.status(409).json({ error: 'Morceau pas encore terminé' });
   if (jobs.hasFfmpeg && (!t.files?.thumb || t.meta?.youtube?.thumbKey !== thumbKey(designOf(t), brandText(), getLang()))) t = await refreshThumb(t); // miniature absente, nom affiché, fond ou mise en page changés
   res.json(ytPayload(t));
@@ -476,6 +545,8 @@ app.post('/api/tracks/:id/video', wrap((req, res) => {
 /* ---------- v1.13.0 : chaînes YouTube, profils de publication par style, file d'auto-publication ---------- */
 const ytTransport = process.env.SOUNDTUBE_YT_TRANSPORT === 'mock' ? mockTransport(path.join(config.dataDir, 'youtube-mock.jsonl')) : liveTransport();
 const channels = new Channels(config.dataDir);
+try { channels.save(); } catch (e) { console.warn('[youtube] re-chiffrement:', e.message); }
+try { channels.save(); } catch {}
 /** Vidéo du morceau : celle qui existe, sinon rendu (file vidéo habituelle) et attente. */
 async function ensureVideo(t, onProgress, resolution = null, { fresh = false } = {}) {
   const D = designOf(t), brand = brandText(), lang = getLang(), key = videoKey(D, brand, lang), y = t.meta?.youtube || {};
@@ -501,13 +572,13 @@ app.put('/api/admin/youtube/channels/:cid', wrap((req, res) => { channels.upsert
 app.delete('/api/admin/youtube/channels/:cid', wrap((req, res) => { channels.remove(req.params.cid); res.json(ytAdminView()); }));
 app.put('/api/admin/youtube/default', wrap((req, res) => { channels.setDefault(req.body?.id); res.json(ytAdminView()); }));
 app.put('/api/admin/youtube/bindings', wrap((req, res) => {
-  const b = req.body || {}; if (!STYLE_IDS().includes(b.style)) return res.status(400).json({ error: 'Style inconnu' });
+  const b = req.body || {}; if (!STYLE_IDS().includes(b.style)) return res.status(400).json({ error: i18nMsg(req, 'unknownStyle') });
   channels.bind(b.style, b.channelId || null); res.json(ytAdminView());
 }));
 const stylePublishView = (id) => { const ch = channels.forStyle(id); return { style: id, label: STYLES[id].label, profile: channels.profile(id), defaults: DEFAULT_PROFILE, channelId: channels.s.bindings[id] || null, channel: ch ? channels.publicChannel(ch) : null, ready: channels.ready(ch), reason: channels.missing(ch), channels: channels.view().channels, transport: ytTransport.kind, confirmWord: CONFIRM_WORD, visibilities: VISIBILITIES.map((v) => ({ id: v, label: VIS_LABEL[v] })), queue: publisher.list({ style: id }).slice(0, 50) }; };
-app.get('/api/styles/:id/publish', wrap((req, res) => { if (!STYLE_IDS().includes(req.params.id)) return res.status(404).json({ error: 'Style inconnu' }); res.json(stylePublishView(req.params.id)); }));
+app.get('/api/styles/:id/publish', wrap((req, res) => { if (!STYLE_IDS().includes(req.params.id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') }); res.json(stylePublishView(req.params.id)); }));
 app.put('/api/styles/:id/publish', wrap((req, res) => {
-  const id = req.params.id, b = req.body || {}; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: 'Style inconnu' });
+  const id = req.params.id, b = req.body || {}; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') });
   if ('channelId' in b) channels.bind(id, b.channelId || null);
   if (b.profile) channels.setProfile(id, b.profile, { confirm: b.confirm });
   res.json(stylePublishView(id));
@@ -517,7 +588,7 @@ app.get('/api/tracks/:id/publish', wrap((req, res) => {
   res.json({ ...publisher.draft(t, req.query.channelId ? { channelId: req.query.channelId } : {}), channels: channels.view().channels, visibilities: VISIBILITIES.map((v) => ({ id: v, label: VIS_LABEL[v] })), confirmWord: CONFIRM_WORD, published: t.meta?.published || [], queue: publisher.items.filter((x) => x.trackId === t.id).map((x) => publisher.view(x)) });
 }));
 app.post('/api/tracks/:id/publish', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const b = req.body || {}, over = {}; for (const k of ['channelId', 'title', 'description', 'tags', 'thumbnail', 'visibility', 'playlistId', 'schedule', 'autoTags', 'again']) if (b[k] !== undefined) over[k] = b[k];
   res.status(202).json(publisher.enqueue(t, over, { mode: 'manual', confirm: b.confirm }));
 }));
@@ -528,15 +599,15 @@ app.post('/api/publish/queue/:pid/retry', wrap((req, res) => res.json(publisher.
 /* ---------- v1.14.0 : animation de la vidéo par style (formulaire de génération) ---------- */
 const pubMedia = (m) => { if (!m) return null; const { path: _p, posterPath: _q, ...x } = m; return x; };
 const styleAnimView = (id) => ({ style: id, media: getStyleAnimation(id), item: pubMedia(getStyleAnimation(id) ? getMedia(getStyleAnimation(id)) : null), all: getStyleAnimations() });
-app.get('/api/styles/:id/animation', wrap((req, res) => { if (!STYLE_IDS().includes(req.params.id)) return res.status(404).json({ error: 'Style inconnu' }); res.json(styleAnimView(req.params.id)); }));
+app.get('/api/styles/:id/animation', wrap((req, res) => { if (!STYLE_IDS().includes(req.params.id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') }); res.json(styleAnimView(req.params.id)); }));
 app.put('/api/styles/:id/animation', wrap((req, res) => {
-  const id = req.params.id; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: 'Style inconnu' });
+  const id = req.params.id; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') });
   const m = req.body?.media; if (m !== null && m !== undefined && typeof m !== 'string') return res.status(400).json({ error: 'media : identifiant ou null' });
   setStyleAnimation(id, m || null); res.json(styleAnimView(id));
 }));
 /** Animation réellement utilisée par la vidéo d'un morceau, et d'où elle vient (morceau / génération / réglage commun). */
 app.get('/api/tracks/:id/animation', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const D = designOf(t), gen = t.meta?.animation || null;
   res.json({ media: D.background.media || null, scope: D.scope, override: D.scope === 'track', generation: gen ? gen.media || null : undefined, item: pubMedia(D.background.media ? getMedia(D.background.media) : null) });
 }));
@@ -581,7 +652,7 @@ function startPack(t, options) {
   return st;
 }
 app.get('/api/tracks/:id/pack.zip', awrap(async (req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const p = packState(t.id); if (p?.status !== 'done') return res.status(404).json({ error: 'Aucun paquet prêt : lance d\'abord « Créer le ZIP complet ».' });
   const E = p.manifest.entries.filter((x) => x.data || (fs.existsSync(x.path) && fs.statSync(x.path).size === x.size));
   if (E.length !== p.manifest.entries.length) { packs.delete(t.id); fs.rmSync(path.join(tracksDir, t.id, 'pack', '.entries.json'), { force: true }); return res.status(410).json({ error: 'Fichiers du paquet modifiés : recrée le ZIP.' }); }
@@ -608,7 +679,7 @@ app.put('/api/youtube/design', wrap((req, res) => {
 }));
 // réglage propre à un morceau (design: null = revenir au réglage global)
 app.put('/api/tracks/:id/design', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   const d = req.body?.design; if (d !== null && (typeof d !== 'object' || d === undefined)) return res.status(400).json({ error: 'design : objet ou null' });
   const y = { ...(t.meta?.youtube || {}) }; if (d === null) delete y.design; else y.design = normalizeDesign(d);
   store.update(t.id, { meta: { ...(t.meta || {}), youtube: y } });
@@ -661,7 +732,7 @@ app.post('/api/tracks/:id/youtube/preview', awrap(async (req, res) => {
 }));
 
 app.get('/api/tracks/:id/settings', wrap((req, res) => {
-  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: 'Morceau introuvable' });
+  const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
   res.json(settingsOf(t.params));
 }));
 
@@ -752,7 +823,7 @@ function styleCard(id) {
 }
 app.get('/api/styles', (req, res) => { const d = stylesDoc(); res.json({ styles: STYLE_IDS().map(styleCard), roadmap: d.roadmap || null, ai: d.ai || null }); });
 app.get('/api/styles/:id', (req, res) => {
-  const id = req.params.id; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: 'Style inconnu' });
+  const id = req.params.id; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') });
   const d = stylesDoc().sections[id] || null;
   res.json({ ...styleCard(id), html: d?.html || '', facts: d?.facts || [], neighbours: STYLE_IDS().filter((x) => x !== id) });
 });
@@ -760,12 +831,28 @@ app.get('/api/styles/:id', (req, res) => {
 app.get('/styles/:id', (req, res, next) => (STYLE_IDS().includes(req.params.id) ? res.sendFile(path.join(config.publicDir, 'style.html'), { headers: { 'Cache-Control': 'no-cache' } }) : res.status(404).sendFile(path.join(config.publicDir, 'style.html'), { headers: { 'Cache-Control': 'no-cache' } })));
 
 app.get('/api/openapi.json', (req, res) => res.json(openapi));
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi, { customSiteTitle: 'soundtube — API', customCss: '.topbar{display:none}' }));
+const swaggerSetup = swaggerUi.setup(openapi, { customSiteTitle: 'soundtube — API', customCss: '.topbar{display:none}' });
+app.use('/api/docs', swaggerUi.serve, swaggerSetup);
+app.use('/docs', swaggerUi.serve, swaggerSetup);
+mountAuthRoutes(app, { auth, config, awrap, wrap });
 
 // Pages Admin / studio : jamais de cache navigateur (les ?v= versionnent CSS/JS).
-app.get(['/admin', '/admin.html'], (req, res) => {
+app.get(['/admin', '/admin.html'], requireLocalAdmin, (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'admin.html'));
+});
+app.get(['/login', '/login.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'login.html'));
+});
+app.get(['/setup', '/setup.html'], requireLocalAdmin, (req, res) => {
+  if (!auth.needsSetup()) return res.redirect('/login');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'setup.html'));
+});
+app.get(['/legal', '/legal.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'legal.html'));
 });
 app.get(['/', '/index.html'], (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -792,13 +879,17 @@ app.put('/api/ui/lang', (req, res) => {
 
 app.use(express.static(config.publicDir, { extensions: ['html'], maxAge: '1h', setHeaders: (res, p) => { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate'); } }));
 
-app.use('/api', (req, res) => res.status(404).json({ error: 'Route inconnue' }));
+app.use('/api', (req, res) => res.status(404).json({ error: i18nMsg(req, 'unknownRoute') }));
 app.use((err, req, res, next) => {
   const status = err.status || (err.type === 'entity.parse.failed' ? 400 : 500);
   if (status >= 500) console.error(err);
-  res.status(status).json({ error: err.message || 'Erreur interne' });
+  const errMsg = status >= 500 ? i18nMsg(req, 'internal') : (err.message || i18nMsg(req, 'internal'));
+  if (req.accepts('html') && !req.path.startsWith('/api/')) {
+    return res.status(status).type('html').send(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${status}</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/app.css"></head><body class="wrap"><h1>${status}</h1><p class="muted">${errMsg.replace(/[<>&]/g,'')}</p><p><a href="/">Accueil</a></p></body></html>`);
+  }
+  res.status(status).json({ error: errMsg });
 });
 
 app.listen(config.port, config.host, () => {
-  console.log(`[soundtube] http://${config.host}:${config.port}  (données: ${config.dataDir}, stockage: ${store.kind}, mp3: ${jobs.hasFfmpeg ? 'oui' : 'non'}, workers: ${config.maxConcurrentJobs})`);
+  console.log(`[soundtube] http://${config.host}:${config.port}  (données: ${config.dataDir}, stockage: ${store.kind}, mp3: ${jobs.hasFfmpeg ? 'oui' : 'non'}, workers: ${config.maxConcurrentJobs}, auth: ${auth.needsSetup() ? 'setup' : 'on'})`);
 });

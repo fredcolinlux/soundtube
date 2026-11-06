@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 // Éditeur « Animation et mise en page » du panneau YouTube : fond (animation importée ou visuel généré) et position des textes.
 // L'aperçu canvas utilise le même module de mise en page et les mêmes polices que le rendu ffmpeg du serveur (WYSIWYG) ;
 // « Comparer au rendu » affiche l'image réellement produite par le serveur avec le réglage en cours.
@@ -35,7 +36,7 @@ function create(id) {
   const el = document.createElement('section'); el.className = 'yt-design'; el.dataset.id = id;
   const st = { id, open: false, target: 'thumb', sel: 'title', draft: null, saved: null, scope: 'global', server: null, serverBusy: false, base: null, baseUrl: '', drag: null, guides: [], upload: null };
   const ed = { el, st };
-  el.innerHTML = `<button class="btn btn-mini yd-toggle" type="button" aria-expanded="false">Animation et mise en page…</button><div class="yd-body" hidden></div>`;
+  el.innerHTML = `<button class="btn btn-mini yd-toggle" type="button" aria-expanded="false">${t('yd.toggle')}</button><div class="yd-body" hidden></div>`;
   el.querySelector('.yd-toggle').addEventListener('click', async () => {
     st.open = !st.open; el.querySelector('.yd-toggle').setAttribute('aria-expanded', st.open); el.querySelector('.yd-toggle').classList.toggle('on', st.open);
     el.querySelector('.yd-body').hidden = !st.open;
@@ -109,19 +110,19 @@ function render(ed) {
           ${items.map((m) => tile(m.id, m.name, m.poster, m.kind === 'video' ? `${(m.duration || 0).toFixed(1)} s` : m.kind === 'gif' ? 'GIF' : 'image')).join('')}
         </div>
         <div class="row">
-          <label class="btn btn-mini yd-up">Importer une animation…<input type="file" accept="${esc(media?.accept || '')}" data-ydfile hidden></label>
+          <label class="btn btn-mini yd-up">${t('yd.import')}<input type="file" accept="${esc(media?.accept || '')}" data-ydfile hidden></label>
           ${st.upload ? `<span class="hint">${esc(st.upload)}</span>` : ''}
         </div>
         <p class="hint">MP4, WebM, MOV, GIF animé (bouclés sur toute la durée) ou image PNG/JPG · ${maxMb} Mo max.<br><b>Utilise uniquement des animations dont tu as les droits</b> (création perso, licence libre ou achetée) : YouTube peut bloquer ou démonétiser une vidéo qui reprend l'œuvre d'un autre.</p>
         ${B.media ? `
-        <div class="yd-row"><span>Cadrage</span><div class="seg seg-sm" role="radiogroup" aria-label="Cadrage"><button type="button" role="radio" aria-checked="${B.fit === 'cover'}" class="${B.fit === 'cover' ? 'on' : ''}" data-ydfit="cover" title="Remplit l'image, quitte à recadrer">Remplir</button><button type="button" role="radio" aria-checked="${B.fit === 'contain'}" class="${B.fit === 'contain' ? 'on' : ''}" data-ydfit="contain" title="Animation entière, bandes sur les côtés">Ajuster</button></div></div>
+        <div class="yd-row"><span>${t('yd.fit')}</span><div class="seg seg-sm" role="radiogroup" aria-label="${t('yd.fit')}"><button type="button" role="radio" aria-checked="${B.fit === 'cover'}" class="${B.fit === 'cover' ? 'on' : ''}" data-ydfit="cover" title="Remplit l'image, quitte à recadrer">${t('yd.cover')}</button><button type="button" role="radio" aria-checked="${B.fit === 'contain'}" class="${B.fit === 'contain' ? 'on' : ''}" data-ydfit="contain" title="Animation entière, bandes sur les côtés">${t('yd.contain')}</button></div></div>
         <label>Voile sombre <input type="range" min="0" max="80" step="5" value="${Math.round(B.dim * 100)}" data-ydbg="dim"><output>${Math.round(B.dim * 100)} %</output></label>
         <label class="yt-check"><input type="checkbox" data-ydbg="overlay" ${B.overlay ? 'checked' : ''}> Garder le spectre (vidéo) et la forme d'onde (miniature) par-dessus</label>
         <div class="yd-row"><span>Miniature</span><div class="seg seg-sm" role="radiogroup" aria-label="Fond de la miniature"><button type="button" role="radio" aria-checked="${B.thumb === 'media'}" class="${B.thumb === 'media' ? 'on' : ''}" data-ydthumb="media">Image de l'animation</button><button type="button" role="radio" aria-checked="${B.thumb === 'generated'}" class="${B.thumb === 'generated' ? 'on' : ''}" data-ydthumb="generated">Visuel généré</button></div></div>` : ''}
       </div>
     </div>
     <div class="row yd-actions">
-      <button class="btn btn-mini btn-primary" type="button" data-ydsave ${dirty(st) || st.scopeChanged ? '' : 'disabled'}>Enregistrer</button>
+      <button class="btn btn-mini btn-primary" type="button" data-ydsave ${dirty(st) || st.scopeChanged ? '' : 'disabled'}>${t('yd.save')}</button>
       <button class="btn btn-mini" type="button" data-ydundo ${dirty(st) ? '' : 'disabled'}>Annuler les modifications</button>
       <button class="btn btn-mini" type="button" data-ydreset title="Disposition et fond d'origine">Réinitialiser</button>
       <span class="hint" data-ydstatus>${dirty(st) ? 'Modifications non enregistrées' : st.scope === 'track' ? 'Réglage propre à ce morceau' : 'Réglage commun à tous les morceaux'}</span>
@@ -193,10 +194,10 @@ function hit(ed, x, y) {
 function changed(ed, rerender = false) {
   const { el, st } = ed; st.server = null;
   if (rerender) return render(ed);
-  const s = el.querySelector('[data-ydstatus]'); if (s) s.textContent = dirty(st) ? 'Modifications non enregistrées' : st.scope === 'track' ? 'Réglage propre à ce morceau' : 'Réglage commun à tous les morceaux';
+  const s = el.querySelector('[data-ydstatus]'); if (s) s.textContent = dirty(st) ? t('yd.dirty') : st.scope === 'track' ? t('yd.scopeTrack') : t('yd.scopeAll');
   el.querySelector('[data-ydsave]')?.toggleAttribute('disabled', !dirty(st) && !st.scopeChanged);
   el.querySelector('[data-ydundo]')?.toggleAttribute('disabled', !dirty(st));
-  el.querySelector('.yd-server')?.remove(); const c = el.querySelector('[data-ydcompare]'); if (c && !st.serverBusy) { c.textContent = 'Comparer au rendu'; c.classList.remove('on'); }
+  el.querySelector('.yd-server')?.remove(); const c = el.querySelector('[data-ydcompare]'); if (c && !st.serverBusy) { c.textContent = t('yd.compare'); c.classList.remove('on'); }
   draw(ed);
 }
 /** Déplace un élément (dx, dy en px de référence) avec aimantation sur le centre et les autres éléments. */
@@ -261,7 +262,7 @@ function bind(ed) {
     else if (b.matches('[data-ydcompare]')) await compare(ed);
     else if (b.matches('[data-ydsave]')) await save(ed);
     else if (b.matches('[data-ydundo]')) { st.draft = normalizeDesign(JSON.parse(st.saved)); st.scopeChanged = false; changed(ed, true); }
-    else if (b.matches('[data-ydreset]')) { const def = defaultDesign(); if (st.target) { st.draft.layout[st.target] = def.layout[st.target]; } if (confirm('Remettre aussi le fond d\'origine (visuel généré) ?')) st.draft.background = def.background; changed(ed, true); }
+    else if (b.matches('[data-ydreset]')) { const def = defaultDesign(); if (st.target) { st.draft.layout[st.target] = def.layout[st.target]; } if (confirm(t('confirm.ydResetBg'))) st.draft.background = def.background; changed(ed, true); }
   });
   body.addEventListener('keydown', (ev) => { const t = ev.target.closest('[data-ydmedia]'); if (t && (ev.key === 'Enter' || ev.key === ' ') && !ev.target.closest('button')) { ev.preventDefault(); t.click(); } });
   body.addEventListener('input', (ev) => {
@@ -305,7 +306,7 @@ async function save(ed) {
       if (deps.getYt(st.id)?.design?.scope === 'track') await deps.api(`/api/tracks/${st.id}/design`, { method: 'PUT', body: JSON.stringify({ design: null }) });
     }
     st.saved = JSON.stringify(design); st.scopeChanged = false;
-    deps.toast(st.scope === 'track' ? 'Réglage enregistré pour ce morceau : miniature mise à jour, vidéo à recréer.' : 'Réglage enregistré pour tous les morceaux : miniature mise à jour, vidéo à recréer.');
+    deps.toast(st.scope === 'track' ? t('toast.ydSavedTrack') : t('toast.ydSavedAll'));
     for (const [id, o] of editors) if (id !== st.id && o.st.draft && !dirty(o.st) && st.scope === 'global') o.st.draft = null; // rechargés à la prochaine ouverture
     await deps.onSaved(st.id);
     render(ed);
@@ -323,7 +324,7 @@ function upload(ed, file) {
     x.onload = async () => {
       let j = {}; try { j = JSON.parse(x.responseText); } catch {}
       st.upload = null;
-      if (x.status === 201) { await loadMedia(true); st.draft.background.media = j.id; deps.toast(`« ${j.name} » ajouté à la bibliothèque.`); changed(ed, true); for (const [id, o] of editors) if (id !== st.id && o.st.open) render(o); }
+      if (x.status === 201) { await loadMedia(true); st.draft.background.media = j.id; deps.toast(t('toast.ydMediaAdded', { name: j.name })); changed(ed, true); for (const [id, o] of editors) if (id !== st.id && o.st.open) render(o); }
       else { deps.toast(j.error || `Erreur ${x.status}`); render(ed); }
       resolve();
     };
@@ -333,7 +334,7 @@ function upload(ed, file) {
 }
 async function del(ed, mid) {
   const m = media?.items.find((x) => x.id === mid);
-  if (!confirm(`Supprimer « ${m?.name || mid} » de la bibliothèque ? Les morceaux qui l'utilisent reprendront le visuel généré.`)) return;
+  if (!confirm(t('confirm.ydMediaDel', { name: m?.name || mid }))) return;
   try {
     media = await deps.api(`/api/media/${mid}`, { method: 'DELETE' });
     for (const [, o] of editors) if (o.st.draft?.background.media === mid) { o.st.draft.background.media = null; if (o.st.open) changed(o, true); }
