@@ -1,5 +1,15 @@
 # Journal des versions
 
+## 1.20.1 — Configuration simple, auth stricte, i18n & légal
+
+- Setup LAN en **une étape** (user + mot de passe) ; **pas d’OTP** imposé (2FA/passkeys optionnelles dans `/profile`).
+- Studio + bibliothèque + APIs de génération : **login obligatoire pour tous** (plus de bypass IP locale). Admin : LAN **et** session admin.
+- Menu compte (avatar / Connexion) sur toutes les pages ; page `/register` si « Inscriptions ouvertes » (défaut OFF, rate-limit, validation admin optionnelle).
+- Détection proxy/domaine (suggestions Admin, confirmation un clic) ; XFF non confirmé = non-local (défaut sûr).
+- Mentions légales / confidentialité / CGU (FR+EN) + champs éditeur en Admin (placeholders, jamais de PII dans le dépôt).
+- i18n 823 clés ; test DOM EN headless zéro chrome FR ; tests `test/v1201.js`.
+
+
 ## 1.20.0 — Exposition Internet, auth & durcissement WebGuardian
 
 - Login state-of-the-art (scrypt, session `__Host-` / Secure / HttpOnly / SameSite=Strict, CSRF, rate-limit + verrouillage, TOTP + recovery, passkeys WebAuthn).
@@ -10,7 +20,6 @@
 - Secrets YouTube chiffrés au repos ; journal d’audit ; backup/restore ; `security.txt`.
 - En-têtes CSP/HSTS/COOP/COEP/CORP/… ; plus de scripts inline ; pages Mentions légales.
 - Docs `SECURITY.md` / `EXPOSITION.md` (+ EN) ; fail2ban ; tests `test/v1200.js` + `test/security-headers.sh`.
-- i18n FR+EN complet (646 clés, was 251) ; test `test/v1200-i18n.js` échoue si une page EN laisse du chrome FR ou si les catalogues divergent.
 
 ## 1.19.2 — 2026-11-06
 

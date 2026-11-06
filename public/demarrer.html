@@ -3,68 +3,72 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>soundtube — démarrer</title>
+  <title data-i18n="title.start">soundtube — démarrer</title>
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.20.0">
-  <link rel="stylesheet" href="/css/site.css?v=1.20.0">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/site.css?v=1.20.1">
 </head>
 <body class="site page-start">
   <main class="site-wrap">
     <section class="page-hero">
-      <p class="kicker">Démarrer</p>
-      <h1 class="mega mega-2">Comment naît<br><span>un morceau.</span></h1>
-      <p class="lead">soundtube est un studio qui tourne sur ton serveur (le CT). Il compose, joue et masterise ; un PC Windows peut faire les vidéos et un PC IA peut jouer le directeur artistique. Voici le circuit, puis une visite en cinq étapes.</p>
+      <p class="kicker" data-i18n="start.kicker">Démarrer</p>
+      <h1 class="mega mega-2"><span data-i18n="start.h1a">Comment naît</span><br><span data-i18n="start.h1b">un morceau.</span></h1>
+      <p class="lead" data-i18n="start.lead">soundtube est un studio qui tourne sur ton serveur. Il compose, joue et masterise ; un PC Windows peut faire les vidéos et un PC IA peut jouer le directeur artistique. Voici le circuit, puis une visite en cinq étapes.</p>
     </section>
 
     <section class="sys" aria-labelledby="hSys">
-      <div class="sec-head" data-reveal><h2 id="hSys"><span class="num">01</span>Le système</h2></div>
+      <div class="sec-head" data-reveal><h2 id="hSys"><span class="num">01</span><span data-i18n="start.sys">Le système</span></h2></div>
       <div class="sys-map" data-reveal>
-        <div class="sys-node sys-you"><span class="sys-tag">toi</span><b>Navigateur</b><p>Studio, pages de style, Admin. Réseau local seulement, jeton facultatif.</p></div>
-        <div class="sys-node sys-core"><span class="sys-tag">serveur · CT</span><b>soundtube</b>
+        <div class="sys-node sys-you"><span class="sys-tag" data-i18n="start.youTag">toi</span><b data-i18n="start.youTitle">Navigateur</b><p data-i18n="start.youBody">Studio, pages de style, Admin. Compte requis pour créer et la bibliothèque.</p></div>
+        <div class="sys-node sys-core"><span class="sys-tag" data-i18n="start.coreTag">serveur</span><b>soundtube</b>
           <ol class="sys-steps">
-            <li><b>Théorie</b> gamme, mode, progression tirés de la graine</li>
-            <li><b>Composition</b> mélodie (Markov), basse, batterie, forme</li>
-            <li><b>Synthèse</b> machines recréées en JavaScript</li>
-            <li><b>Mix &amp; master</b> sidechain, bande, −14 LUFS</li>
-            <li><b>Fichiers</b> WAV · MP3 · MIDI · vidéo YouTube</li>
+            <li data-i18n="start.stepTheory">Théorie — gamme, mode, progression tirés de la graine</li>
+            <li data-i18n="start.stepComp">Composition — mélodie (Markov), basse, batterie, forme</li>
+            <li data-i18n="start.stepSynth">Synthèse — machines recréées en JavaScript</li>
+            <li data-i18n="start.stepMix">Mix &amp; master — sidechain, bande, −14 LUFS</li>
+            <li data-i18n="start.stepFiles">Fichiers — WAV · MP3 · MIDI · vidéo YouTube</li>
           </ol></div>
         <div class="sys-side">
-          <div class="sys-node sys-opt"><span class="sys-tag">facultatif</span><b>PC IA (Ollama)</b><p>« Décris l’ambiance » → réglages validés par le serveur. Veille tendances hebdomadaire. Sans lui : propositions locales.</p></div>
-          <div class="sys-node sys-opt"><span class="sys-tag">facultatif</span><b>PC Windows</b><p>Agent de rendu vidéo (NVENC / x264) ; sinon le CT fait la vidéo lui-même.</p></div>
+          <div class="sys-node sys-opt"><span class="sys-tag" data-i18n="start.optTag">facultatif</span><b>PC IA (Ollama)</b><p data-i18n="start.aiBody">« Décris l’ambiance » → réglages validés par le serveur. Veille tendances hebdomadaire. Sans lui : propositions locales.</p></div>
+          <div class="sys-node sys-opt"><span class="sys-tag" data-i18n="start.optTag">facultatif</span><b>PC Windows</b><p data-i18n="start.winBody">Agent de rendu vidéo (NVENC / x264) ; sinon le serveur fait la vidéo lui-même.</p></div>
         </div>
       </div>
     </section>
 
     <section class="tour" aria-labelledby="hTour">
-      <div class="sec-head" data-reveal><h2 id="hTour"><span class="num">02</span>Visite en cinq étapes</h2><span class="hint">Flèches ← → du clavier pour naviguer.</span></div>
+      <div class="sec-head" data-reveal><h2 id="hTour"><span class="num">02</span><span data-i18n="start.tour">Visite en cinq étapes</span></h2><span class="hint" data-i18n="start.tourHint">Flèches ← → du clavier pour naviguer.</span></div>
       <div class="tour-box" id="tourBox" data-reveal>
-        <ol class="tour-dots" id="tourDots" role="tablist" aria-label="Étapes"></ol>
+        <ol class="tour-dots" id="tourDots" role="tablist" data-i18n-aria="start.stepsAria" aria-label="Étapes"></ol>
         <div class="tour-stage">
           <div class="tour-art" id="tourArt" aria-hidden="true"></div>
           <div class="tour-text" role="tabpanel" id="tourPanel" aria-live="polite"></div>
         </div>
         <div class="tour-nav">
-          <button class="btn btn-ghost" type="button" id="tourPrev">← Précédent</button>
+          <button class="btn btn-ghost" type="button" id="tourPrev" data-i18n="start.prev">← Précédent</button>
           <span class="tour-count" id="tourCount"></span>
-          <button class="btn btn-primary" type="button" id="tourNext">Suivant →</button>
+          <button class="btn btn-primary" type="button" id="tourNext" data-i18n="tour.nextBtn">Suivant →</button>
         </div>
       </div>
     </section>
 
     <section class="first" aria-labelledby="hFirst">
-      <div class="sec-head" data-reveal><h2 id="hFirst"><span class="num">03</span>Premiers réglages</h2><span class="hint">Une fois pour toutes.</span></div>
+      <div class="sec-head" data-reveal><h2 id="hFirst"><span class="num">03</span><span data-i18n="start.first">Premiers réglages</span></h2><span class="hint" data-i18n="start.firstHint">Une fois pour toutes.</span></div>
       <ol class="first-list" data-reveal>
-        <li><b>Nom de la chaîne</b> affiché sur les miniatures et les vidéos : studio → bibliothèque → panneau YouTube d’un morceau.</li>
-        <li><b>PC IA</b> (Admin → PC IA) : adresse Ollama (ex. <code>http://192.0.2.10:8080/proxy/ollama</code>), modèle <code>qwen3:14b</code>, délai, puis « Tester la connexion ».</li>
-        <li><b>PC Windows</b> (facultatif, Admin → Nœuds de rendu vidéo) : « Rechercher sur le réseau » trouve l’agent installé.</li>
-        <li><b>Veille tendances</b> (Admin) : clé YouTube Data API ou flux RSS, fréquence, styles suivis.</li>
+        <li data-i18n="start.liBrand">Nom de la chaîne affiché sur les miniatures et les vidéos : studio → bibliothèque → panneau YouTube d’un morceau.</li>
+        <li data-i18n="start.liAi">PC IA (Admin → Modèles IA) : adresse Ollama (ex. http://192.168.1.50:11434), modèle, délai, puis Tester.</li>
+        <li data-i18n="start.liWin">PC Windows (facultatif, Admin → Nœuds) : Rechercher sur le réseau trouve l’agent installé.</li>
+        <li data-i18n="start.liTrends">Veille tendances (Admin) : clé YouTube Data API ou flux RSS, fréquence, styles suivis.</li>
       </ol>
-      <div class="cta-row" data-reveal><a class="btn btn-primary btn-lg" href="/?tour=1">Visite guidée dans le studio</a><a class="btn btn-ghost btn-lg" href="/styles">Choisir un style</a><a class="btn btn-ghost btn-lg" href="/admin">Ouvrir l’Admin</a></div>
+      <div class="cta-row" data-reveal>
+        <a class="btn btn-primary btn-lg" href="/?tour=1" data-i18n="start.ctaTour">Visite guidée dans le studio</a>
+        <a class="btn btn-ghost btn-lg" href="/styles" data-i18n="start.ctaStyles">Choisir un style</a>
+        <a class="btn btn-ghost btn-lg" href="/admin" data-i18n="start.ctaAdmin">Ouvrir l’Admin</a>
+      </div>
     </section>
   </main>
-  <footer class="site-foot"><span>Documentation complète : README et <code>docs/STYLES.md</code></span><a href="/docs" target="_blank" rel="noopener">API</a></footer>
-  <script type="module" src="/js/demarrer.js?v=1.20.0"></script>
+  <footer class="site-foot"><span data-i18n="start.footDocs">Documentation complète : README et docs/STYLES.md</span><a href="/docs" target="_blank" rel="noopener" data-i18n="nav.api">API</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></footer>
+  <script type="module" src="/js/demarrer.js?v=1.20.1"></script>
 </body>
 </html>

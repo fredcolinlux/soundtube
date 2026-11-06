@@ -36,7 +36,7 @@ import { Channels, PublishQueue, mockTransport, liveTransport, DEFAULT_PROFILE, 
 import { buildPack, packOptions, readPack, packSplit } from './pack.js';
 import { fmtTime } from './youtube.js';
 import { AuthStore } from './auth/store.js';
-import { attachAuth, requireAuthUnlessLocal, requireCsrf, localOnly, requireLocalAdmin, setSessionCookie, clearSessionCookie } from './auth/middleware.js';
+import { attachAuth, requireAuth, requireCsrf, localOnly, requireLocalAdmin, requireAdminSession, setSessionCookie, clearSessionCookie } from './auth/middleware.js';
 import { mountAuthRoutes } from './auth/routes.js';
 import { securityHeaders } from './security/headers.js';
 import { signPayload, verifySigned } from './security/crypto.js';
@@ -150,14 +150,6 @@ app.use(express.json({ limit: `${auth.security.bodyLimitKb || 64}kb` }));
 
 const AUTH_ALLOW = [
   { method: 'GET', path: '/health' },
-  { method: 'GET', path: '/auth/status' },
-  { method: 'POST', path: '/auth/login' },
-  { method: 'POST', path: '/auth/setup' },
-  { method: 'POST', path: '/auth/2fa' },
-  { method: 'POST', path: '/auth/logout' },
-  { method: 'POST', path: '/auth/passkey/login/options' },
-  { method: 'POST', path: '/auth/passkey/login' },
-  { method: 'GET', path: '/auth/me' },
   { method: 'GET', path: '/legal' },
   { method: 'GET', path: '/ui/lang' },
   { method: 'PUT', path: '/ui/lang' },
@@ -165,13 +157,21 @@ const AUTH_ALLOW = [
   { method: 'GET', path: '/signed*' },
   { method: '*', path: '/auth*' },
   { method: '*', path: '/docs*' },
+  // Pages publiques (accueil / styles) : lecture seule
+  { method: 'GET', path: '/styles' },
+  { method: 'GET', path: '/styles/*' },
+  { method: 'GET', path: '/options' },
+  { method: 'GET', path: '/tracks' },
+  { method: 'GET', path: '/tracks/*' },
+  { method: 'GET', path: '/media/*' },
+  { method: 'GET', path: '/youtube/base.jpg' },
 ];
 app.use('/api', (req, res, next) => {
-  // Admin API : local only (404 from internet)
-  if (req.path.startsWith('/admin')) return localOnly(req, res, next);
+  // Admin API : LAN + session admin (pas d’anonyme LAN)
+  if (req.path.startsWith('/admin')) return requireAdminSession(req, res, next);
   next();
 });
-app.use('/api', requireAuthUnlessLocal(AUTH_ALLOW));
+app.use('/api', requireAuth(AUTH_ALLOW));
 app.use('/api', requireCsrf);
 
 // Rattrapage des dates de création manquantes (anciens morceaux) : date de modification des fichiers
@@ -837,13 +837,17 @@ app.use('/docs', swaggerUi.serve, swaggerSetup);
 mountAuthRoutes(app, { auth, config, awrap, wrap });
 
 // Pages Admin / studio : jamais de cache navigateur (les ?v= versionnent CSS/JS).
-app.get(['/admin', '/admin.html'], requireLocalAdmin, (req, res) => {
+app.get(['/admin', '/admin.html'], requireAdminSession, (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'admin.html'));
 });
 app.get(['/login', '/login.html'], (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'login.html'));
+});
+app.get(['/register', '/register.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'register.html'));
 });
 app.get(['/setup', '/setup.html'], requireLocalAdmin, (req, res) => {
   if (!auth.needsSetup()) return res.redirect('/login');
@@ -854,7 +858,23 @@ app.get(['/legal', '/legal.html'], (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'legal.html'));
 });
+app.get(['/privacy', '/privacy.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'privacy.html'));
+});
+app.get(['/terms', '/terms.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'terms.html'));
+});
+app.get(['/profile', '/profile.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'profile.html'));
+});
 app.get(['/', '/index.html'], (req, res) => {
+  if (!req.authUser) {
+    const q = req.url.includes('?') ? '&' : '?';
+    return res.redirect('/login?next=' + encodeURIComponent('/'));
+  }
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'index.html'));
 });

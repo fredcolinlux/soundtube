@@ -12,13 +12,13 @@ let V = null;
 const flag = (ok, label) => `<span class="node-tag ${ok ? '' : 'tag-miss'}">${label} ${ok ? '✓' : 'manquant'}</span>`;
 function render(v) {
   V = v;
-  $('#ytMode').textContent = v.transport === 'mock' ? 'Mode simulation (SOUNDTUBE_YT_TRANSPORT=mock) : aucun envoi réel' : `Envoi réel : confirmation « ${v.confirmWord} » exigée`;
+  $('#ytMode').textContent = v.transport === 'mock' ? t('yt.modeMock') : t('yt.modeReal', { word: v.confirmWord });
   $('#ytChannels').innerHTML = v.channels.length ? v.channels.map((c) => `<div class="node-row ${c.ready ? 'up' : 'down'}" data-cid="${esc(c.id)}">
-    <span class="node-dot" title="${c.ready ? 'Prête' : 'Incomplète'}"></span>
-    <div class="node-main"><div class="node-title"><b>${esc(c.name)}</b>${c.isDefault ? '<span class="node-tag">par défaut</span>' : ''}</div>
-      <div class="node-url">${c.channelId ? esc(c.channelId) : 'ID de chaîne non renseigné'}${c.clientId ? ' · client ' + esc(c.clientId) : ''}</div>
+    <span class="node-dot" title="${c.ready ? t('yt.ready') : t('yt.incomplete')}"></span>
+    <div class="node-main"><div class="node-title"><b>${esc(c.name)}</b>${c.isDefault ? `<span class="node-tag">${t('yt.defaultTag')}</span>` : ''}</div>
+      <div class="node-url">${c.channelId ? esc(c.channelId) : t('yt.noChannelId')}${c.clientId ? ' · client ' + esc(c.clientId) : ''}</div>
       <div class="node-meta">${flag(c.hasClientId, 'client ID')}${flag(c.hasClientSecret, 'secret')}${flag(c.hasRefreshToken, 'jeton')}<span>${c.styles.length ? t('yt.styles') + c.styles.map((s) => esc(v.styles.find((x) => x.id === s)?.label || s)).join(', ') : c.isDefault ? t('yt.stylesUnbound') : t('yt.noStyle')}</span></div></div>
-    <div class="node-actions">${c.isDefault ? '' : '<button class="btn btn-mini" data-yact="default" type="button">Par défaut</button>'}<button class="btn btn-mini" data-yact="edit" type="button">Modifier</button><button class="btn btn-mini" data-yact="cleartoken" type="button" ${c.hasRefreshToken ? '' : 'disabled'}>Effacer le jeton</button><button class="btn btn-mini btn-danger" data-yact="remove" type="button">Retirer</button></div></div>`).join('')
+    <div class="node-actions">${c.isDefault ? '' : `<button class="btn btn-mini" data-yact="default" type="button">${t('yt.btnDefault')}</button>`}<button class="btn btn-mini" data-yact="edit" type="button">${t('yt.btnEdit')}</button><button class="btn btn-mini" data-yact="cleartoken" type="button" ${c.hasRefreshToken ? '' : 'disabled'}>${t('yt.btnClearToken')}</button><button class="btn btn-mini btn-danger" data-yact="remove" type="button">${t('yt.btnRemove')}</button></div></div>`).join('')
     : `<p class="hint nodes-empty">${t('yt.noChannels')}</p>`;
   const opts = (sel) => `<option value="">${t('yt.defaultChannel')}${v.defaultId ? ' (' + esc(v.channels.find((c) => c.id === v.defaultId)?.name || '') + ')' : ''}</option>` + v.channels.map((c) => `<option value="${esc(c.id)}" ${sel === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
   $('#ytBindings').innerHTML = v.styles.map((s) => `<label class="yt-bind"><span>${esc(s.label)}${s.autoPublish ? ' <span class="node-tag">auto</span>' : ''}</span><select data-style="${esc(s.id)}" ${v.channels.length ? '' : 'disabled'}>${opts(s.channelId)}</select><a class="hint" href="/styles/${esc(s.id)}#publish">profil</a></label>`).join('');
@@ -38,7 +38,7 @@ $('#ytChannels').addEventListener('click', async (e) => {
   try {
     if (b.dataset.yact === 'edit') {
       $('#ytId').value = id; $('#ytName').value = c.name; $('#ytChannelId').value = c.channelId || ''; $('#ytDefault').checked = c.isDefault;
-      for (const [k, has] of [['#ytClientId', c.hasClientId], ['#ytSecret', c.hasClientSecret], ['#ytToken', c.hasRefreshToken]]) { $(k).value = ''; $(k).placeholder = has ? '•••••••• (enregistré, laisser vide)' : $(k).dataset.ph; }
+      for (const [k, has] of [['#ytClientId', c.hasClientId], ['#ytSecret', c.hasClientSecret], ['#ytToken', c.hasRefreshToken]]) { $(k).value = ''; $(k).placeholder = has ? t('yt.savedPh') : $(k).dataset.ph; }
       $('#ytSave').textContent = t('common.save'); $('#ytCancel').hidden = false; $('#ytName').focus();
     } else if (b.dataset.yact === 'default') render(await api('PUT', '/api/admin/youtube/default', { id }));
     else if (b.dataset.yact === 'cleartoken') { if (confirm(t('confirm.ytClearToken', { name: c.name }))) render(await api('PUT', `/api/admin/youtube/channels/${id}`, { refreshToken: null })); }

@@ -2,6 +2,8 @@
 const MSG = {
   notFound: { fr: 'Introuvable', en: 'Not found' },
   authRequired: { fr: 'Authentification requise', en: 'Authentication required' },
+  rateLimited: { fr: 'Trop de tentatives. Réessaie plus tard.', en: 'Too many attempts. Try again later.' },
+  registrationClosed: { fr: 'Inscriptions fermées', en: 'Registration is closed' },
   forbidden: { fr: 'Droits insuffisants', en: 'Insufficient permissions' },
   csrf: { fr: 'Jeton CSRF invalide', en: 'Invalid CSRF token' },
   badCreds: { fr: 'Identifiants incorrects', en: 'Invalid credentials' },

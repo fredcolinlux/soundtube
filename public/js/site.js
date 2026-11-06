@@ -3,6 +3,7 @@
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
 import { apiFetch, refreshAuth, getAuthUser } from './csrf.js';
+import { mountAuthMenu } from './authmenu.js';
 export { t, getUiLang, refreshAuth, getAuthUser };
 
 export const $ = (q, el = document) => el.querySelector(q);
@@ -31,7 +32,7 @@ export const colorOf = (id) => STYLE_COLOR[id] || '#5ef2c9';
 export const color2Of = (id) => STYLE_COLOR_2[id] || '#9b8cff';
 const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
-const NAV = () => [['/accueil', t('nav.home')], ['/demarrer', t('nav.start')], ['/styles', t('nav.styles')], ['/', t('nav.studio')], ['/admin', t('nav.admin')], ['/login', t('nav.login')], ['/legal', t('nav.legal')]];
+const NAV_ITEMS = () => [['/accueil', t('nav.home')], ['/demarrer', t('nav.start')], ['/styles', t('nav.styles')], ['/', t('nav.studio')]];
 /** Barre du haut commune ; `current` = chemin de la page (aria-current). */
 export function mountTopbar(current) {
   const h = document.createElement('header'); h.className = 'topbar site-top';
@@ -40,11 +41,13 @@ export function mountTopbar(current) {
       <svg class="brand-mark" viewBox="0 0 28 20" width="28" height="20" aria-hidden="true"><rect x="0" y="7" width="4" height="6" rx="2"/><rect x="6" y="2" width="4" height="16" rx="2"/><rect x="12" y="5" width="4" height="10" rx="2"/><rect x="18" y="0" width="4" height="20" rx="2"/><rect x="24" y="7" width="4" height="6" rx="2"/></svg>
       <span>sound<em>tube</em></span></a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span><b class="sr">${t('nav.menu')}</b></button>
-    <nav id="siteNav">${NAV().map(([href, l]) => `<a href="${href}"${href === current || (href === '/styles' && current.startsWith('/styles')) ? ' aria-current="page"' : ''}>${l}</a>`).join('')}
+    <nav id="siteNav">${NAV_ITEMS().map(([href, l]) => `<a href="${href}"${href === current || (href === '/styles' && current.startsWith('/styles')) ? ' aria-current="page"' : ''}>${l}</a>`).join('')}
       <a href="/docs" target="_blank" rel="noopener">${t('nav.api')}</a></nav>
+    <span class="top-auth" id="topAuth"></span>
     <a class="btn btn-primary btn-mini nav-cta" href="/">${t('nav.openStudio')}</a>`;
     const tog = $('.nav-toggle', h); tog.addEventListener('click', () => { const o = h.classList.toggle('open'); tog.setAttribute('aria-expanded', String(o)); });
     mountLangSwitcher(h);
+    mountAuthMenu($('#topAuth', h)).catch(() => {});
   };
   paint();
   document.body.prepend(h);
@@ -85,7 +88,7 @@ export function styleCardHtml(s, i) {
     <b class="sc-name">${esc(s.label)}</b>
     <span class="sc-genre">${esc(s.genre)}</span>
     <span class="sc-words">${words.map((w) => `<em>${esc(w)}</em>`).join('')}</span>
-    <span class="sc-foot"><span>${s.bpm[0]}–${s.bpm[1]} BPM</span><span>${s.tracks ? `${s.tracks} morceau${s.tracks > 1 ? 'x' : ''}` : 'aucun morceau'}</span></span>
+    <span class="sc-foot"><span>${s.bpm[0]}–${s.bpm[1]} BPM</span><span>${s.tracks ? (s.tracks > 1 ? t('style.tracksCount_plural', { n: s.tracks }) : t('style.tracksCount', { n: s.tracks })) : t('style.tracksNone')}</span></span>
   </a>`;
 }
 

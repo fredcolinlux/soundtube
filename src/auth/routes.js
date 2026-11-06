@@ -3,10 +3,11 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import {
-  setSessionCookie, clearSessionCookie, requireLocalAdmin, requireRole, requireCsrf, localOnly,
+  setSessionCookie, clearSessionCookie, requireLocalAdmin, requireAdminSession, requireRole, requireCsrf, localOnly,
 } from './middleware.js';
 import { backupAuth, restoreAuth } from './backup.js';
 import * as webauthn from '../security/webauthn.js';
+import { legalBundle } from '../legal-content.js';
 import { randomToken } from '../security/crypto.js';
 import { msg } from '../i18n-server.js';
 
@@ -25,8 +26,32 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
       user: auth.publicUser(req.authUser),
       csrf: req.csrfToken || null,
       publicDomain: auth.security.publicDomain || null,
+      openRegistration: !!auth.security.openRegistration,
     });
   });
+
+  // Inscription publique (désactivée par défaut)
+  const regHits = new Map(); // ip -> { n, until }
+  app.post('/api/auth/register', awrap(async (req, res) => {
+    const ip = req.clientMeta?.ip || '0.0.0.0';
+    const now = Date.now();
+    let e = regHits.get(ip) || { n: 0, until: 0 };
+    if (e.until > now) return res.status(429).json({ error: msg(req, 'rateLimited') });
+    if (e.n >= 5) { e.until = now + 15 * 60_000; e.n = 0; regHits.set(ip, e); return res.status(429).json({ error: msg(req, 'rateLimited') }); }
+    try {
+      const { username, password } = req.body || {};
+      const u = await auth.registerPublic({ username, password });
+      e.n += 1; regHits.set(ip, e);
+      if (u.pendingApproval) return res.status(201).json({ ok: true, pendingApproval: true });
+      const { session, csrf } = auth.createSession(auth.getUser(u.id), { ip, ua: req.headers['user-agent'] });
+      setSessionCookie(res, session.id, cookieOpts(req));
+      res.status(201).json({ ok: true, pendingApproval: false, csrf, user: auth.publicUser(auth.getUser(u.id)) });
+    } catch (err) {
+      e.n += 1; regHits.set(ip, e);
+      res.status(err.status || 400).json({ error: msg(req, err.message) || err.message || msg(req, 'generic') });
+    }
+  }));
+
 
   app.post('/api/auth/setup', requireLocalAdmin, awrap(async (req, res) => {
     if (!auth.needsSetup()) return res.status(409).json({ error: msg(req, 'alreadySetup') });
@@ -175,7 +200,7 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
 
   // ---- Admin users / tokens / security / audit / backup (LOCAL ONLY)
   const admin = express.Router();
-  admin.use(requireLocalAdmin);
+  admin.use(requireAdminSession);
   admin.use(requireCsrf);
 
   admin.get('/users', (req, res) => res.json({ users: auth.listUsers() }));
@@ -198,6 +223,10 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
 
   admin.get('/security', (req, res) => res.json(auth.securityView()));
   admin.put('/security', (req, res) => res.json(auth.updateSecurity(req.body || {})));
+  admin.post('/security/confirm', (req, res) => {
+    const proxy = !!req.body?.proxy, domain = !!req.body?.domain;
+    res.json(auth.confirmSuggestions({ proxy, domain }));
+  });
 
   admin.get('/audit', (req, res) => res.json({ items: auth.readAudit({ limit: Math.min(500, +(req.query.limit || 100)) }) }));
 
@@ -221,10 +250,11 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
   app.use('/api/admin/auth', admin);
 
   // Legal (public)
-  app.get('/api/legal', (req, res) => {
+    app.get('/api/legal', (req, res) => {
     const lang = req.query.lang === 'en' ? 'en' : 'fr';
-    const text = auth.security.legal?.[lang] || auth.security.legal?.fr || '';
-    res.json({ lang, text, domain: auth.security.publicDomain || null });
+    const kind = ['notice', 'privacy', 'terms'].includes(req.query.kind) ? req.query.kind : 'notice';
+    const bundle = legalBundle(auth.security, lang);
+    res.json({ ...bundle, kind, text: bundle[kind] });
   });
 
   // security.txt

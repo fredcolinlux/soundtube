@@ -2,8 +2,10 @@
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom } from './i18n.js';
 import { apiFetch, refreshAuth } from './csrf.js';
+import { mountAuthMenu } from './authmenu.js';
 await initI18n();
 await refreshAuth();
+await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function toast(msg, ms = 3200) { const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (el.hidden = true), ms); }

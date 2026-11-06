@@ -30,7 +30,7 @@ export function normUrl(u) {
   if (!x.hostname || x.username || x.password || x.pathname.length > 1 || x.search || !/^([a-z0-9-]+\.)*[a-z0-9-]+$|^\[[0-9a-f:.]+\]$/i.test(x.hostname)) return null;
   return `${x.protocol}//${x.host}`.toLowerCase();
 }
-// URL du PC IA : comme normUrl, mais accepte un chemin (proxy inverse, ex. http://192.0.2.10:8080/proxy/ollama)
+// URL du PC IA : comme normUrl, mais accepte un chemin (proxy inverse, ex. http://192.0.2.10:8080/ollama)
 export function normAiUrl(u) {
   let s = String(u || '').trim(); if (!s) return null;
   if (!/^https?:\/\//i.test(s)) s = 'http://' + s;

@@ -43,14 +43,11 @@ export function publishHTML(t) {
 const PK_DEF = { video: true, videoRes: '', pieces: true, pieceVideo: false, pieceRes: '720p', wav: false, midi: true, txt: true, stems: false };
 const pkOpts = (id) => ({ ...PK_DEF, ...(P.pack.get(id)?.state?.options || {}), ...(P.pkDraft?.get(id) || {}) });
 const tree = (o, split, info = {}) => {
-  const k = [o.pieceVideo && 'vidéo MP4', 'MP3', o.wav && 'WAV', o.txt && 'TXT'].filter(Boolean).join(', ');
-  const n = (x) => (x != null ? ` (${x} fichier${x > 1 ? 's' : ''})` : '');
-  return `nom-du-morceau/
-├─ LISEZMOI.txt
-├─ manifest.json        tempo, tonalité, graine, style par morceau
-├─ video/               ${o.video ? `la vidéo MP4${o.videoRes ? ' ' + o.videoRes : ''}` : '(vidéo non demandée)'}
+  const k = [o.pieceVideo && tf('pack.tree.videoMp4'), 'MP3', o.wav && 'WAV', o.txt && 'TXT'].filter(Boolean).join(', ');
+  const n = (x) => (x != null ? (x > 1 ? tf('pack.tree.files_plural', { n: x }) : tf('pack.tree.files', { n: x })) : '');
+  return `${tf('pack.tree.titleFolder')}\n├─ ${tf('pack.tree.readme')}\n├─ ${tf('pack.tree.manifest')}\n├─ video/               ${o.video ? tf('pack.tree.videoOn', { res: o.videoRes ? ' ' + o.videoRes : '' }) : tf('pack.tree.videoOff')}
 ${split && o.pieces ? '├' : '└'}─ mix/                 MP3${o.wav ? ' + WAV' : ''}${o.midi ? ' + MIDI' : ''}${split && o.pieces ? `
-└─ morceaux/            « 01 - Titre » : ${k}${n(info.pieces)}${o.midi && split === 'mix' ? '\n   ├─ MIDI/' : ''}${o.stems ? '\n   └─ samples/         « 01 - Titre - batterie.wav »…' : ''}` : ''}`;
+└─ ${tf('pack.tree.pieces')}            ${tf('pack.tree.pieceEx', { kinds: k })}${n(info.pieces)}${o.midi && split === 'mix' ? '\n   ├─ MIDI/' : ''}${o.stems ? '\n   └─ samples/         « 01 - Titre - batterie.wav »…' : ''}` : ''}`;
 };
 export function packHTML(t) {
   const d = P.pack.get(t.id); if (!d) return '';

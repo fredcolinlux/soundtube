@@ -30,13 +30,38 @@ async function loadSecurity() {
   const s = await api('GET', '/api/admin/auth/security');
   $('#secProxies').value = (s.trustedProxies || []).join('\n');
   $('#secLocal').value = (s.localCidrs || []).join('\n');
-  $('#secDomain').value = s.publicDomain || '';
+  $('#secDomain').value = s.publicDomain || s.suggestedPublicDomain || '';
   $('#secTtl').value = s.sessionTtlHours ?? 12;
   $('#secAttempts').value = s.loginMaxAttempts ?? 5;
   $('#secLock').value = s.loginLockMinutes ?? 15;
   $('#secSigned').value = s.signedLinkTtlSec ?? 3600;
   $('#secLegalFr').value = s.legal?.fr || '';
   $('#secLegalEn').value = s.legal?.en || '';
+  if ($('#secPrivacyFr')) $('#secPrivacyFr').value = s.privacy?.fr || '';
+  if ($('#secPrivacyEn')) $('#secPrivacyEn').value = s.privacy?.en || '';
+  if ($('#secTermsFr')) $('#secTermsFr').value = s.terms?.fr || '';
+  if ($('#secTermsEn')) $('#secTermsEn').value = s.terms?.en || '';
+  // Publisher / legal identity (placeholders only — never ship real PII in the repo)
+  const pub = s.publisher || {};
+  if ($('#secPubName')) $('#secPubName').value = pub.name || '';
+  if ($('#secPubAddress')) $('#secPubAddress').value = pub.address || '';
+  if ($('#secPubEmail')) $('#secPubEmail').value = pub.email || '';
+  if ($('#secPubHost')) $('#secPubHost').value = pub.host || '';
+  if ($('#secOpenReg')) $('#secOpenReg').checked = !!s.openRegistration;
+  if ($('#secRegApproval')) $('#secRegApproval').checked = !!s.registrationRequireApproval;
+  // One-click suggestions
+  const box = $('#secSuggest');
+  const needP = !!(s.suggestedTrustedProxy && !(s.trustedProxies || []).length);
+  const needD = !!(s.suggestedPublicDomain && !s.publicDomain);
+  if (box) box.hidden = !(needP || needD);
+  if ($('#secSugProxy')) {
+    $('#secSugProxy').hidden = !needP;
+    if (needP) $('#secSugProxyVal').textContent = s.suggestedTrustedProxy;
+  }
+  if ($('#secSugDomain')) {
+    $('#secSugDomain').hidden = !needD;
+    if (needD) $('#secSugDomainVal').textContent = s.suggestedPublicDomain;
+  }
 }
 
 async function loadAudit() {
@@ -93,9 +118,28 @@ export async function bootAdminAuth() {
         loginLockMinutes: +$('#secLock').value,
         signedLinkTtlSec: +$('#secSigned').value,
         legal: { fr: $('#secLegalFr').value, en: $('#secLegalEn').value },
+        privacy: { fr: $('#secPrivacyFr')?.value || '', en: $('#secPrivacyEn')?.value || '' },
+        terms: { fr: $('#secTermsFr')?.value || '', en: $('#secTermsEn')?.value || '' },
+        openRegistration: !!$('#secOpenReg')?.checked,
+        registrationRequireApproval: !!$('#secRegApproval')?.checked,
+        publisher: {
+          name: $('#secPubName')?.value.trim() || '',
+          address: $('#secPubAddress')?.value.trim() || '',
+          email: $('#secPubEmail')?.value.trim() || '',
+          host: $('#secPubHost')?.value.trim() || '',
+        },
       });
       toast(t('admin.sec.saved'));
+      loadSecurity();
     } catch (e) { toast(e.message); }
+  });
+  $('#secConfirmProxy')?.addEventListener('click', async () => {
+    try { await api('POST', '/api/admin/auth/security/confirm', { proxy: true }); toast(t('admin.sec.proxyConfirmed')); loadSecurity(); }
+    catch (e) { toast(e.message); }
+  });
+  $('#secConfirmDomain')?.addEventListener('click', async () => {
+    try { await api('POST', '/api/admin/auth/security/confirm', { domain: true }); toast(t('admin.sec.domainConfirmed')); loadSecurity(); }
+    catch (e) { toast(e.message); }
   });
 
   $('#tokenAdd')?.addEventListener('click', async () => {
