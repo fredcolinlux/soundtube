@@ -98,11 +98,21 @@ No API key is required for the default RSS crawl. Optional: YouTube Data API key
 **Patch** / **complete** archives from v1.19.2+ are **flat** (no `soundtube/` prefix).
 
 ```bash
-systemctl stop soundtube
-cd /opt/soundtube/app
-tar xzf /path/soundtube-1.19.2-patch.tar.gz --no-same-owner
-test -f public/admin.html && grep -q aiWatchCard public/admin.html && echo OK || echo WRONG_PATH
-systemctl start soundtube
+See update script below.
+
+## Update (flat patch)
+
+Use the bundled script (**root**, no `sudo` inside the command):
+
+```bash
+/opt/soundtube/app/scripts/update.sh /path/soundtube-1.21.1-patch.tar.gz
+# or several patches in order:
+/opt/soundtube/app/scripts/update.sh /path/patch-a.tar.gz /path/patch-b.tar.gz
+```
+
+It **verifies** every archive (gzip, tar, **flat** layout — no `soundtube/` prefix) **before** stopping the service, backs up to `/var/backups/soundtube/`, extracts, runs `node --check`, **always** restarts (restores the backup if extraction failed), then waits for `http://127.0.0.1:8080/healthz`.
+
+> Do not hand-roll `systemctl stop && tar … && systemctl start`: if `tar` fails, the service stays down (502).
 curl -s localhost:8080/api/health
 ```
 

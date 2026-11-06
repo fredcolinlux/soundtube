@@ -8,6 +8,7 @@ Heures : Europe/Paris.
 
 | Date | Jalon | État | Détail |
 |---|---|---|---|
+| 06/11/2026 13:50 | v1.21.1 : update.sh sûr + /healthz + docs API LAN-only | ✅ fait | `scripts/update.sh` vérifie avant stop, backup, trap start ; `/healthz` ; docs/OpenAPI → 404 stylé hors LAN ; `isLocal` sur `/api/me` `/api/site` ; `test/v1211.js`. |
 | 06/11/2026 13:45 | v1.21.0 : Facebook Page + X (credentials chiffrés, panneau bibliothèque, auto par style défaut off, mock) | ✅ fait | Admin › Réseaux sociaux ; `POST /api/tracks/:id/social` + confirm PUBLISH ; `SOUNDTUBE_SOCIAL_TRANSPORT=mock` ; `test/v1210.js` ; docs SOCIAL.md FR/EN. setup.html + site.css. |
 | 06/11/2026 01:05 | v1.19.2 : patch plat pour /opt/soundtube/app (préfixe soundtube/ cassait la MAJ) | ✅ fait | Cause live : `tar -C app` créait `app/soundtube/…` ; Admin restait 1.18. Patch/complet à plat. Même UI Modèles IA. |
 | 06/11/2026 01:00 | v1.19.1 : Modèles IA visibles côte à côte + cache-bust | ✅ fait | Cause : section veille sous-titrée sous PC IA + `?v=1.18.0` sur admin.js (cache 1 h). Fix : bloc **Modèles IA** (Directeur | Veille), `?v=1.19.1`, `no-store` sur HTML admin, pastille version. |

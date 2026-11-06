@@ -23,6 +23,7 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
     res.json({
       setupRequired: auth.needsSetup(),
       local: !!req.clientMeta?.local,
+      isLocal: !!req.clientMeta?.local,
       authenticated: !!(req.authUser && !req.session?.pending2fa),
       user: auth.publicUser(req.authUser),
       csrf: req.csrfToken || null,
@@ -101,9 +102,18 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
     res.json({ ok: true });
   });
 
+  app.get('/api/me', (req, res) => {
+    res.json({
+      user: auth.publicUser(req.authUser),
+      csrf: req.csrfToken || null,
+      local: !!req.clientMeta?.local,
+      isLocal: !!req.clientMeta?.local,
+      authenticated: !!(req.authUser && !req.session?.pending2fa),
+    });
+  });
   app.get('/api/auth/me', (req, res) => {
     if (!req.authUser) return res.status(401).json({ error: msg(req, 'notConnected') });
-    res.json({ user: auth.publicUser(req.authUser), csrf: req.csrfToken, local: !!req.clientMeta?.local });
+    res.json({ user: auth.publicUser(req.authUser), csrf: req.csrfToken, local: !!req.clientMeta?.local, isLocal: !!req.clientMeta?.local });
   });
 
   app.post('/api/auth/password', requireCsrf, awrap(async (req, res) => {

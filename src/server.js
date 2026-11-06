@@ -158,6 +158,12 @@ app.use(securityHeaders());
 app.use(attachAuth(auth));
 app.use(express.json({ limit: `${auth.security.bodyLimitKb || 64}kb` }));
 
+/* Liveness for reverse proxies / update.sh (no auth). */
+app.get(['/healthz', '/health'], (_req, res) => {
+  res.status(200).json({ ok: true, version: VERSION });
+});
+
+
 const AUTH_ALLOW = [
   { method: 'GET', path: '/health' },
   { method: 'GET', path: '/site' },
@@ -167,6 +173,7 @@ const AUTH_ALLOW = [
   { method: 'GET', path: '/openapi.json' },
   { method: 'GET', path: '/signed*' },
   { method: '*', path: '/auth*' },
+  { method: 'GET', path: '/me' },
   { method: '*', path: '/docs*' },
   // Pages publiques (accueil / styles) : lecture seule
   { method: 'GET', path: '/styles' },
@@ -765,7 +772,7 @@ app.get('/api/tracks/:id/pack.zip', awrap(async (req, res) => {
 }));
 
 // nom affiché sur les miniatures / vidéos (ex. le nom de la chaîne) ; vide = « soundtube », hidden = aucun nom
-app.get('/api/site', (req, res) => res.json({ version: VERSION, githubUrl: getGithubUrl(), githubDefault: DEFAULT_GITHUB }));
+app.get('/api/site', (req, res) => res.json({ version: VERSION, githubUrl: getGithubUrl(), githubDefault: DEFAULT_GITHUB, isLocal: !!req.clientMeta?.local, local: !!req.clientMeta?.local }));
 app.put('/api/admin/site', requireAdminSession, wrap((req, res) => {
   const b = req.body || {};
   if (b.githubUrl !== undefined) setGithubUrl(b.githubUrl);
@@ -950,10 +957,16 @@ app.get('/styles/:id', (req, res) => {
   res.sendFile(path.join(config.publicDir, 'style.html'), { headers: { 'Cache-Control': 'no-cache' } });
 });
 
-app.get('/api/openapi.json', (req, res) => res.json(openapi));
+/** Docs / OpenAPI UI : LAN only → styled 404 from internet (API itself stays reachable with Bearer). */
+function requireLocalDocs(req, res, next) {
+  if (req.clientMeta?.local) return next();
+  if (wantsHtml(req)) return sendErrorPage(res, 404);
+  return sendErrorPage(res, 404); // always styled HTML 404 for docs (even Accept: json)
+}
+app.get('/api/openapi.json', requireLocalDocs, (req, res) => res.json(openapi));
 const swaggerSetup = swaggerUi.setup(openapi, { customSiteTitle: 'soundtube — API', customCss: '.topbar{display:none}' });
-app.use('/api/docs', swaggerUi.serve, swaggerSetup);
-app.use('/docs', swaggerUi.serve, swaggerSetup);
+app.use('/api/docs', requireLocalDocs, swaggerUi.serve, swaggerSetup);
+app.use('/docs', requireLocalDocs, swaggerUi.serve, swaggerSetup);
 mountAuthRoutes(app, { auth, config, awrap, wrap });
 
 // Pages Admin / studio : jamais de cache navigateur (les ?v= versionnent CSS/JS).

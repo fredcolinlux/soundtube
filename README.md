@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fredcolinlux/soundtube/releases/tag/v1.21.0"><img alt="release" src="https://img.shields.io/github/v/release/fredcolinlux/soundtube?style=flat-square&color=5ef2c9"></a>
+  <a href="https://github.com/fredcolinlux/soundtube/releases/tag/v1.21.1"><img alt="release" src="https://img.shields.io/github/v/release/fredcolinlux/soundtube?style=flat-square&color=5ef2c9"></a>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D20-7dd3fc?style=flat-square">
   <img alt="license" src="https://img.shields.io/badge/license-ARR-c792ff?style=flat-square">
   <img alt="i18n" src="https://img.shields.io/badge/UI-FR%20%7C%20EN-f3c97a?style=flat-square">
@@ -90,6 +90,8 @@ tar xzf soundtube-1.20.4-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # restart the soundtube service
 ```
 
+Update with `/opt/soundtube/app/scripts/update.sh <patch.tar.gz>` (verifies archives before stop).
+
 More detail: [QUICKSTART.md](QUICKSTART.md) · [docs/en/INSTALL-MANUAL.md](docs/en/INSTALL-MANUAL.md)
 
 ## Architecture
@@ -147,5 +149,5 @@ Download **standalone** and **patch** archives from
 ➡️ **[GitHub Releases](https://github.com/fredcolinlux/soundtube/releases)**
 
 ```
-soundtube @ v1.21.0
+soundtube @ v1.21.1
 ```

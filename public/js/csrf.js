@@ -1,7 +1,7 @@
 // Jeton CSRF (session cookie) — récupéré via /api/auth/status ou /api/auth/me
 let csrf = null;
 let authUser = null;
-let authLocal = true;
+let authLocal = false; // hide API until /api/auth/status says local
 
 export function getCsrf() { return csrf; }
 export function getAuthUser() { return authUser; }
