@@ -75,3 +75,7 @@ Presence: `assets/samples/manifest.json` and `samples: true` on `/api/health`. M
 ### AI models (v1.19.1)
 
 Section **03 AI models**: two visible cards **Art director** and **Trend watch**. Version pill in the Admin header. CSS/JS use `?v=1.19.1`; Admin HTML is `Cache-Control: no-store`.
+
+### Patch update (v1.19.2)
+
+Extract **flat** into `/opt/soundtube/app`. Check `grep aiWatchCard public/admin.html` and the Admin version pill.

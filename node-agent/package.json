@@ -1,6 +1,6 @@
 {
   "name": "soundtube-node-agent",
-  "version": "1.19.1",
+  "version": "1.19.2",
   "description": "soundtube — agent de rendu musique + vidéo pour le réseau local (moteur soundtube ; NVENC sur NVIDIA, VideoToolbox sur Apple Silicon, sinon libx264). Aucune dépendance npm.",
   "type": "module",
   "main": "agent.mjs",

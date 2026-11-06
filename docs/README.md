@@ -1,4 +1,4 @@
-# Documentation index — soundtube 1.19.1
+# Documentation index — soundtube 1.19.2
 
 | Topic | Français | English |
 |---|---|---|

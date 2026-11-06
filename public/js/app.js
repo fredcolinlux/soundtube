@@ -1,9 +1,9 @@
 // soundtube — interface web (vanilla JS, sans build).
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.19.1';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.19.1';
-import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.19.1';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.19.2';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.19.2';
+import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.19.2';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
@@ -1001,7 +1001,7 @@ async function boot() {
     const q = new URLSearchParams(location.search), tid = q.get('track');
     const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-    if (q.get('tour') === '1') import('./tour.js?v=1.19.1').then((m) => m.startTour());
+    if (q.get('tour') === '1') import('./tour.js?v=1.19.2').then((m) => m.startTour());
   }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
 }
 function updateStatus() {
