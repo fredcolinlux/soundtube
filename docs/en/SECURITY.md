@@ -10,3 +10,7 @@ See the French `docs/SECURITY.md` for the full guide. Summary:
 - Security headers aligned with WebGuardian 2026 (CSP, HSTS, COOP/COEP/CORP, …).
 - Fail2ban filter sample: `deploy/fail2ban/soundtube-auth.conf`.
 - Public domain is an Admin setting — never hardcoded in the public repo.
+
+### Styles demo (v1.20.3)
+
+Anonymous visitors: `POST /api/demo/generate` enforces **≤ 15 s**, audio only, **3 / 10 min / IP** rate limit, lower priority than signed-in jobs, files under `data/demo/` purged every **5 min**. Admin from the internet → branded **404**.

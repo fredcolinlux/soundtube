@@ -267,3 +267,14 @@ a.link-more:hover { text-decoration: underline; text-underline-offset: 4px; }
 .auth-drop{position:absolute;right:0;top:calc(100% + .35rem);min-width:10rem;padding:.35rem;border-radius:10px;background:#12162a;border:1px solid color-mix(in oklab,#fff 14%,transparent);box-shadow:0 12px 40px #0008;z-index:50;display:flex;flex-direction:column;gap:.15rem}
 .auth-drop a,.auth-drop button{display:block;width:100%;text-align:left;padding:.45rem .65rem;border:0;background:transparent;color:inherit;font:inherit;border-radius:6px;cursor:pointer;text-decoration:none}
 .auth-drop a:hover,.auth-drop button:hover{background:color-mix(in oklab,#fff 8%,transparent)}
+
+/* Démo anonyme (v1.20.3) */
+.demo-banner {
+  margin: 0 0 1rem; padding: .85rem 1rem; border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--c, #5ef2c9) 18%, transparent), color-mix(in oklab, var(--c2, #c792ff) 14%, transparent));
+  border: 1px solid color-mix(in oklab, var(--c, #5ef2c9) 35%, transparent);
+}
+.demo-banner p { margin: 0 0 .65rem; font-size: .92rem; line-height: 1.35; }
+.demo-banner .btn { width: 100%; justify-content: center; }
+body.demo-mode #publish, body.demo-mode #pAsk, body.demo-mode #pIdea, body.demo-mode .field:has(#pIdea) { display: none !important; }
+body.demo-mode #openStudio { display: none; }

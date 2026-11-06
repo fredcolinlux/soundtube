@@ -54,3 +54,7 @@ Admin › Sécurité › « Sauvegarder users/config » ou `tools/backup-auth.sh
 | COOP / COEP / CORP | Oui |
 | Cookies Secure + HttpOnly + SameSite=Strict | Oui |
 | Préfixe __Host- | Oui (HTTPS) |
+
+### Démo Styles (v1.20.3)
+
+Visiteurs anonymes : `POST /api/demo/generate` force **≤ 15 s**, audio seul, rate-limit **3 / 10 min / IP**, priorité inférieure aux jobs connectés, fichiers dans `data/demo/` purgés toutes les **5 min**. Admin hors LAN → **404** brandée.

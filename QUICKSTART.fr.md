@@ -1,11 +1,11 @@
-# Démarrage rapide — soundtube 1.20.2
+# Démarrage rapide — soundtube 1.20.3
 
 Trois étapes. Rien d’autre n’est obligatoire.
 
 ## 1. Installer
 
 ```bash
-tar xzf soundtube-1.20.2-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.20.3-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # redémarre le service soundtube
 ```
 
@@ -26,3 +26,5 @@ Le **studio** et la **bibliothèque** demandent toujours un compte (même en LAN
 Accueil, styles, mentions légales restent publics.
 
 Inscriptions : fermées par défaut (`Admin → Inscriptions ouvertes`).
+
+Les pages **Styles** sans compte proposent une **démo audio de 15 s** (hors bibliothèque, limite 3 / 10 min). Connecte-toi pour générer des morceaux complets.

@@ -1,14 +1,18 @@
-// v1.10.0 : page d'un style — en-tête coloré, fiche (docs/STYLES.md), machines, préréglage, bibliothèque du style.
-import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t } from './site.js?v=1.20.1';
+// v1.10.0+ : page d'un style — démo anonyme 15 s (v1.20.3) ou génération complète si connecté.
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser } from './site.js?v=1.20.3';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
 await bootSite('/styles/' + id);
+await refreshAuth();
+const isDemo = !getAuthUser();
+if (isDemo) document.body.classList.add('demo-mode');
+
 const field = mountBackground(id);
 const player = new MiniPlayer(field);
-const S = { style: null, opt: null, variant: '', mood: 'auto', amb: null, ambLevel: null, duration: 180, ai: null, tracks: [], total: 0, job: null, labels: { key: {}, mood: {} } };
-const DURS = [[60, '1 min'], [180, '3 min'], [300, '5 min'], [600, '10 min'], [1800, '30 min'], [3600, '1 h']];
+const S = { style: null, opt: null, variant: '', mood: 'auto', amb: null, ambLevel: null, duration: isDemo ? 15 : 180, ai: null, tracks: [], total: 0, job: null, labels: { key: {}, mood: {} }, demo: isDemo };
+const DURS = isDemo ? [[15, t('style.demoOnly')]] : [[60, '1 min'], [180, '3 min'], [300, '5 min'], [600, '10 min'], [1800, '30 min'], [3600, '1 h']];
 const TWEAKS_KEY = 'st.advTweaks';
-const tweaks = () => { try { const t = JSON.parse(localStorage.getItem(TWEAKS_KEY) || '{}')?.[id]; return t && typeof t === 'object' ? t : {}; } catch { return {}; } };
+const tweaks = () => { try { const t0 = JSON.parse(localStorage.getItem(TWEAKS_KEY) || '{}')?.[id]; return t0 && typeof t0 === 'object' ? t0 : {}; } catch { return {}; } };
 
 function chips(el, list, cur, attr) {
   el.innerHTML = list.map(([v, l]) => `<button type="button" class="chip${v === cur ? ' on' : ''}" data-${attr}="${esc(v)}" aria-pressed="${v === cur}">${esc(l)}</button>`).join('');
@@ -17,31 +21,38 @@ function renderPreset() {
   const s = S.style, o = S.opt;
   if (s.variants) { $('#pVarField').hidden = false; chips($('#pVar'), [['', 'Au choix de la graine'], ...Object.entries(s.variants.options).map(([k, l]) => [k, l.split(' (')[0]])], S.variant, 'var'); }
   chips($('#pMood'), [['auto', 'Auto'], ...o.moods.filter((m) => m.id !== 'auto').map((m) => [m.id, m.label])], S.mood, 'mood');
-  // v1.11.0 : fond sonore (pluie, café, nuit, salle d'étude…) et son volume ; repris des retouches du studio
   const T = tweaks(); if (S.amb === null) S.amb = T.ambience || 'auto'; if (S.ambLevel === null) S.ambLevel = T.ambienceLevel ?? 50;
   const ambOpts = o.advanced?.ambience?.options || {}, defAmb = S.mood !== 'auto' ? o.moods.find((m) => m.id === S.mood)?.ambience : null;
   chips($('#pAmb'), [['auto', defAmb ? `Auto · ${ambOpts[defAmb] || defAmb}` : 'Auto'], ...Object.entries(ambOpts).map(([k, l]) => [k, l.split(' (')[0]])], S.amb, 'amb');
   const eff = S.amb === 'auto' ? defAmb : S.amb;
   $('#pAmbVolRow').hidden = !eff || eff === 'none';
   $('#pAmbVol').value = S.ambLevel; $('#pAmbVolVal').textContent = S.ambLevel;
-  const max = o.limits?.maxDuration || 14400;
+  const max = S.demo ? 15 : (o.limits?.maxDuration || 14400);
   chips($('#pDur'), DURS.filter(([d]) => d <= max), S.duration, 'dur');
-  const n = Object.keys(tweaks()).length;
-  $('#pTweaks').textContent = n ? `${n} retouche${n > 1 ? 's' : ''} mémorisée${n > 1 ? 's' : ''} pour ce style (page Studio → Avancé) : utilisée${n > 1 ? 's' : ''} aussi ici.` : 'Valeurs du style par défaut ; les retouches faites dans le studio (Avancé) sont reprises ici.';
-  $('#openStudio').href = `/?style=${encodeURIComponent(id)}#settings`;
+  if (S.demo) {
+    $('#pTweaks').textContent = '';
+    $('#pGo').textContent = t('style.demoGenerate');
+    const ban = $('#demoBanner'); if (ban) { ban.hidden = false; }
+    const cta = $('#demoLoginCta'); if (cta) cta.href = '/login?next=' + encodeURIComponent(location.pathname);
+  } else {
+    const n = Object.keys(tweaks()).length;
+    $('#pTweaks').textContent = n ? `${n} retouche${n > 1 ? 's' : ''} mémorisée${n > 1 ? 's' : ''} pour ce style (page Studio → Avancé) : utilisée${n > 1 ? 's' : ''} aussi ici.` : 'Valeurs du style par défaut ; les retouches faites dans le studio (Avancé) sont reprises ici.';
+    $('#openStudio').href = `/?style=${encodeURIComponent(id)}#settings`;
+  }
 }
 $('#preset').addEventListener('click', (e) => {
   const b = e.target.closest('.chip'); if (!b) return;
   if (b.dataset.var !== undefined) S.variant = b.dataset.var;
   if (b.dataset.mood !== undefined) S.mood = b.dataset.mood;
   if (b.dataset.amb !== undefined) S.amb = b.dataset.amb;
-  if (b.dataset.dur !== undefined) S.duration = +b.dataset.dur;
+  if (b.dataset.dur !== undefined && !S.demo) S.duration = +b.dataset.dur;
   renderPreset();
 });
 
 $('#pAmbVol').addEventListener('input', (e) => { S.ambLevel = +e.target.value; $('#pAmbVolVal').textContent = e.target.value; });
 
-$('#pAsk').addEventListener('click', async () => {
+$('#pAsk')?.addEventListener('click', async () => {
+  if (S.demo) return;
   const prompt = $('#pIdea').value.trim(), out = $('#pAiOut'); out.hidden = false;
   if (prompt.length < 3) { out.textContent = t('toast.aiNeedPrompt'); return; }
   $('#pAsk').disabled = true; out.textContent = t('toast.aiThinking');
@@ -62,27 +73,45 @@ $('#pGo').addEventListener('click', async () => {
   if (vk && S.variant) adv[vk] = S.variant;
   if (S.amb && S.amb !== 'auto') adv.ambience = S.amb; else if (S.amb === 'auto' && !S.ai?.adv?.ambience) delete adv.ambience;
   if (S.ambLevel != null && S.ambLevel !== 50) adv.ambienceLevel = S.ambLevel; else delete adv.ambienceLevel;
-  const body = { style: id, mood: S.mood, duration: S.duration, adv, engine: S.opt.engine || 21, wav: S.opt.wavDefault !== false };
-  if (S.ai?.key) body.key = S.ai.key; if (S.ai?.scale) body.scale = S.ai.scale; if (S.ai?.bpm) body.bpm = S.ai.bpm;
-  if (S.duration > 3600 && !confirm(t('style.longConfirm', { dur: fmt(S.duration) }))) return;
+  const body = { style: id, mood: S.mood, duration: S.demo ? 15 : S.duration, adv, engine: S.opt.engine || 21, wav: S.opt.wavDefault !== false };
+  if (!S.demo) {
+    if (S.ai?.key) body.key = S.ai.key; if (S.ai?.scale) body.scale = S.ai.scale; if (S.ai?.bpm) body.bpm = S.ai.bpm;
+    if (S.duration > 3600 && !confirm(t('style.longConfirm', { dur: fmt(S.duration) }))) return;
+  }
   $('#pGo').disabled = true;
-  try { const j = await api('/api/generate', { method: 'POST', body: JSON.stringify(body) }); S.job = j.id; poll(); }
-  catch (e) { $('#pJob').hidden = false; $('#pStage').textContent = e.message; $('#pGo').disabled = false; }
+  try {
+    const url = S.demo ? '/api/demo/generate' : '/api/generate';
+    const j = await api(url, { method: 'POST', body: JSON.stringify(body) });
+    S.job = j.id; poll();
+  } catch (e) { $('#pJob').hidden = false; $('#pStage').textContent = e.message; $('#pGo').disabled = false; }
 });
 async function poll() {
   $('#pJob').hidden = false;
   try {
-    const j = await api('/api/jobs/' + S.job);
+    const j = await api((S.demo ? '/api/demo/jobs/' : '/api/jobs/') + S.job);
     $('#pBar').style.width = Math.round((j.progress || 0) * 100) + '%';
-    $('#pStage').textContent = j.status === 'queued' ? `${t('style.queued')}${j.queue_position ? ' (' + j.queue_position + ')' : ''}` : j.status === 'done' ? `${t('style.ready', { title: j.title })}` : j.status === 'error' ? t('style.err') + (j.error || '') : `${j.stage || 'Rendu'} · ${Math.round((j.progress || 0) * 100)} %`;
-    if (j.status === 'done') { $('#pGo').disabled = false; await loadLib(true); const t = S.tracks.find((x) => x.id === j.id); if (t) player.play(t); return; }
+    if (S.demo) {
+      $('#pStage').textContent = j.status === 'queued' ? `${t('style.demoQueued')}${j.queue_position ? ' (' + j.queue_position + ')' : ''}`
+        : j.status === 'done' ? t('style.demoReady', { title: j.title })
+        : j.status === 'error' ? t('style.err') + (j.error || '')
+        : `${j.stage || '…'} · ${Math.round((j.progress || 0) * 100)} %`;
+      if (j.status === 'done') {
+        $('#pGo').disabled = false;
+        const url = j.urls?.audio;
+        if (url) player.play({ id: j.id, title: j.title, urls: { mp3: url, wav: url }, duration: 15 });
+        return;
+      }
+    } else {
+      $('#pStage').textContent = j.status === 'queued' ? `${t('style.queued')}${j.queue_position ? ' (' + j.queue_position + ')' : ''}` : j.status === 'done' ? `${t('style.ready', { title: j.title })}` : j.status === 'error' ? t('style.err') + (j.error || '') : `${j.stage || 'Rendu'} · ${Math.round((j.progress || 0) * 100)} %`;
+      if (j.status === 'done') { $('#pGo').disabled = false; await loadLib(true); const tr = S.tracks.find((x) => x.id === j.id); if (tr) player.play(tr); return; }
+    }
     if (j.status === 'error') { $('#pGo').disabled = false; return; }
   } catch (e) { $('#pStage').textContent = e.message; }
   setTimeout(poll, 1500);
 }
 
 function renderLib() {
-  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((t) => trackRowHtml(t, player, S.labels)).join('') : `<li class="tr-empty">${t('style.emptyLib', { label: esc(S.style.label) })}</li>`;
+  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((tr) => trackRowHtml(tr, player, S.labels)).join('') : `<li class="tr-empty">${t('style.emptyLib', { label: esc(S.style.label) })}</li>`;
   $('#sLibCount').textContent = S.total ? `${S.total} morceau${S.total > 1 ? 'x' : ''}` : '';
   $('#sMore').hidden = S.tracks.length >= S.total;
 }
@@ -94,13 +123,14 @@ async function loadLib(reset) {
 player.onChange = renderLib;
 $('#sLib').addEventListener('click', async (e) => {
   const r = e.target.closest('[data-regen]');
-  if (r) { // v1.12.0 : régénération d'un ancien morceau (même graine, harmonie corrigée) — l'original reste en place
+  if (r) {
+    if (S.demo) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return; }
     r.disabled = true;
     try { const j = await api(`/api/tracks/${r.dataset.regen}/regenerate`, { method: 'POST', body: '{}' }); S.job = j.id; $('#pGo').disabled = true; poll(); $('#pJob').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     catch (err) { r.disabled = false; $('#pJob').hidden = false; $('#pStage').textContent = err.message; }
     return;
   }
-  const b = e.target.closest('[data-play]'); if (b) player.play(S.tracks.find((t) => t.id === b.dataset.play));
+  const b = e.target.closest('[data-play]'); if (b) player.play(S.tracks.find((tr) => tr.id === b.dataset.play));
 });
 $('#sMore').addEventListener('click', () => loadLib(false));
 

@@ -36,6 +36,10 @@ const MSG = {
   challengeExpired: { fr: 'Défi expiré', en: 'Challenge expired' },
   badPassword: { fr: 'Mot de passe actuel incorrect', en: 'Current password incorrect' },
   passkeyUnknown: { fr: 'Passkey inconnue', en: 'Unknown passkey' },
+  demoRate: { fr: 'Limite de démos atteinte (3 / 10 min). Connecte-toi pour générer sans limite.', en: 'Demo limit reached (3 / 10 min). Sign in to generate without this cap.' },
+  demoBusy: { fr: 'File démo saturée, réessaie dans un instant.', en: 'Demo queue busy, try again shortly.' },
+  demoUseFull: { fr: 'Compte connecté : utilise Générer (studio) pour un morceau complet.', en: 'Signed in: use Generate (studio) for a full track.' },
+  demoNoAudio: { fr: 'Démo : audio indisponible', en: 'Demo: audio unavailable' },
 };
 
 export function langOf(req) {
