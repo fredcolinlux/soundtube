@@ -1,11 +1,11 @@
-# Quick start — soundtube 1.20.3
+# Quick start — soundtube 1.20.4
 
 Three steps. Nothing else is required.
 
 ## 1. Install
 
 ```bash
-tar xzf soundtube-1.20.3-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.20.4-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # restart the soundtube service
 ```
 

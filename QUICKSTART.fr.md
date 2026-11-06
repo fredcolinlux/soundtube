@@ -1,11 +1,11 @@
-# Démarrage rapide — soundtube 1.20.3
+# Démarrage rapide — soundtube 1.20.4
 
 Trois étapes. Rien d’autre n’est obligatoire.
 
 ## 1. Installer
 
 ```bash
-tar xzf soundtube-1.20.3-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.20.4-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # redémarre le service soundtube
 ```
 

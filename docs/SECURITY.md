@@ -58,3 +58,5 @@ Admin › Sécurité › « Sauvegarder users/config » ou `tools/backup-auth.sh
 ### Démo Styles (v1.20.3)
 
 Visiteurs anonymes : `POST /api/demo/generate` force **≤ 15 s**, audio seul, rate-limit **3 / 10 min / IP**, priorité inférieure aux jobs connectés, fichiers dans `data/demo/` purgés toutes les **5 min**. Admin hors LAN → **404** brandée.
+
+Démo = écoute seule : toute tentative de téléchargement, publication ou écriture bibliothèque sur un job démo renvoie **401**.

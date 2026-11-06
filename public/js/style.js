@@ -1,5 +1,5 @@
 // v1.10.0+ : page d'un style — démo anonyme 15 s (v1.20.3) ou génération complète si connecté.
-import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser } from './site.js?v=1.20.3';
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser } from './site.js?v=1.20.4';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
 await bootSite('/styles/' + id);
@@ -98,7 +98,7 @@ async function poll() {
       if (j.status === 'done') {
         $('#pGo').disabled = false;
         const url = j.urls?.audio;
-        if (url) player.play({ id: j.id, title: j.title, urls: { mp3: url, wav: url }, duration: 15 });
+        if (url) player.play({ id: j.id, title: j.title, style: id, urls: { mp3: url }, duration: 15 });
         return;
       }
     } else {
@@ -111,7 +111,7 @@ async function poll() {
 }
 
 function renderLib() {
-  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((tr) => trackRowHtml(tr, player, S.labels)).join('') : `<li class="tr-empty">${t('style.emptyLib', { label: esc(S.style.label) })}</li>`;
+  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((tr) => trackRowHtml(tr, player, S.labels, { listenOnly: S.demo })).join('') : `<li class="tr-empty">${t('style.emptyLib', { label: esc(S.style.label) })}</li>`;
   $('#sLibCount').textContent = S.total ? `${S.total} morceau${S.total > 1 ? 'x' : ''}` : '';
   $('#sMore').hidden = S.tracks.length >= S.total;
 }

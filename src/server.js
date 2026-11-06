@@ -342,11 +342,28 @@ app.get('/api/demo/jobs/:id', wrap((req, res) => {
   res.json(demo.publicJob(j));
 }));
 app.get('/api/demo/audio/:token', wrap((req, res) => {
+  // Preview only — never offer download/attachment
+  if (req.query.download != null || String(req.headers['content-disposition'] || '').toLowerCase().includes('attachment')) {
+    return res.status(401).json({ error: i18nMsg(req, 'demoPreviewOnly') });
+  }
   const a = demo.resolveAudio(req.params.token);
   if (!a) return res.status(404).json({ error: i18nMsg(req, 'fileUnavailable') });
-  res.set({ 'Cache-Control': 'no-store', 'Content-Type': a.mime });
-  res.sendFile(a.file);
+  res.set({
+    'Cache-Control': 'no-store',
+    'Content-Type': a.mime,
+    'Content-Disposition': 'inline',
+  });
+  res.sendFile(a.file, { acceptRanges: true, cacheControl: false });
 }));
+
+/** Demo jobs live outside the library — any track/job/publish/pack route for a demo id → 401. */
+const blockDemoId = wrap((req, res, next) => {
+  const id = req.params.id;
+  if (id && demo.get(id)) return res.status(401).json({ error: i18nMsg(req, 'demoPreviewOnly') });
+  next();
+});
+app.use('/api/jobs/:id', blockDemoId);
+app.use('/api/tracks/:id', blockDemoId);
 
 app.get('/api/jobs/:id', wrap((req, res) => {
   const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'jobNotFound') });

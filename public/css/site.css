@@ -276,5 +276,12 @@ a.link-more:hover { text-decoration: underline; text-underline-offset: 4px; }
 }
 .demo-banner p { margin: 0 0 .65rem; font-size: .92rem; line-height: 1.35; }
 .demo-banner .btn { width: 100%; justify-content: center; }
-body.demo-mode #publish, body.demo-mode #pAsk, body.demo-mode #pIdea, body.demo-mode .field:has(#pIdea) { display: none !important; }
-body.demo-mode #openStudio { display: none; }
+body.demo-mode #publish,
+body.demo-mode #pAsk,
+body.demo-mode #pIdea,
+body.demo-mode .field:has(#pIdea),
+body.demo-mode #openStudio,
+body.demo-mode .tr-links,
+body.demo-mode .tr-regen-btn,
+body.demo-mode .tr-date { display: none !important; }
+body.demo-mode #sLib .tr-row { grid-template-columns: auto 1fr; }

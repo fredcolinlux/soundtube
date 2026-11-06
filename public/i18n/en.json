@@ -843,5 +843,6 @@
   "err403.lead": "You don’t have permission to open this resource.",
   "err500.title": "soundtube — server error",
   "err500.h1": "The engine skipped a beat",
-  "err500.lead": "An internal error occurred. Try again in a moment."
+  "err500.lead": "An internal error occurred. Try again in a moment.",
+  "style.demoPreviewOnly": "Demo: preview only — no download or publish."
 }

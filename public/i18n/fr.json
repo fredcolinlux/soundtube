@@ -843,5 +843,6 @@
   "err403.lead": "Tu n’as pas la permission d’ouvrir cette ressource.",
   "err500.title": "soundtube — erreur serveur",
   "err500.h1": "Le moteur a sauté une mesure",
-  "err500.lead": "Une erreur interne s’est produite. Réessaie dans un instant."
+  "err500.lead": "Une erreur interne s’est produite. Réessaie dans un instant.",
+  "style.demoPreviewOnly": "Démo : écoute seule — pas de téléchargement ni publication."
 }
