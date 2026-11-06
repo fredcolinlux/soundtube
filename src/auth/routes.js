@@ -10,6 +10,7 @@ import * as webauthn from '../security/webauthn.js';
 import { legalBundle } from '../legal-content.js';
 import { randomToken } from '../security/crypto.js';
 import { msg } from '../i18n-server.js';
+import { qrSvg } from '../security/qrcode.js';
 
 export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
   const cookieOpts = (req) => ({
@@ -114,11 +115,24 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
     res.json({ ok: true });
   }));
 
-  // TOTP
+  // TOTP enrolment (QR is served by authenticated SVG endpoint — no external service)
   app.post('/api/auth/totp/begin', requireCsrf, awrap(async (req, res) => {
     if (!req.authUser) return res.status(401).json({ error: msg(req, 'notConnected') });
     res.json(await auth.beginTotp(req.authUser));
   }));
+  function sendTotpQr(req, res) {
+    if (!req.authUser) return res.status(401).json({ error: msg(req, 'notConnected') });
+    const uri = auth.pendingTotpOtpauth(req.authUser);
+    if (!uri) return res.status(404).type('text').send('no pending TOTP challenge');
+    res.set({
+      'Content-Type': 'image/svg+xml; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+      'Pragma': 'no-cache',
+    });
+    res.send(qrSvg(uri, { size: 240, margin: 2, ecl: 'M' }));
+  }
+  app.get('/api/me/totp/qr.svg', sendTotpQr);
+  app.get('/api/auth/totp/qr.svg', sendTotpQr);
   app.post('/api/auth/totp/confirm', requireCsrf, awrap(async (req, res) => {
     if (!req.authUser) return res.status(401).json({ error: msg(req, 'notConnected') });
     res.json(await auth.confirmTotp(req.authUser, req.body?.code));

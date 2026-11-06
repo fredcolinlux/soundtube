@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#0b1022">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
-  <link rel="stylesheet" href="/css/auth.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.2">
+  <link rel="stylesheet" href="/css/auth.css?v=1.20.2">
 </head>
 <body class="auth-body">
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -37,13 +37,26 @@
         <button class="btn btn-mini" type="button" id="totpEnable" data-i18n="profile.totpEnable">Activer TOTP</button>
         <button class="btn btn-mini btn-ghost" type="button" id="totpDisable" hidden data-i18n="profile.totpDisable">Désactiver TOTP</button>
       </div>
-      <div id="totpSetup" hidden>
-        <p class="hint" data-i18n="profile.totpScan">Scanne ce secret dans ton app, puis entre un code pour confirmer :</p>
-        <p><code id="totpSecret"></code></p>
-        <p class="hint" id="totpUri"></p>
-        <div class="field"><label for="totpCode" data-i18n="login.totp">Code d’authentification</label><input id="totpCode" inputmode="numeric" maxlength="8" autocomplete="one-time-code"></div>
-        <button class="btn btn-primary" type="button" id="totpConfirm" data-i18n="login.verify">Vérifier</button>
-        <p class="hint" id="totpRecovery" hidden></p>
+      <div id="totpSetup" class="totp-setup" hidden>
+        <p class="hint" data-i18n="profile.totpScan">Scanne le QR code avec ton application d’authentification, ou saisis le secret manuellement :</p>
+        <div class="totp-qr-wrap">
+          <img id="totpQr" class="totp-qr" alt="" width="240" height="240" decoding="async">
+        </div>
+        <p class="hint"><span data-i18n="profile.totpSecretLabel">Secret (base32)</span> · <button type="button" class="btn btn-mini btn-ghost" id="totpCopy" data-i18n="profile.totpCopy">Copier</button></p>
+        <p><code id="totpSecret" class="totp-secret" tabindex="0"></code></p>
+        <p class="hint muted" id="totpUri" hidden></p>
+        <div class="field"><label for="totpCode" data-i18n="login.totp">Code d’authentification</label><input id="totpCode" inputmode="numeric" maxlength="8" autocomplete="one-time-code" placeholder="123456"></div>
+        <button class="btn btn-primary" type="button" id="totpConfirm" data-i18n="profile.totpConfirm">Confirmer et activer</button>
+        <p class="hint err" id="totpMsg" hidden></p>
+      </div>
+      <div id="totpRecoveryBox" class="totp-recovery" hidden>
+        <h3 data-i18n="profile.recoveryOnce">Codes de récupération (à conserver — affichés une seule fois)</h3>
+        <p class="hint" data-i18n="profile.recoveryHint">Chaque code ne peut servir qu’une fois si tu perds ton application. Télécharge-les ou copie-les maintenant.</p>
+        <pre id="totpRecovery" class="totp-recovery-codes"></pre>
+        <div class="row">
+          <button type="button" class="btn btn-mini" id="totpRecoveryDl" data-i18n="profile.recoveryDownload">Télécharger</button>
+          <button type="button" class="btn btn-mini btn-ghost" id="totpRecoveryCopy" data-i18n="profile.totpCopy">Copier</button>
+        </div>
       </div>
       <div class="row" style="margin-top:.8rem">
         <span class="hint" id="pkLabel" data-i18n="profile.pkOff">Passkeys : aucune</span>
@@ -54,6 +67,6 @@
 
     <p class="hint auth-foot"><a href="/" data-i18n="nav.studio">Studio</a> · <a href="/admin" data-i18n="nav.admin">Admin</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a></p>
   </main>
-  <script type="module" src="/js/profile.js?v=1.20.1"></script>
+  <script type="module" src="/js/profile.js?v=1.20.2"></script>
 </body>
 </html>

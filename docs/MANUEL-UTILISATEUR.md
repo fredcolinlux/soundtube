@@ -63,3 +63,7 @@ Pianos, cordes, batterie acoustique, etc. depuis `assets/samples/` (voir [SAMPLE
 
 Dans **Admin**, configurez les sources RSS publiques (liste par défaut fournie) et, si besoin, un **modèle Ollama dédié** à la veille. Lancement manuel ou planifié. Les propositions ont un bouton **Appliquer** (rien n’est appliqué seul). Les noms d’artistes sont retirés des textes générés.
 
+## Profil & double authentification (v1.20.2)
+
+Dans **Mon profil**, tu peux activer un TOTP optionnel : un **QR code** (SVG servi par `/api/me/totp/qr.svg`, sans service externe) + secret base32, puis confirmation par code. Les codes de récupération s’affichent **une seule fois** (téléchargement possible). Les passkeys restent optionnelles.
+

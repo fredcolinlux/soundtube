@@ -41,7 +41,14 @@ export function verifyTotp(secret, code, window = 1) {
 }
 
 export function otpauthUrl(secret, account, issuer = 'soundtube') {
-  return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+  const iss = String(issuer || 'soundtube').trim() || 'soundtube';
+  return `otpauth://totp/${encodeURIComponent(iss)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(iss)}&algorithm=SHA1&digits=6&period=30`;
+}
+
+/** Group base32 secret in 4-char blocks for display / copy. */
+export function groupSecret(secret) {
+  const s = String(secret || '').replace(/\s+/g, '').toUpperCase();
+  return s.replace(/(.{4})/g, '$1 ').trim();
 }
 
 export async function makeRecoveryCodes(n = 10) {

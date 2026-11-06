@@ -716,8 +716,8 @@
   "profile.totpEnable": "Enable TOTP",
   "profile.totpDisable": "Disable TOTP",
   "profile.totpDisableConfirm": "Disable TOTP on this account?",
-  "profile.totpScan": "Scan this secret in your app, then enter a code to confirm:",
-  "profile.recoveryOnce": "Recovery codes (keep them safe):",
+  "profile.totpScan": "Scan the QR code with your authenticator app, or enter the secret manually:",
+  "profile.recoveryOnce": "Recovery codes (keep them safe — shown only once)",
   "profile.pkOff": "Passkeys: none",
   "profile.pkOn": "Passkeys: {n}",
   "profile.pkAdd": "Add a passkey",
@@ -821,5 +821,12 @@
   "start.ctaTour": "Guided studio tour",
   "start.ctaStyles": "Pick a style",
   "start.ctaAdmin": "Open Admin",
-  "start.footDocs": "Full documentation: README and docs/STYLES.md"
+  "start.footDocs": "Full documentation: README and docs/STYLES.md",
+  "profile.totpSecretLabel": "Secret (base32)",
+  "profile.totpCopy": "Copy",
+  "profile.totpCopied": "Copied to clipboard.",
+  "profile.totpQrAlt": "TOTP QR code to scan",
+  "profile.totpConfirm": "Confirm and enable",
+  "profile.recoveryHint": "Each code can be used once if you lose your authenticator. Download or copy them now.",
+  "profile.recoveryDownload": "Download"
 }
