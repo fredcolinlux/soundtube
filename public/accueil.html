@@ -3,29 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>soundtube — onze styles, une graine, ta musique</title>
-  <meta name="description" content="soundtube compose et synthétise des morceaux instrumentaux sur ton réseau local : onze styles, des machines recréées en code, un directeur artistique IA facultatif.">
+  <title data-i18n="title.home">soundtube — accueil</title>
+  <meta name="description" content="soundtube">
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
-  <link rel="stylesheet" href="/css/site.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.5">
+  <link rel="stylesheet" href="/css/site.css?v=1.20.5">
 </head>
 <body class="site page-home">
   <main class="site-wrap">
     <section class="home-hero">
-      <p class="kicker">Studio génératif · réseau local</p>
-      <h1 class="mega">Onze styles.<br>Une graine.<br><span>Ta musique.</span></h1>
+      <p class="kicker" data-i18n="home.kicker">Studio génératif · réseau local</p>
+      <h1 class="mega"><span data-i18n="home.h1a">Onze styles.</span><br><span data-i18n="home.h1b">Une graine.</span><br><span data-i18n="home.h1c">Ta musique.</span></h1>
       <div class="home-hero-side">
-        <p class="lead">soundtube écrit la musique note par note — théorie, groove, arrangement — puis la joue sur des machines recréées en code&nbsp;: 909, 303, Juno, DX7, Minimoog. Rien n’est copié, tout est rejoué. Une graine suffit à retrouver un morceau.</p>
+        <p class="lead" data-i18n="home.lead">soundtube écrit la musique note par note — théorie, groove, arrangement — puis la joue sur des machines recréées en code&nbsp;: 909, 303, Juno, DX7, Minimoog. Rien n’est copié, tout est rejoué. Une graine suffit à retrouver un morceau.</p>
         <div class="cta-row">
-          <a class="btn btn-primary btn-lg" href="/">Composer un morceau</a>
-          <a class="btn btn-ghost btn-lg" href="/demarrer">Comprendre en 2 minutes</a>
+          <a class="btn btn-primary btn-lg" href="/studio" data-i18n="home.ctaCompose">Composer un morceau</a>
+          <a class="btn btn-ghost btn-lg" href="/demarrer" data-i18n="home.ctaStart">Comprendre en 2 minutes</a>
         </div>
         <ul class="stats" id="homeStats">
-          <li><b id="hsStyles">11</b><span>styles</span></li>
-          <li><b id="hsTracks">—</b><span>morceaux</span></li>
-          <li><b id="hsAi">—</b><span>directeur IA</span></li>
+          <li><b id="hsStyles">11</b><span data-i18n="home.statStyles">styles</span></li>
+          <li><b id="hsTracks">—</b><span data-i18n="home.statTracks">morceaux</span></li>
+          <li><b id="hsAi">—</b><span data-i18n="home.statAi">directeur IA</span></li>
         </ul>
       </div>
       <div class="ticker" aria-hidden="true"><div class="ticker-in" id="ticker"></div></div>
@@ -33,32 +33,32 @@
 
     <section class="home-styles" aria-labelledby="hStyles">
       <div class="sec-head" data-reveal>
-        <h2 id="hStyles"><span class="num">01</span>Choisis une couleur</h2>
-        <a class="link-more" href="/styles">Tous les styles et la feuille de route →</a>
+        <h2 id="hStyles"><span class="num">01</span><span data-i18n="home.secStyles">Choisis une couleur</span></h2>
+        <a class="link-more" href="/styles" data-i18n="home.allStyles">Tous les styles et la feuille de route →</a>
       </div>
       <div class="sc-grid" id="homeGrid"></div>
     </section>
 
     <section class="home-flow" aria-labelledby="hFlow">
-      <div class="sec-head" data-reveal><h2 id="hFlow"><span class="num">02</span>Du réglage au fichier</h2></div>
+      <div class="sec-head" data-reveal><h2 id="hFlow"><span class="num">02</span><span data-i18n="home.secFlow">Du réglage au fichier</span></h2></div>
       <ol class="flow" data-reveal>
-        <li><span class="flow-n">A</span><b>Tu décris ou tu règles</b><p>Un style, une ambiance, une durée de 20 s à 4 h. Ou une phrase pour le directeur artistique.</p></li>
-        <li><span class="flow-n">B</span><b>La graine compose</b><p>Gamme, progression, mélodie, batterie et forme sont tirées d’une graine — même graine, même morceau.</p></li>
-        <li><span class="flow-n">C</span><b>Les machines jouent</b><p>Synthèse 100 % JavaScript, mix et mastering à −14 LUFS, sur le serveur, sans cloud.</p></li>
-        <li><span class="flow-n">D</span><b>Tu récupères</b><p>WAV, MP3, MIDI par instrument, vidéo YouTube avec miniature, textes FR + EN.</p></li>
+        <li><span class="flow-n">A</span><b data-i18n="home.flowAt">Tu décris ou tu règles</b><p data-i18n="home.flowAp">Un style, une ambiance, une durée de 20 s à 4 h. Ou une phrase pour le directeur artistique.</p></li>
+        <li><span class="flow-n">B</span><b data-i18n="home.flowBt">La graine compose</b><p data-i18n="home.flowBp">Gamme, progression, mélodie, batterie et forme sont tirées d’une graine — même graine, même morceau.</p></li>
+        <li><span class="flow-n">C</span><b data-i18n="home.flowCt">Les machines jouent</b><p data-i18n="home.flowCp">Synthèse 100 % JavaScript, mix et mastering à −14 LUFS, sur le serveur, sans cloud.</p></li>
+        <li><span class="flow-n">D</span><b data-i18n="home.flowDt">Tu récupères</b><p data-i18n="home.flowDp">WAV, MP3, MIDI par instrument, vidéo YouTube avec miniature, textes FR + EN.</p></li>
       </ol>
     </section>
 
     <section class="home-latest" aria-labelledby="hLatest" id="latestSec" hidden>
-      <div class="sec-head" data-reveal><h2 id="hLatest"><span class="num">03</span>Derniers morceaux</h2><a class="link-more" href="/#library">Toute la bibliothèque →</a></div>
+      <div class="sec-head" data-reveal><h2 id="hLatest"><span class="num">03</span><span data-i18n="home.secLatest">Derniers morceaux</span></h2><a class="link-more" href="/studio#library" data-i18n="home.allLibrary">Toute la bibliothèque →</a></div>
       <ul class="tr-list" id="latestList"></ul>
     </section>
 
     <section class="home-end" data-reveal>
-      <p class="end-line">Une idée d’ambiance&nbsp;? <a href="/#settings">Décris-la au directeur artistique</a>, ou pars d’une <a href="/styles">page de style</a>.</p>
+      <p class="end-line" data-i18n="home.endLine" data-i18n-html="1">Une idée d’ambiance&nbsp;? <a href="/studio#settings">Décris-la au directeur artistique</a>, ou pars d’une <a href="/styles">page de style</a>.</p>
     </section>
   </main>
-  <footer class="site-foot"><span>soundtube <b id="ver"></b> · tout tourne sur ton serveur</span><a href="/docs" target="_blank" rel="noopener">API</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></footer>
-  <script type="module" src="/js/accueil.js?v=1.20.1"></script>
+  <footer class="site-foot"><span>soundtube <b id="ver"></b> · <span data-i18n="home.footNote">tout tourne sur ton serveur</span></span><a href="/docs" target="_blank" rel="noopener" data-i18n="nav.api">API</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></footer>
+  <script type="module" src="/js/accueil.js?v=1.20.5"></script>
 </body>
 </html>

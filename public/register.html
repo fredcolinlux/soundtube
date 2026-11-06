@@ -7,14 +7,13 @@
   <meta name="theme-color" content="#0b1022">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
-  <link rel="stylesheet" href="/css/auth.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.5">
+  <link rel="stylesheet" href="/css/auth.css?v=1.20.5">
+  <link rel="stylesheet" href="/css/site.css?v=1.20.5">
 </head>
-<body class="auth-body">
+<body class="site auth-body page-auth">
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
   <main class="auth-card">
-    <a class="brand auth-brand" href="/accueil"><span>sound<em>tube</em></span></a>
-    <div class="auth-lang" id="langHost"></div>
     <h1 data-i18n="register.title">Créer un compte</h1>
     <p class="hint" data-i18n="register.lead">Inscription ouverte par l’administrateur. Aucune double authentification n’est demandée.</p>
     <form id="regForm" class="auth-form" autocomplete="on">
@@ -27,6 +26,7 @@
     </form>
     <p class="hint auth-foot"><a href="/login" data-i18n="nav.login">Connexion</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></p>
   </main>
-  <script type="module" src="/js/register.js?v=1.20.1"></script>
+  <footer class="site-foot"><span class="foot-meta"></span></footer>
+  <script type="module" src="/js/register.js?v=1.20.5"></script>
 </body>
 </html>

@@ -1,8 +1,10 @@
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, applyDom } from './i18n.js';
+import { mountSiteFooter } from './sitefoot.js';
 import { apiFetch, refreshAuth } from './csrf.js';
 
-await initI18n(); applyDom(); mountLangSwitcher(document.getElementById('langHost'));
+await initI18n();
+  await mountSiteFooter(); applyDom(); mountLangSwitcher(document.getElementById('langHost'));
 try { new AuroraField(document.getElementById('bgCanvas')); } catch {}
 
 const st = await refreshAuth();

@@ -1,6 +1,7 @@
 // Page Admin : nœuds de rendu musique + vidéo (v1.16.0 : capacité musicale, moteur, historique ; état en direct, ajout / retrait, activation, nœud forcé), CT local, PC IA (Ollama).
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom } from './i18n.js';
+import { mountSiteFooter } from './sitefoot.js';
 import { apiFetch, refreshAuth } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
 await initI18n();
@@ -226,6 +227,7 @@ loadTrends();
 
 mountLangSwitcher(document.querySelector('.topbar'));
 applyDom(document);
+  await mountSiteFooter();
 onLangChange(() => { applyDom(document); try { render(); } catch {} });
 
 async function showVersion() {

@@ -1,5 +1,23 @@
 # Journal des versions
 
+## 1.20.5 — 2026-11-06
+
+### Public site & Studio routes
+- **`/` is the public home** (Accueil). Studio moved to **`/studio`** (login required → `/login?next=/studio`).
+- **`/accueil` → 301 `/`**. Legacy `/?style|tour|track=` redirects to `/studio`.
+- Nav, CTAs, post-login redirect, library/deep links updated.
+
+### i18n FR/EN (live switch)
+- Home & Styles keyed with `data-i18n`; style metadata (`taglineEn`, `genreEn`, moods, instruments, advanced options, YouTube visibility) localized by cookie/`Accept-Language`.
+- Studio FR|EN selector remounts/repaints options; docs `docs/en/STYLES.md` for style sheets.
+- Headless browser test `test/v1205-i18n.js` (Puppeteer) FR↔EN on all public/auth pages.
+
+### Auth / error pages
+- Login, register, setup, 404/403/500 and legal pages use the **full site topbar** (logo, nav, language selector, Login/Logout) and common footer (version + GitHub), including mobile hamburger.
+
+### Footer
+- Every page footer: **version** + **GitHub** link (icon). URL configurable in Admin › Sécurité (default `https://github.com/fredcolinlux/soundtube`).
+
 ## 1.20.4 — Démo Styles : écoute seule
 
 - Démo anonyme = **preview only** : pas de téléchargement / ZIP / YouTube / bibliothèque (boutons masqués ; `401` serveur sur les routes track/publish/pack/job pour un id démo ; `?download=1` refusé sur `/api/demo/audio`).

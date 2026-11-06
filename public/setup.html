@@ -10,11 +10,9 @@
   <link rel="stylesheet" href="/css/app.css?v=1.20.1">
   <link rel="stylesheet" href="/css/auth.css?v=1.20.1">
 </head>
-<body class="auth-body">
+<body class="site auth-body page-auth">
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
   <main class="auth-card">
-    <a class="brand auth-brand" href="/accueil"><span>sound<em>tube</em></span></a>
-    <div class="auth-lang" id="langHost"></div>
     <h1 data-i18n="setup.title">Créer le compte admin</h1>
     <p class="hint" data-i18n="setup.lead">Une seule étape : choisis un identifiant et un mot de passe admin. Réseau local uniquement. Pas de code OTP — la double authentification reste optionnelle plus tard dans ton profil.</p>
     <form id="setupForm" class="auth-form" autocomplete="on">
@@ -26,6 +24,7 @@
     </form>
     <p class="hint auth-foot"><a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></p>
   </main>
-  <script type="module" src="/js/setup.js?v=1.20.1"></script>
+  <footer class="site-foot"><span class="foot-meta"></span></footer>
+  <script type="module" src="/js/setup.js?v=1.20.5"></script>
 </body>
 </html>

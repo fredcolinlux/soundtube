@@ -1,9 +1,9 @@
-import { AuroraField } from './aurora.js';
-import { initI18n, mountLangSwitcher, applyDom } from './i18n.js';
+import { bootSite, mountBackground } from './site.js?v=1.20.5';
+import { applyDom } from './i18n.js';
 
-await initI18n(); applyDom();
-mountLangSwitcher(document.getElementById('langHost'));
-try { new AuroraField(document.getElementById('bgCanvas')); } catch {}
+mountBackground();
+await bootSite('/' + (document.body.dataset.err || '404'));
+applyDom(document);
 
 const wave = document.getElementById('errWave');
 if (wave) {

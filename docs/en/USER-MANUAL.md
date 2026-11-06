@@ -1,3 +1,4 @@
+<!-- v1.20.5 routes: / home, /studio studio -->
 # User manual — soundtube 1.18.0
 
 The web UI is **French** and **English** (**FR | EN** in the top bar). Choice is stored in the browser (`localStorage` + cookie `soundtube_ui_lang`). YouTube title / description / tag generation keeps its existing FR+EN behaviour and is **independent** of the UI language (`/api/youtube/lang`).

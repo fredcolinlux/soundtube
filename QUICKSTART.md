@@ -1,3 +1,4 @@
+<!-- v1.20.5 routes: / home, /studio studio -->
 # Quick start — soundtube 1.20.4
 
 Three steps. Nothing else is required.

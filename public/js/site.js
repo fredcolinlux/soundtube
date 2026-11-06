@@ -2,9 +2,10 @@
 // (navigation, fond animé teinté, couleurs par style, mini-lecteur, petites aides).
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
+import { mountSiteFooter } from './sitefoot.js';
 import { apiFetch, refreshAuth, getAuthUser } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
-export { t, getUiLang, refreshAuth, getAuthUser };
+export { t, getUiLang, refreshAuth, getAuthUser, onLangChange };
 
 export const $ = (q, el = document) => el.querySelector(q);
 export const $$ = (q, el = document) => [...el.querySelectorAll(q)];
@@ -22,29 +23,36 @@ export const dateFr = (d) => { try { return new Date(d).toLocaleDateString(docum
 export const STYLE_COLOR = { lofi: '#f3c97a', ambient: '#7fd0ff', synthwave: '#c792ff', house: '#5ef2c9', frenchtouch: '#ffd23f', techno: '#a9b4d8', cinematic: '#e8dcb0', chiptune: '#b6f36a', trap: '#ff8fc7', hiphop: '#ffb36b', dnb: '#6be3ff' };
 export const STYLE_COLOR_2 = { lofi: '#ff8a65', ambient: '#9b8cff', synthwave: '#ff4f9a', house: '#3aa8ff', frenchtouch: '#ff5a36', techno: '#6c7cff', cinematic: '#c07a4a', chiptune: '#33d6ff', trap: '#8b5cff', hiphop: '#ff5e5e', dnb: '#2ef0a0' };
 /** Trois mots d'ambiance par style (cartes et en-têtes ; pas de texte promotionnel). */
-export const STYLE_WORDS = {
+export const STYLE_WORDS_FR = {
   lofi: ['vinyle', 'Rhodes', 'swing'], ambient: ['nappes', 'espace', 'lenteur'], synthwave: ['néons', 'supersaw', 'nuit'],
   house: ['groove', 'contretemps', 'chaleur'], frenchtouch: ['filtre', 'pompe', 'disco'], techno: ['hypnose', '909', 'acid'],
   cinematic: ['cordes', 'tension', 'ampleur'], chiptune: ['8-bit', 'arpèges', 'console'], trap: ['808', 'rafales', 'ombre'],
   hiphop: ['boom-bap', 'MPC', 'poussière'], dnb: ['breaks', 'reese', 'vitesse'],
 };
+export const STYLE_WORDS_EN = {
+  lofi: ['vinyl', 'Rhodes', 'swing'], ambient: ['pads', 'space', 'slow'], synthwave: ['neon', 'supersaw', 'night'],
+  house: ['groove', 'off-beat', 'warmth'], frenchtouch: ['filter', 'pump', 'disco'], techno: ['hypnosis', '909', 'acid'],
+  cinematic: ['strings', 'tension', 'scale'], chiptune: ['8-bit', 'arps', 'console'], trap: ['808', 'hats', 'dark'],
+  hiphop: ['boom-bap', 'MPC', 'dust'], dnb: ['breaks', 'reese', 'speed'],
+};
+export const STYLE_WORDS = new Proxy({}, { get: (_, id) => (getUiLang() === 'en' ? STYLE_WORDS_EN : STYLE_WORDS_FR)[id] || [] });
 export const colorOf = (id) => STYLE_COLOR[id] || '#5ef2c9';
 export const color2Of = (id) => STYLE_COLOR_2[id] || '#9b8cff';
 const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
-const NAV_ITEMS = () => [['/accueil', t('nav.home')], ['/demarrer', t('nav.start')], ['/styles', t('nav.styles')], ['/', t('nav.studio')]];
+const NAV_ITEMS = () => [['/', t('nav.home')], ['/demarrer', t('nav.start')], ['/styles', t('nav.styles')], ['/studio', t('nav.studio')]];
 /** Barre du haut commune ; `current` = chemin de la page (aria-current). */
 export function mountTopbar(current) {
   const h = document.createElement('header'); h.className = 'topbar site-top';
   const paint = () => {
-    h.innerHTML = `<a class="brand" href="/accueil" aria-label="${t('nav.brandAria')}">
+    h.innerHTML = `<a class="brand" href="/" aria-label="${t('nav.brandAria')}">
       <svg class="brand-mark" viewBox="0 0 28 20" width="28" height="20" aria-hidden="true"><rect x="0" y="7" width="4" height="6" rx="2"/><rect x="6" y="2" width="4" height="16" rx="2"/><rect x="12" y="5" width="4" height="10" rx="2"/><rect x="18" y="0" width="4" height="20" rx="2"/><rect x="24" y="7" width="4" height="6" rx="2"/></svg>
       <span>sound<em>tube</em></span></a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span><b class="sr">${t('nav.menu')}</b></button>
     <nav id="siteNav">${NAV_ITEMS().map(([href, l]) => `<a href="${href}"${href === current || (href === '/styles' && current.startsWith('/styles')) ? ' aria-current="page"' : ''}>${l}</a>`).join('')}
       <a href="/docs" target="_blank" rel="noopener">${t('nav.api')}</a></nav>
     <span class="top-auth" id="topAuth"></span>
-    <a class="btn btn-primary btn-mini nav-cta" href="/">${t('nav.openStudio')}</a>`;
+    <a class="btn btn-primary btn-mini nav-cta" href="/studio">${t('nav.openStudio')}</a>`;
     const tog = $('.nav-toggle', h); tog.addEventListener('click', () => { const o = h.classList.toggle('open'); tog.setAttribute('aria-expanded', String(o)); });
     mountLangSwitcher(h);
     mountAuthMenu($('#topAuth', h)).catch(() => {});
@@ -54,12 +62,13 @@ export function mountTopbar(current) {
   onLangChange(() => { paint(); applyDom(document); });
   return h;
 }
-export async function bootI18n() { await initI18n(); applyDom(document); }
+export async function bootI18n() { await initI18n(); applyDom(document); await mountSiteFooter(); }
 /** Initialise i18n puis la barre du haut (pages Accueil / Démarrer / Styles). */
 export async function bootSite(current) {
   await initI18n();
   const h = mountTopbar(current);
   applyDom(document);
+  await mountSiteFooter();
   return h;
 }
 
@@ -129,7 +138,7 @@ export class MiniPlayer {
 
 /** v1.12.0 : lien entre un ancien morceau et sa version régénérée (harmonie juste). */
 export function regenLine(t) {
-  const lk = (x) => `<a href="/?track=${encodeURIComponent(x.id)}#library">« ${esc(x.title || 'morceau supprimé')} »</a>`;
+  const lk = (x) => `<a href="/studio?track=${encodeURIComponent(x.id)}#library">« ${esc(x.title || 'morceau supprimé')} »</a>`;
   if (t.regen_of) return `<span class="tr-regen">régénéré en v${esc(t.regen_of.version || '1.12.0')} · depuis ${lk(t.regen_of)}</span>`;
   if (t.regenerations?.length) return `<span class="tr-regen">version régénérée (v1.12.0) : ${t.regenerations.map(lk).join(', ')}</span>`;
   return '';
@@ -140,7 +149,7 @@ export function trackRowHtml(t, player, labels = {}, { listenOnly = false } = {}
   const on = player?.playing(t.id);
   const tags = [fmt(t.duration), t.bpm ? `${t.bpm} BPM` : '', labels.key?.[t.key] ? labels.key[t.key] : t.key, labels.mood?.[t.mood] || ''].filter(Boolean);
   const links = listenOnly ? '' : `<span class="tr-date">${dateFr(t.created_at)}</span>
-    <span class="tr-links">${t.urls?.mp3 ? `<a href="${esc(t.urls.mp3)}?download=1">MP3</a>` : ''}${t.urls?.wav ? `<a href="${esc(t.urls.wav)}?download=1">WAV</a>` : ''}${t.urls?.mid ? `<a href="${esc(t.urls.mid)}?download=1">MIDI</a>` : ''}<a href="/?track=${encodeURIComponent(t.id)}#library" title="Retrouver ce morceau dans le studio (variation, vidéo…)">Studio</a>${t.regen_ok && !t.regenerations?.length ? `<button type="button" class="tr-regen-btn" data-regen="${esc(t.id)}" title="Même graine, mêmes réglages, harmonie corrigée (moteur 21). L’original est conservé.">Régénérer en v1.12.0</button>` : ''}</span>`;
+    <span class="tr-links">${t.urls?.mp3 ? `<a href="${esc(t.urls.mp3)}?download=1">MP3</a>` : ''}${t.urls?.wav ? `<a href="${esc(t.urls.wav)}?download=1">WAV</a>` : ''}${t.urls?.mid ? `<a href="${esc(t.urls.mid)}?download=1">MIDI</a>` : ''}<a href="/studio?track=${encodeURIComponent(t.id)}#library" title="Retrouver ce morceau dans le studio (variation, vidéo…)">Studio</a>${t.regen_ok && !t.regenerations?.length ? `<button type="button" class="tr-regen-btn" data-regen="${esc(t.id)}" title="Même graine, mêmes réglages, harmonie corrigée (moteur 21). L’original est conservé.">Régénérer en v1.12.0</button>` : ''}</span>`;
   return `<li class="tr-row${on ? ' on' : ''}${listenOnly ? ' tr-listen' : ''}" data-id="${esc(t.id)}" style="--c:${colorOf(t.style)}">
     <button type="button" class="tr-play" data-play="${esc(t.id)}" aria-label="${on ? 'Pause' : 'Écouter'} « ${esc(t.title)} »">${on ? '❚❚' : '▶'}</button>
     <span class="tr-main"><b>${esc(t.title)}</b><span>${tags.map(esc).join(' · ')}</span>${listenOnly ? '' : regenLine(t)}</span>

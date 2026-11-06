@@ -116,7 +116,20 @@ export class Channels {
   scrub(msg) { let m = String(msg || ''); for (const c of this.s.channels) for (const k of ['clientId', ...SECRET_KEYS]) if (c[k] && c[k].length >= 6) m = m.split(c[k]).join('•••'); return m; }
   get(id) { return this.s.channels.find((c) => c.id === id) || null; }
   ready(c) { const u = this.unlocked(c); return !!(u && u.clientId && u.clientSecret && u.refreshToken); }
-  missing(c) { c = this.unlocked(c); if (!c) return 'Aucune chaîne YouTube configurée : ajoute-en une dans Admin › Chaînes YouTube.'; const m = []; if (!c.clientId) m.push('client ID'); if (!c.clientSecret) m.push('client secret'); if (!c.refreshToken) m.push('jeton d\'actualisation'); return m.length ? `Chaîne « ${c.name} » : ${m.join(', ')} manquant${m.length > 1 ? 's' : ''}. Renseigne-${m.length > 1 ? 'les' : 'le'} dans Admin › Chaînes YouTube.` : null; }
+  missing(c, lang = 'fr') {
+    c = this.unlocked(c);
+    const en = lang === 'en';
+    if (!c) return en
+      ? 'No YouTube channel configured: add one in Admin › YouTube channels.'
+      : 'Aucune chaîne YouTube configurée : ajoute-en une dans Admin › Chaînes YouTube.';
+    const m = [];
+    if (!c.clientId) m.push('client ID');
+    if (!c.clientSecret) m.push('client secret');
+    if (!c.refreshToken) m.push(en ? 'refresh token' : "jeton d'actualisation");
+    if (!m.length) return null;
+    if (en) return `Channel “${c.name}”: missing ${m.join(', ')}. Fill them in Admin › YouTube channels.`;
+    return `Chaîne « ${c.name} » : ${m.join(', ')} manquant${m.length > 1 ? 's' : ''}. Renseigne-${m.length > 1 ? 'les' : 'le'} dans Admin › Chaînes YouTube.`;
+  }
   /** Vue publique : aucun secret, seulement « présent » / masque du client ID. */
   publicChannel(c) { return { id: c.id, name: c.name, channelId: c.channelId, clientId: mask(c.clientId), hasClientId: !!c.clientId, hasClientSecret: !!c.clientSecret, hasRefreshToken: !!c.refreshToken, ready: this.ready(c), isDefault: this.s.defaultId === c.id, styles: Object.entries(this.s.bindings).filter(([, v]) => v === c.id).map(([k]) => k), created: c.created }; }
   view() { return { channels: this.s.channels.map((c) => this.publicChannel(c)), defaultId: this.s.defaultId, bindings: { ...this.s.bindings } }; }

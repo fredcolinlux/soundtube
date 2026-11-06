@@ -1,4 +1,4 @@
-// v1.18.0 — i18n léger (FR/EN), sans dépendance. Repli français.
+// v1.20.5 — i18n léger (FR/EN), sans dépendance. Repli français.
 const STORAGE_KEY = 'soundtube_ui_lang';
 const COOKIE = 'soundtube_ui_lang';
 const SUPPORTED = ['fr', 'en'];
@@ -59,6 +59,18 @@ async function loadCatalog(lang) {
   return j;
 }
 
+/** Refresh FR|EN button active state on every switcher in the page. */
+export function syncLangSwitchers() {
+  document.querySelectorAll('.lang-switch').forEach((box) => {
+    box.querySelectorAll('[data-lang]').forEach((b) => {
+      const on = b.dataset.lang === current;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+    box.setAttribute('aria-label', t('nav.lang'));
+  });
+}
+
 export async function initI18n(forced) {
   current = SUPPORTED.includes(forced) ? forced : detectLang();
   catalog = await loadCatalog(current);
@@ -66,21 +78,30 @@ export async function initI18n(forced) {
   try { localStorage.setItem(STORAGE_KEY, current); } catch {}
   writeCookie(current);
   applyDom();
+  syncLangSwitchers();
   return current;
 }
 
 export async function setUiLang(lang) {
-  if (!SUPPORTED.includes(lang) || lang === current) return current;
-  current = lang;
-  catalog = await loadCatalog(lang);
-  document.documentElement.lang = lang;
-  try { localStorage.setItem(STORAGE_KEY, lang); } catch {}
-  writeCookie(lang);
+  if (!SUPPORTED.includes(lang)) return current;
+  const changed = lang !== current;
+  if (changed) {
+    current = lang;
+    catalog = await loadCatalog(lang);
+    document.documentElement.lang = lang;
+    try { localStorage.setItem(STORAGE_KEY, lang); } catch {}
+    writeCookie(lang);
+    try {
+      const u = new URL(location.href);
+      u.searchParams.set('lang', lang);
+      history.replaceState(null, '', u);
+    } catch {}
+  }
   applyDom();
-  listeners.forEach((fn) => { try { fn(lang); } catch {} });
-  // miroir serveur (cookie déjà posé ; endpoint optionnel)
-  try { await fetch('/api/ui/lang', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang }) }); } catch {}
-  return lang;
+  syncLangSwitchers();
+  if (changed) listeners.forEach((fn) => { try { fn(lang); } catch {} });
+  try { await fetch('/api/ui/lang', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang: current }) }); } catch {}
+  return current;
 }
 
 export function onLangChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
@@ -106,7 +127,7 @@ export function applyDom(root = document) {
   if (titleEl) document.title = t(titleEl.getAttribute('data-i18n'));
 }
 
-/** Sélecteur FR | EN pour la barre du haut (esprit v1.6). */
+/** Sélecteur FR | EN (délégation d'événements, réutilisable après re-paint). */
 export function mountLangSwitcher(host) {
   if (!host) return null;
   let box = host.querySelector('.lang-switch');
@@ -118,14 +139,12 @@ export function mountLangSwitcher(host) {
     host.appendChild(box);
     box.addEventListener('click', (e) => {
       const b = e.target.closest('[data-lang]');
-      if (b) setUiLang(b.dataset.lang);
+      if (!b) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setUiLang(b.dataset.lang);
     });
   }
-  box.querySelectorAll('[data-lang]').forEach((b) => {
-    const on = b.dataset.lang === current;
-    b.classList.toggle('is-active', on);
-    b.setAttribute('aria-pressed', String(on));
-  });
-  box.setAttribute('aria-label', t('nav.lang'));
+  syncLangSwitchers();
   return box;
 }

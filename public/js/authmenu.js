@@ -46,7 +46,7 @@ export async function mountAuthMenu(host, { showRegister = true } = {}) {
     });
     host.querySelector('#authLogout')?.addEventListener('click', async () => {
       try { await apiFetch('/api/auth/logout', { method: 'POST' }); } catch {}
-      location.href = '/accueil';
+      location.href = '/';
     });
   };
   paint();

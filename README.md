@@ -29,6 +29,9 @@
 
 ---
 
+
+> **Routes:** `/` public home · `/studio` generator (login) · `/styles` catalogue · `/accueil` → `/`.
+
 ## Why soundtube?
 
 Most “AI music” tools are SaaS black boxes. **soundtube** runs on *your* hardware:
