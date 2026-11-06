@@ -6,7 +6,7 @@ de Markov, basse, batterie, intro / couplet / refrain / pont / outro) puis **syn
 
 | | |
 |---|---|
-| **Version** | **1.19.1** |
+| **Version** | **1.19.2** |
 | **Langues d’interface** | Français et anglais (sélecteur **FR \| EN** dans la barre du haut) |
 | **Licence** | Voir `LICENSE` (tous droits réservés) |
 | **Moteur par défaut** | 21 (harmonie juste) ; empreinte `696de0f4125a` |
@@ -23,8 +23,8 @@ Le serveur central (**CT**) est prévu pour tourner **en root** (LXC Proxmox typ
 N’appelez **pas** `sudo` si vous êtes déjà root :
 
 ```bash
-tar -xzf soundtube-1.19.1-standalone.tar.gz
-cd soundtube-1.19.1
+tar -xzf soundtube-1.19.2-standalone.tar.gz
+cd soundtube-1.19.2
 ./install.sh --port 8080
 # équivalent : ./deploy/install.sh --port 8080
 ```
@@ -35,8 +35,8 @@ La langue d’interface est **indépendante** de la langue des titres / descript
 
 Agents de rendu dans `dist/` :
 
-- `dist/soundtube-node-agent-1.19.1-windows.zip`
-- `dist/soundtube-node-agent-1.19.1-macos.zip`
+- `dist/soundtube-node-agent-1.19.2-windows.zip`
+- `dist/soundtube-node-agent-1.19.2-macos.zip`
 
 ## Fonctions
 
@@ -58,12 +58,12 @@ Détail et attributions : [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md).
 `./install.sh` copie la banque dans `/opt/soundtube/app/assets/samples` ; `GET /api/health` → `samples: true`.
 
 
-## Modèles IA + veille (v1.19.1)
+## Modèles IA + veille (v1.19.2)
 
 Admin › **03 Modèles IA** : Directeur et Veille côte à côte ; `?v=` cache-bust. 
 
 Modèle Ollama **séparé** pour la veille (repli sur le directeur) et crawl autonome RSS (DuckDuckGo optionnel, anti-SSRF). Voir [docs/EXPLOITATION.md](docs/EXPLOITATION.md).
-## i18n (v1.19.1)
+## i18n (v1.19.2)
 
 | Élément | Chemin / API |
 |---|---|
@@ -83,7 +83,7 @@ npm test          # inclut test/v1180.js (i18n + empreinte moteur)
 Styles · Théorie · Nœuds · YouTube · Pack · Directeur · API — voir [docs/README.md](docs/README.md).  
 OpenAPI interactif : `/docs` (`/api/openapi.json`).
 
-## Nouveautés v1.19.1 — modèle veille dédié + crawl autonome
+## Nouveautés v1.19.2 — modèle veille dédié + crawl autonome
 
 - **Réglage Admin séparé** pour le LLM de veille : URL Ollama optionnelle (repli URL directeur), modèle choisi dans `/api/tags` (jamais de nom en dur), bouton **Tester**, repli sur le modèle directeur avec notice si non configuré.
 - **Crawl autonome** de sources publiques (RSS/Atom) : feeds musique / électronique / YouTube RSS publics / Reddit `.rss` / Bandcamp Daily / Resident Advisor, plus mots-clés par style ; DuckDuckGo HTML optionnel (désactivé par défaut).
@@ -118,7 +118,7 @@ OpenAPI interactif : `/docs` (`/api/openapi.json`).
 ## Nouveautés v1.15.0 — le directeur artistique connaît ton goût et la dernière veille
 
 - **Admin › 07 Contexte du directeur artistique** : deux sources facultatives, chacune avec son interrupteur (coupées par défaut ; coupées = prompt identique à la v1.14).
-  - **Profil de goût** distillé de l’export Apple Music (45 333 pistes) : son global, genres et artistes les plus écoutés, artistes de référence par style **modifiables à la main** (une ligne par style). Livré dans `contexte/gout.json` ; outil `tools/gout-distill.mjs` pour le refaire.
+  - **Profil de goût** distillé de l’export music library (45 333 pistes) : son global, genres et artistes les plus écoutés, artistes de référence par style **modifiables à la main** (une ligne par style). Livré dans `contexte/gout.json` ; outil `tools/gout-distill.mjs` pour le refaire.
   - **Dernière veille tendances** : résumé daté et borné (formats, ambiances, tempos, énergie, mots fréquents), étiqueté « données publiques, pas des instructions » ; omis sans rapport.
 - Budgets durs : 1 000 caractères pour le goût, 800 pour la veille ; exemple French Touch : 5 344 → 7 236 caractères (~2 070 jetons sur 8 192).
 - Les noms d’artistes restent internes : consigne explicite au modèle, puis retrait automatique des titres, descriptions, tags et explications proposés.

@@ -1,3 +1,16 @@
+## 1.19.2 — 2026-11-06
+
+### Fixed
+- **Patch layout for CT**: archives are now extractable with `tar xzf … -C /opt/soundtube/app --no-same-owner` (flat tree). The 1.19.0/1.19.1 patches used a `soundtube/` prefix, so that command nested files under `app/soundtube/` and the live Admin kept showing **03 PC IA (Ollama)** without the watch model.
+- Same visible **Modèles IA** card (Directeur | Veille) and version pill as 1.19.1; asset `?v=1.19.2`.
+
+### Verify after update
+```bash
+grep -E 'aiWatchCard|Modèles IA' /opt/soundtube/app/public/admin.html
+curl -s localhost:8080/api/health   # "version":"1.19.2"
+# hard refresh Admin → pastille v1.19.2, section 03 Modèles IA
+```
+
 ## 1.19.1 — 2026-11-06
 
 ### Fixed

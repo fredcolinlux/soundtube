@@ -93,3 +93,20 @@ npm test   # from the app directory if you keep sources/tests
 
 No API key is required for the default RSS crawl. Optional: YouTube Data API key, DuckDuckGo discovery toggle, separate Ollama model for watch under Admin → AI. See `SAMPLES-LICENSES.md` for the sample bank; see Operations for crawler security.
 
+## Updating (patch on an existing CT)
+
+**Patch** / **complete** archives from v1.19.2+ are **flat** (no `soundtube/` prefix).
+
+```bash
+systemctl stop soundtube
+cd /opt/soundtube/app
+tar xzf /path/soundtube-1.19.2-patch.tar.gz --no-same-owner
+test -f public/admin.html && grep -q aiWatchCard public/admin.html && echo OK || echo WRONG_PATH
+systemctl start soundtube
+curl -s localhost:8080/api/health
+```
+
+Hard-refresh Admin: pill **v1.19.2**, section **03 AI models** (Director | Watch).
+
+> If an older archive created `/opt/soundtube/app/soundtube/`, the server ignores it. Remove that nested folder after applying a flat patch, or extract with `--strip-components=1`.
+

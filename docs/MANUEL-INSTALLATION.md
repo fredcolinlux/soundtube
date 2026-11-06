@@ -61,3 +61,21 @@ curl -s http://127.0.0.1:8080/api/health
 
 Aucune clé API n’est requise pour le crawl RSS par défaut. Optionnel : clé YouTube Data API, bascule DuckDuckGo, modèle Ollama dédié à la veille (Admin → PC IA). Voir `SAMPLES-LICENSES.md` et le manuel d’exploitation pour la sécurité du crawler.
 
+## Mise à jour (patch sur CT déjà installé)
+
+Les archives **patch** et **complet** v1.19.2+ sont à **plat** (pas de préfixe `soundtube/`).
+
+```bash
+systemctl stop soundtube
+cd /opt/soundtube/app
+tar xzf /chemin/soundtube-1.19.2-patch.tar.gz --no-same-owner
+# vérifie que les fichiers sont bien ICI (pas dans app/soundtube/) :
+test -f public/admin.html && grep -q aiWatchCard public/admin.html && echo OK || echo ÉCHEC_CHEMIN
+systemctl start soundtube
+curl -s localhost:8080/api/health
+```
+
+Puis **Ctrl+F5** sur Admin : pastille **v1.19.2**, section **03 Modèles IA** (Directeur | Veille).
+
+> Si une ancienne archive (préfixe `soundtube/`) a créé `/opt/soundtube/app/soundtube/`, ce dossier est **ignoré** par le serveur. Supprimez-le après avoir appliqué un patch plat, ou : `tar xzf …-patch.tar.gz -C /opt/soundtube/app --strip-components=1 --no-same-owner`.
+

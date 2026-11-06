@@ -35,14 +35,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const p = buildProfile(csv);
   check(!JSON.stringify(p).includes('Un, deux') && p.styles.frenchtouch.refs.includes('Daft Punk') && p.sound.length < 200, 'profil : aucun titre de morceau, références French Touch, son décrit en une phrase');
 }
-// ---------- 2. profil livré (contexte/gout.json, distillé de l'export Apple Music de 45 333 pistes)
+// ---------- 2. profil livré (contexte/gout.json, distillé de l'export music library de 45 333 pistes)
 const shipped = D.loadShipped();
 {
   check(shipped && shipped.stats.tracks === 45333 && shipped.topArtists[0].name === 'Depeche Mode' && shipped.topArtists[0].plays === 1026 && shipped.topGenres[0].name === 'Électronique', `profil livré : 45 333 pistes, n° 1 Depeche Mode (1 026 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);
   check(fs.statSync(path.join(ROOT, 'contexte/gout.json')).size < 12000 && Object.keys(shipped.styles).every((id) => STYLES[id]), 'profil livré court (< 12 Ko) et styles connus');
   check(JSON.stringify(shipped.styles.frenchtouch.refs) === JSON.stringify(['Daft Punk', 'Justice', 'Myd', 'Cassius', 'Mr. Oizo', 'Ed Banger']) && shipped.styles.lofi.refs.includes('Chinese Man'), 'références graines : French Touch = Ed Banger, Daft Punk, Justice, Myd, Cassius (+ Mr. Oizo) ; lo-fi = Chinese Man…');
   const csvPath = '/workspace/apple-music-library.csv';
-  if (fs.existsSync(csvPath)) { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(shipped.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(shipped.topGenres), 'export Apple Music présent : la distillation redonne le profil livré'); }
+  if (fs.existsSync(csvPath)) { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(shipped.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(shipped.topGenres), 'export music library présent : la distillation redonne le profil livré'); }
 }
 // ---------- 3. budgets
 const bigReport = { at: '2026-11-02T08:00:00.000Z', source: 'rss', sourceLabel: 'Flux RSS / pages', styles: Object.fromEntries(Object.keys(STYLES).map((id) => [id, { label: STYLES[id].label,
