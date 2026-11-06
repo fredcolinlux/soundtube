@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.18.0">
+  <link rel="stylesheet" href="/css/app.css?v=1.19.1">
 </head>
 <body>
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -26,6 +26,7 @@
       <a href="/demarrer" data-i18n="nav.help">Aide</a>
       <a href="/docs" target="_blank" rel="noopener" data-i18n="nav.api">API</a>
     </nav>
+    <span class="status-pill ver-pill" id="appVersion" title="version">…</span>
     <span class="status-pill" id="statusPill"><span class="live-dot"></span><span id="statusText" data-i18n="status.nodes">Nœuds…</span></span>
   </header>
 
@@ -86,24 +87,28 @@
 
     <section class="module panel" id="ai">
       <div class="module-head">
-        <h2><span class="num">03</span><span data-i18n="admin.ai">PC IA (Ollama)</span></h2>
-        <span class="hint" data-i18n="admin.aiHint">Directeur artistique et, en repli, veille tendances. Sans PC joignable : propositions locales.</span>
+        <h2><span class="num">03</span><span data-i18n="admin.aiModels">Modèles IA</span></h2>
+        <span class="hint" data-i18n="admin.aiHint">Deux réglages Ollama distincts : directeur artistique et veille. Sans PC joignable : propositions locales.</span>
       </div>
-      <h3 class="subhead" data-i18n="admin.aiDirector">Directeur artistique</h3>
-      <div class="grid-3">
-        <div class="field"><label for="aiUrl" data-i18n="admin.aiUrl">Adresse Ollama</label><input type="text" id="aiUrl" placeholder="http://192.168.1.50:11434" spellcheck="false" list="aiModelHints"></div>
-        <div class="field"><label for="aiModel" data-i18n="admin.aiModel">Modèle</label><input type="text" id="aiModel" placeholder="choisi dans Admin (liste /api/tags)" spellcheck="false" list="aiModelsList"><datalist id="aiModelsList"></datalist></div>
-        <div class="field"><label for="aiTimeout" data-i18n="admin.aiTimeout">Délai max d’une réponse (s)</label><input type="number" id="aiTimeout" min="10" max="600" step="10" placeholder="120"></div>
+      <div class="ai-models">
+        <article class="ai-card" id="aiDirectorCard">
+          <h3 data-i18n="admin.aiDirector">Directeur artistique</h3>
+          <p class="hint" data-i18n="admin.aiDirectorHint">Modèle utilisé pour « Proposer » sur la page Générer. Choisi dans la liste /api/tags — jamais de nom en dur.</p>
+          <div class="field"><label for="aiUrl" data-i18n="admin.aiUrl">Adresse Ollama</label><input type="text" id="aiUrl" placeholder="http://192.168.1.50:11434" spellcheck="false" list="aiModelHints"></div>
+          <div class="field"><label for="aiModel" data-i18n="admin.aiModel">Modèle</label><input type="text" id="aiModel" placeholder="choisi dans Admin (liste /api/tags)" spellcheck="false" list="aiModelsList"><datalist id="aiModelsList"></datalist></div>
+          <div class="field"><label for="aiTimeout" data-i18n="admin.aiTimeout">Délai max d’une réponse (s)</label><input type="number" id="aiTimeout" min="10" max="600" step="10" placeholder="120"></div>
+          <div class="row"><button class="btn btn-primary" id="aiSave" type="button" data-i18n="admin.save">Enregistrer</button><button class="btn" id="aiTest" type="button" data-i18n="admin.testDirector">Tester le directeur</button></div>
+          <p class="hint" id="aiMsg"></p>
+        </article>
+        <article class="ai-card ai-card-watch" id="aiWatchCard">
+          <h3 data-i18n="admin.aiWatch">Veille</h3>
+          <p class="hint" data-i18n="admin.aiWatchHint">URL optionnelle (sinon celle du directeur). Modèle propre recommandé. Si vide : repli sur le directeur, avec avis visible.</p>
+          <div class="field"><label for="watchUrl" data-i18n="admin.watchUrl">Adresse Ollama veille</label><input type="text" id="watchUrl" placeholder="(repli directeur)" spellcheck="false"></div>
+          <div class="field"><label for="watchModel" data-i18n="admin.watchModel">Modèle veille</label><input type="text" id="watchModel" placeholder="(repli directeur)" spellcheck="false" list="watchModelsList"><datalist id="watchModelsList"></datalist></div>
+          <div class="field"><label class="sr-only" for="watchTest">—</label><button class="btn btn-primary" id="watchTest" type="button" data-i18n="admin.testWatch">Tester la veille</button></div>
+          <p class="hint" id="watchMsg" role="status"></p>
+        </article>
       </div>
-      <div class="row"><button class="btn btn-primary" id="aiSave" type="button" data-i18n="admin.save">Enregistrer</button><button class="btn" id="aiTest" type="button" data-i18n="admin.testDirector">Tester le directeur</button><span class="hint" id="aiMsg"></span></div>
-      <h3 class="subhead" data-i18n="admin.aiWatch">Veille tendances (modèle dédié)</h3>
-      <p class="hint" data-i18n="admin.aiWatchHint">URL optionnelle (sinon celle du directeur). Modèle propre recommandé. Si le modèle veille est vide : repli sur le modèle directeur, avec avis visible.</p>
-      <div class="grid-3">
-        <div class="field"><label for="watchUrl" data-i18n="admin.watchUrl">Adresse Ollama veille</label><input type="text" id="watchUrl" placeholder="(repli directeur)" spellcheck="false"></div>
-        <div class="field"><label for="watchModel" data-i18n="admin.watchModel">Modèle veille</label><input type="text" id="watchModel" placeholder="(repli directeur)" spellcheck="false" list="watchModelsList"><datalist id="watchModelsList"></datalist></div>
-        <div class="field"><label class="sr">—</label><button class="btn" id="watchTest" type="button" data-i18n="admin.testWatch">Tester la veille</button></div>
-      </div>
-      <p class="hint" id="watchMsg"></p>
     </section>
 
     <section class="module panel" id="trends">
@@ -203,9 +208,9 @@
     </footer>
   </main>
   <div class="toast" id="toast" hidden></div>
-  <script type="module" src="/js/admin.js?v=1.18.0"></script>
-  <script type="module" src="/js/ytadmin.js?v=1.18.0"></script>
-  <script type="module" src="/js/adminmedia.js?v=1.18.0"></script>
-  <script type="module" src="/js/admindirector.js?v=1.18.0"></script>
+  <script type="module" src="/js/admin.js?v=1.19.1"></script>
+  <script type="module" src="/js/ytadmin.js?v=1.19.1"></script>
+  <script type="module" src="/js/adminmedia.js?v=1.19.1"></script>
+  <script type="module" src="/js/admindirector.js?v=1.19.1"></script>
 </body>
 </html>

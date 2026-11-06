@@ -657,3 +657,39 @@ table.hist td { padding: 6px 8px; border-bottom: 1px solid var(--edge); vertical
 @media (max-width: 720px) { .audio-routing .span-2 { grid-column: auto; } table.hist { font-size: 11.5px; } table.hist .c-dur { display: none; } .node-detail { overflow-x: auto; } }
 .pk-pc { flex-wrap: wrap; gap: 6px 12px; margin-top: 4px; }
 .pk-pc .hint { flex-basis: 100%; }
+
+/* v1.19.1 — Modèles IA côte à côte */
+.ai-models {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.ai-card {
+  border: 1px solid color-mix(in oklch, var(--line, #2a3148) 100%, transparent);
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.1rem;
+  background: color-mix(in oklch, var(--panel, #12182a) 92%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.ai-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+.ai-card-watch {
+  outline: 1px dashed color-mix(in oklch, var(--accent, #e85d4c) 45%, transparent);
+}
+.ver-pill {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+@media (max-width: 900px) {
+  .ai-models { grid-template-columns: 1fr; }
+}

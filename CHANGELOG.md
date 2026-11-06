@@ -1,3 +1,13 @@
+## 1.19.1 — 2026-11-06
+
+### Fixed
+- Admin: second Ollama model for trend watch was easy to miss (buried under “PC IA”) and asset URLs still used `?v=1.18.0`, so browsers could keep the old `admin.js`
+- Visible top-level **Modèles IA / AI models** block with **Directeur** and **Veille** side by side; version pill in the Admin header (`/api/health`)
+- Cache-busting: all public HTML `?v=1.19.1`; Admin/studio HTML served with `Cache-Control: no-store`
+
+### Unchanged
+- Watch crawl / SSRF behaviour from 1.19.0; director path; engine fingerprint `696de0f4125a`
+
 ## 1.19.0 — 2026-11-05
 
 ### Added

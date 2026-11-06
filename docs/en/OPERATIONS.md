@@ -71,3 +71,7 @@ Crawler: http(s) only, DNS SSRF block (loopback/private/link-local), robots.txt,
 
 
 Presence: `assets/samples/manifest.json` and `samples: true` on `/api/health`. Memory cache: `SOUNDTUBE_SAMPLE_CACHE_MB`. Licences: [SAMPLES-LICENSES.md](../../SAMPLES-LICENSES.md).
+
+### AI models (v1.19.1)
+
+Section **03 AI models**: two visible cards **Art director** and **Trend watch**. Version pill in the Admin header. CSS/JS use `?v=1.19.1`; Admin HTML is `Cache-Control: no-store`.

@@ -35,14 +35,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const p = buildProfile(csv);
   check(!JSON.stringify(p).includes('Un, deux') && p.styles.frenchtouch.refs.includes('Daft Punk') && p.sound.length < 200, 'profil : aucun titre de morceau, références French Touch, son décrit en une phrase');
 }
-// ---------- 2. profil livré (contexte/gout.json, distillé de l'export bibliothèque musicale de 1 200 pistes)
+// ---------- 2. profil livré (contexte/gout.json, distillé de l'export Apple Music de 1 200 pistes)
 const shipped = D.loadShipped();
 {
   check(shipped && shipped.stats.tracks === 1200 && shipped.topArtists[0].name === 'Exemple Synth' && shipped.topArtists[0].plays === 120 && shipped.topGenres[0].name === 'Électronique', `profil livré : 1 200 pistes, n° 1 Exemple Synth (120 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);
   check(fs.statSync(path.join(ROOT, 'contexte/gout.json')).size < 12000 && Object.keys(shipped.styles).every((id) => STYLES[id]), 'profil livré court (< 12 Ko) et styles connus');
   check(JSON.stringify(shipped.styles.frenchtouch.refs) === JSON.stringify(['Daft Punk', 'Justice', 'Myd', 'Cassius', 'Mr. Oizo', 'Ed Banger']) && shipped.styles.lofi.refs.includes('Chinese Man'), 'références graines : French Touch = Ed Banger, Daft Punk, Justice, Myd, Cassius (+ Mr. Oizo) ; lo-fi = Chinese Man…');
-  const csvPath = '/tmp/music-library-example.csv';
-  if (fs.existsSync(csvPath)) { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(shipped.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(shipped.topGenres), 'export bibliothèque musicale présent : la distillation redonne le profil livré'); }
+  const csvPath = '/workspace/apple-music-library.csv';
+  if (fs.existsSync(csvPath)) { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(shipped.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(shipped.topGenres), 'export Apple Music présent : la distillation redonne le profil livré'); }
 }
 // ---------- 3. budgets
 const bigReport = { at: '2026-11-02T08:00:00.000Z', source: 'rss', sourceLabel: 'Flux RSS / pages', styles: Object.fromEntries(Object.keys(STYLES).map((id) => [id, { label: STYLES[id].label,
@@ -87,7 +87,7 @@ const V114 = ['0289f4847fa41cbcbdcef397405907da', '73dee5670e2b288f1bebfc16e4375
 {
   const forbid = D.forbiddenNames(shipped);
   const raw = { style: 'frenchtouch', title_fr: 'Nuit filtrée façon Daft Punk', title_en: 'Justice Of The Night', description_fr: 'Une house filtrée dans l\'esprit de Cassius et Justice, avec des basses à la Mr. Oizo. Un air de fête.', description_en: 'Inspired by Ed Banger and DJ Koze — gritty filtered house (IAM, NTM).',
-    tags: ['french touch', 'daft punk', 'justice', 'ed banger', 'filter house', 'myd'], explanation: 'Comme Kavinsky et Exemple Synth : synthés sombres.' };
+    tags: ['french touch', 'daft punk', 'justice', 'ed banger', 'filter house', 'myd'], explanation: 'Comme Kavinsky et Depeche Mode : synthés sombres.' };
   const v = ai.validateSuggestion(raw, { style: 'frenchtouch', meta: true, forbid });
   const pub = [v.meta.title_fr, v.meta.title_en, v.meta.description_fr, v.meta.description_en, v.explanation, ...v.meta.tags].join(' | ');
   const leaks = forbid.filter((n) => new RegExp(`(?<![\\p{L}])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, D.scrubNames('x ' + n, [n]) === 'x' && /^(Air|Justice|Jungle|Queen|Placebo)$/.test(n) ? 'u' : 'iu').test(pub));

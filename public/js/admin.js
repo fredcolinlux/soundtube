@@ -223,3 +223,15 @@ loadTrends();
 mountLangSwitcher(document.querySelector('.topbar'));
 applyDom(document);
 onLangChange(() => { applyDom(document); try { render(); } catch {} });
+
+async function showVersion() {
+  const el = document.getElementById('appVersion');
+  if (!el) return;
+  try {
+    const h = await api('GET', '/api/health');
+    el.textContent = 'v' + (h.version || '?');
+  } catch {
+    el.textContent = 'v?';
+  }
+}
+showVersion();
