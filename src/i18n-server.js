@@ -40,6 +40,7 @@ const MSG = {
   demoBusy: { fr: 'File démo saturée, réessaie dans un instant.', en: 'Demo queue busy, try again shortly.' },
   demoUseFull: { fr: 'Compte connecté : utilise Générer (studio) pour un morceau complet.', en: 'Signed in: use Generate (studio) for a full track.' },
   demoNoAudio: { fr: 'Démo : audio indisponible', en: 'Demo: audio unavailable' },
+  demoPreviewOnly: { fr: 'Démo : écoute seule (pas de téléchargement, publication ni bibliothèque). Connecte-toi pour créer un morceau complet.', en: 'Demo: preview only (no download, publish, or library). Sign in to create a full track.' },
 };
 
 export function langOf(req) {

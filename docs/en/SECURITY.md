@@ -14,3 +14,5 @@ See the French `docs/SECURITY.md` for the full guide. Summary:
 ### Styles demo (v1.20.3)
 
 Anonymous visitors: `POST /api/demo/generate` enforces **≤ 15 s**, audio only, **3 / 10 min / IP** rate limit, lower priority than signed-in jobs, files under `data/demo/` purged every **5 min**. Admin from the internet → branded **404**.
+
+Demo is preview-only: any download, publish, or library write against a demo job returns **401**.

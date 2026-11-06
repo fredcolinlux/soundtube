@@ -4,6 +4,13 @@ import { queueHtml, bindQueue } from './pubqueue.js';
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
+// v1.20.4 — anonymous Styles demo: preview only (no YouTube publish UI)
+const __pubAuth = await fetch('/api/auth/status', { credentials: 'same-origin' }).then((r) => r.json()).catch(() => ({}));
+const __pubDemo = !__pubAuth.authenticated;
+if (__pubDemo) {
+  const el = document.getElementById('publish');
+  if (el) el.hidden = true;
+}
 async function api(method, url, body) {
   const r = await fetch(url, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
   const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(d.error || `Erreur ${r.status}`), { status: r.status }); return d;
@@ -45,4 +52,4 @@ $('#pubSave').addEventListener('click', async () => {
 });
 $('#pubReset').addEventListener('click', () => { fill({ ...V.defaults, autoPublish: false }); $('#pubMsg').textContent = t('toast.pubDefaults'); });
 bindQueue($('#pubQueue'), () => load().catch(() => {}));
-if (id) { load().catch((e) => { $('#pubState').textContent = e.message; }); setInterval(async () => { try { const q = await api('GET', `/api/publish/queue?style=${encodeURIComponent(id)}`); $('#pubQueue').innerHTML = queueHtml(q.items.slice(0, 50), { empty: t('pub.queueEmpty') }); } catch {} }, 5000); }
+if (id && !__pubDemo) { load().catch((e) => { $('#pubState').textContent = e.message; }); setInterval(async () => { try { const q = await api('GET', `/api/publish/queue?style=${encodeURIComponent(id)}`); $('#pubQueue').innerHTML = queueHtml(q.items.slice(0, 50), { empty: t('pub.queueEmpty') }); } catch {} }, 5000); }

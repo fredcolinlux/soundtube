@@ -136,13 +136,14 @@ export function regenLine(t) {
 }
 
 /** Ligne de bibliothèque (pages de style, accueil). */
-export function trackRowHtml(t, player, labels = {}) {
+export function trackRowHtml(t, player, labels = {}, { listenOnly = false } = {}) {
   const on = player?.playing(t.id);
   const tags = [fmt(t.duration), t.bpm ? `${t.bpm} BPM` : '', labels.key?.[t.key] ? labels.key[t.key] : t.key, labels.mood?.[t.mood] || ''].filter(Boolean);
-  return `<li class="tr-row${on ? ' on' : ''}" data-id="${esc(t.id)}" style="--c:${colorOf(t.style)}">
+  const links = listenOnly ? '' : `<span class="tr-date">${dateFr(t.created_at)}</span>
+    <span class="tr-links">${t.urls?.mp3 ? `<a href="${esc(t.urls.mp3)}?download=1">MP3</a>` : ''}${t.urls?.wav ? `<a href="${esc(t.urls.wav)}?download=1">WAV</a>` : ''}${t.urls?.mid ? `<a href="${esc(t.urls.mid)}?download=1">MIDI</a>` : ''}<a href="/?track=${encodeURIComponent(t.id)}#library" title="Retrouver ce morceau dans le studio (variation, vidéo…)">Studio</a>${t.regen_ok && !t.regenerations?.length ? `<button type="button" class="tr-regen-btn" data-regen="${esc(t.id)}" title="Même graine, mêmes réglages, harmonie corrigée (moteur 21). L’original est conservé.">Régénérer en v1.12.0</button>` : ''}</span>`;
+  return `<li class="tr-row${on ? ' on' : ''}${listenOnly ? ' tr-listen' : ''}" data-id="${esc(t.id)}" style="--c:${colorOf(t.style)}">
     <button type="button" class="tr-play" data-play="${esc(t.id)}" aria-label="${on ? 'Pause' : 'Écouter'} « ${esc(t.title)} »">${on ? '❚❚' : '▶'}</button>
-    <span class="tr-main"><b>${esc(t.title)}</b><span>${tags.map(esc).join(' · ')}</span>${regenLine(t)}</span>
-    <span class="tr-date">${dateFr(t.created_at)}</span>
-    <span class="tr-links">${t.urls?.mp3 ? `<a href="${esc(t.urls.mp3)}?download=1">MP3</a>` : ''}${t.urls?.wav ? `<a href="${esc(t.urls.wav)}?download=1">WAV</a>` : ''}${t.urls?.mid ? `<a href="${esc(t.urls.mid)}?download=1">MIDI</a>` : ''}<a href="/?track=${encodeURIComponent(t.id)}#library" title="Retrouver ce morceau dans le studio (variation, vidéo…)">Studio</a>${t.regen_ok && !t.regenerations?.length ? `<button type="button" class="tr-regen-btn" data-regen="${esc(t.id)}" title="Même graine, mêmes réglages, harmonie corrigée (moteur 21). L’original est conservé.">Régénérer en v1.12.0</button>` : ''}</span>
+    <span class="tr-main"><b>${esc(t.title)}</b><span>${tags.map(esc).join(' · ')}</span>${listenOnly ? '' : regenLine(t)}</span>
+    ${links}
   </li>`;
 }

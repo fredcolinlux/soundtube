@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 1.20.4 — Démo Styles : écoute seule
+
+- Démo anonyme = **preview only** : pas de téléchargement / ZIP / YouTube / bibliothèque (boutons masqués ; `401` serveur sur les routes track/publish/pack/job pour un id démo ; `?download=1` refusé sur `/api/demo/audio`).
+- Test `test/v1204.js`.
+
 ## 1.20.3 — Démo Styles (15 s) & pages d’erreur
 
 - Page **Styles** anonyme = démo : prévisualisation **audio ≤ 15 s** (durée forcée serveur), hors bibliothèque, file basse priorité, rate-limit 3 / 10 min / IP, concurrence démo 1, purge toutes les 5 min (+ au démarrage). CTA « Connectez-vous pour créer des morceaux complets ».
