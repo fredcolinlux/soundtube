@@ -42,6 +42,7 @@ import { mountAuthRoutes } from './auth/routes.js';
 import { securityHeaders } from './security/headers.js';
 import { signPayload, verifySigned } from './security/crypto.js';
 import { setSecretCodec } from './publish.js';
+import { SocialStore, setSocialSecretCodec } from './social.js';
 import { maybeSignUrls } from './auth/bootstrap.js';
 import { msg as i18nMsg } from './i18n-server.js';
 import { DemoQueue, DEMO_MAX_SEC } from './demo.js';
@@ -50,6 +51,7 @@ import { sendErrorPage, wantsHtml } from './http-errors.js';
 const store = openStore(config.dataDir);
 const auth = new AuthStore(config.dataDir);
 setSecretCodec({ seal: (v) => auth.seal(v), open: (v) => auth.open(v) });
+setSocialSecretCodec({ seal: (v) => auth.seal(v), open: (v) => auth.open(v) });
 const tracksDir = path.join(config.dataDir, 'tracks');
 const renderNodes = new RenderNodes({ dataDir: config.dataDir, localSlots: config.localVideoSlots });
 const jobs = new JobQueue(store, tracksDir, renderNodes); // v1.16.0 : la musique peut aussi partir sur un PC de rendu
@@ -133,6 +135,7 @@ async function videoZipEntries(t, lang) {
 jobs.onDone = async (t) => {
   await refreshThumb(t).catch((e) => console.error('[miniature]', t.id, e.message));
   try { publisher.onTrackDone(store.get(t.id)); } catch (e) { console.error('[auto-publication]', t.id, channels.scrub(e.message)); } // v1.13.0 : uniquement si le style a l'auto-publication activée
+  try { await social.onTrackDone(store.get(t.id), tracksDir); } catch (e) { console.error('[auto-social]', t.id, social.scrub(e.message)); } // v1.21.0
   // option « Découper en morceaux individuels » choisie à la génération
   const A = t.meta?.autoSplit; if (A && splitAvailability(t).ok) { try { splits.enqueue(t.id, splitOptions(A, { hasFfmpeg: jobs.hasFfmpeg, lang: getLang() })); } catch (e) { console.error('[découpe auto]', t.id, e.message); } }
   // v1.14.0 : paquet ZIP coché dans le formulaire → construit automatiquement à la fin du rendu
@@ -623,6 +626,7 @@ function publishInfo(t) {
   return { tags: I.tags, vars: { titre: t.title, titre_en: titleEnOf(t), style: STYLES[t.style]?.label || t.style, bpm: Math.round(P.bpm || t.bpm || 0), tonalite: ton, duree: fmtTime(t.duration || 0), description: I.description, titre_youtube: I.title } };
 }
 const publisher = new PublishQueue({ dataDir: config.dataDir, store, tracksDir, channels, transport: ytTransport, ensureVideo, ensureThumb, info: publishInfo });
+const social = new SocialStore(config.dataDir);
 const ytAdminView = () => ({ ...channels.view(), transport: ytTransport.kind, confirmWord: CONFIRM_WORD, styles: STYLE_IDS().map((id) => ({ id, label: STYLES[id].label, channelId: channels.s.bindings[id] || null, autoPublish: channels.profile(id).autoPublish })) });
 app.get('/api/admin/youtube', (req, res) => res.json(ytAdminView()));
 app.post('/api/admin/youtube/channels', wrap((req, res) => { channels.upsert(req.body || {}); res.status(201).json(ytAdminView()); }));
@@ -651,6 +655,46 @@ app.post('/api/tracks/:id/publish', wrap((req, res) => {
   res.status(202).json(publisher.enqueue(t, over, { mode: 'manual', confirm: b.confirm }));
 }));
 app.get('/api/publish/queue', (req, res) => res.json({ items: publisher.list({ style: req.query.style }), transport: ytTransport.kind }));
+
+// v1.21.0 — Facebook / X
+app.get('/api/admin/social', requireAdminSession, (req, res) => res.json(social.view()));
+app.put('/api/admin/social', requireAdminSession, wrap((req, res) => res.json(social.update(req.body || {}))));
+app.get('/api/tracks/:id/social', wrap((req, res) => {
+  const t0 = store.get(req.params.id); if (!t0) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
+  const yt = (t0.meta?.published || []).slice(-1)[0] || null;
+  const drafts = social.draftTexts(t0, yt || {});
+  const v = social.view();
+  res.json({
+    drafts,
+    facebook: { ready: v.facebook.ready && v.facebook.enabled, enabled: v.facebook.enabled },
+    x: { ready: v.x.ready && v.x.enabled, enabled: v.x.enabled, maxChars: 280 },
+    autoPublish: v.autoPublish[t0.style] || { facebook: false, x: false },
+    history: (v.history || []).filter((h) => h.trackId === t0.id).slice(-20),
+    confirmWord: 'PUBLISH',
+  });
+}));
+app.post('/api/tracks/:id/social', wrap(async (req, res) => {
+  const t0 = store.get(req.params.id); if (!t0) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
+  if (req.authUser?.role === 'viewer') return res.status(403).json({ error: i18nMsg(req, 'readOnly') });
+  const b = req.body || {};
+  const network = b.network === 'facebook' ? 'facebook' : b.network === 'x' ? 'x' : null;
+  if (!network) return res.status(400).json({ error: 'network must be facebook or x' });
+  try {
+    const entry = await social.publishTrack({
+      track: t0, network, lang: b.lang === 'en' ? 'en' : 'fr',
+      text: b.text, link: b.link, useCover: b.useCover !== false,
+      confirm: b.confirm, tracksDir, styleAuto: false,
+    });
+    // stamp track meta
+    const now = store.get(t0.id);
+    store.update(t0.id, { meta: { ...(now.meta || {}), social: [...(now.meta?.social || []), { network, id: entry.remoteId, url: entry.url, at: entry.finished, mock: entry.mock }] } });
+    res.status(201).json(entry);
+  } catch (e) {
+    const status = e.status || 500;
+    res.status(status).json({ error: social.scrub(e.message), entry: e.socialEntry || null });
+  }
+}));
+
 app.post('/api/publish/queue/:pid/cancel', wrap((req, res) => res.json(publisher.cancel(req.params.pid))));
 app.post('/api/publish/queue/:pid/retry', wrap((req, res) => res.json(publisher.retry(req.params.pid))));
 
@@ -946,7 +990,7 @@ app.get(['/profile', '/profile.html'], (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(config.publicDir, 'profile.html'));
 });
-// v1.20.5 — '/' = accueil public ; Studio à '/studio' (auth). '/accueil' → 301 '/'.
+// v1.21.0 — '/' = accueil public ; Studio à '/studio' (auth). '/accueil' → 301 '/'.
 app.get(['/accueil', '/accueil.html'], (req, res) => {
   const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
   res.redirect(301, '/' + q);

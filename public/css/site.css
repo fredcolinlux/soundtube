@@ -286,7 +286,7 @@ body.demo-mode .tr-regen-btn,
 body.demo-mode .tr-date { display: none !important; }
 body.demo-mode #sLib .tr-row { grid-template-columns: auto 1fr; }
 
-/* v1.20.5 — pied de page GitHub + version */
+/* v1.21.0 — pied de page GitHub + version */
 .foot-meta { display: inline-flex; align-items: center; gap: .55rem; margin-left: .65rem; flex-wrap: wrap; }
 .foot-ver { opacity: .7; font-variant-numeric: tabular-nums; font-size: .85em; }
 .foot-gh { display: inline-flex; align-items: center; gap: .35rem; text-decoration: none; opacity: .85; }

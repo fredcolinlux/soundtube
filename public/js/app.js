@@ -5,9 +5,9 @@ import { mountSiteFooter } from './sitefoot.js';
 const i18n = t; // alias: track locals often shadow `t`
 import { apiFetch, refreshAuth } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.20.5';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.20.5';
-import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.20.5';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.21.0';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.21.0';
+import { initPubPanel, loadPub, publishHTML, packHTML, socialHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.21.0';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
@@ -960,6 +960,7 @@ function ytHTML(t) {
       <div class="yt-field"><textarea readonly rows="3" lang="${state.ytLang}">${esc(X.tags.join(', '))}</textarea><button class="btn btn-mini" data-act="ytcopy-tags" type="button">Copier</button></div>
       ${ytTitlesHTML(t, d)}
       ${publishHTML(t)}
+      ${socialHTML(t)}
       ${packHTML(t)}
     </div>
     ${editorSlot(t.id)}
@@ -1008,14 +1009,14 @@ await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
   });
   initPubPanel({ api, toast, rerender: () => { if (!document.activeElement?.closest?.('[data-pubform]')) renderLibrary(); } });
   initGenForm({ api, toast, esc }).then(() => { if (state.style) genStyle(state.style); });
-  ['input', 'change'].forEach((ev) => $('#libraryList').addEventListener(ev, onPubInput));
+  ['input', 'change', 'click'].forEach((ev) => $('#libraryList').addEventListener(ev, onPubInput));
   initEditors({ api, toast, getTrack: (id) => state.tracks.find((x) => x.id === id), getYt: (id) => state.yt.get(id), onSaved: async (id) => { await Promise.all([...new Set([id, ...state.ytOpen])].map((x) => loadYt(x))); } });
   field.start();
   loadOptions().then(loadLibrary).then(() => {
     const q = new URLSearchParams(location.search), tid = q.get('track');
     const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-    if (q.get('tour') === '1') import('./tour.js?v=1.20.5').then((m) => m.startTour());
+    if (q.get('tour') === '1') import('./tour.js?v=1.21.0').then((m) => m.startTour());
   }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
 }
 function updateStatus() {

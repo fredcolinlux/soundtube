@@ -1,4 +1,4 @@
-<!-- v1.20.5 routes: / home, /studio studio -->
+<!-- v1.21.0 routes: / home, /studio studio -->
 # Démarrage rapide — soundtube 1.20.4
 
 Trois étapes. Rien d’autre n’est obligatoire.
