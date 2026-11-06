@@ -18,7 +18,7 @@ Le **domaine public** (ex. `soundtube.example.com`) est un réglage Admin, jamai
 - Cookie de session : `HttpOnly`, `SameSite=Strict`, `Secure` + préfixe `__Host-` en HTTPS.
 - CSRF : en-tête `X-CSRF-Token` pour les mutations cookie-session.
 - Rate-limit / verrouillage temporaire après N échecs (réglable).
-- 2FA TOTP optionnel + codes de récupération ; passkeys WebAuthn (ES256) optionnelles.
+- 2FA TOTP optionnel + codes de récupération (QR d’enrollement via `/api/me/totp/qr.svg`, encodeur SVG vendored, aucun service externe) ; passkeys WebAuthn (ES256) optionnelles.
 - Jetons API `st_…` stockés hachés (SHA-256), scopes, révocation Admin.
 
 ## Fichiers générés

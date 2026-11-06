@@ -9,7 +9,6 @@ const st = await refreshAuth();
 if (!st?.authenticated) location.replace('/login?next=/profile');
 
 const $ = (s) => document.querySelector(s);
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 async function api(method, url, body) {
   const r = await apiFetch(url, { method, headers: body !== undefined ? { 'content-type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
   const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || r.status); return d;
@@ -22,12 +21,13 @@ $('#profUser').textContent = me.username || '—';
 $('#profRole').textContent = me.role || '';
 render2fa(me);
 
-function render2fa(u) {
+function render2fa(u, { keepSetup = false, keepRecovery = false } = {}) {
   const on = !!u.totpEnabled;
   $('#totpLabel').textContent = on ? t('profile.totpOn') : t('profile.totpOff');
   $('#totpEnable').hidden = on;
   $('#totpDisable').hidden = !on;
-  $('#totpSetup').hidden = true;
+  if (!keepSetup) $('#totpSetup').hidden = true;
+  if (!keepRecovery) $('#totpRecoveryBox').hidden = true;
   const n = u.passkeys || 0;
   $('#pkLabel').textContent = n ? t('profile.pkOn', { n }) : t('profile.pkOff');
 }
@@ -40,27 +40,71 @@ $('#pwdForm').addEventListener('submit', async (e) => {
   } catch (err) { toast($('#pwdMsg'), err.message); }
 });
 
+let pendingSecret = '';
+
 $('#totpEnable').addEventListener('click', async () => {
   try {
+    toast($('#totpMsg'));
     const r = await api('POST', '/api/auth/totp/begin');
-    $('#totpSecret').textContent = r.secret;
-    $('#totpUri').textContent = r.otpauthUrl || '';
+    pendingSecret = r.secret || '';
+    const grouped = r.secretGrouped || pendingSecret;
+    $('#totpSecret').textContent = grouped;
+    $('#totpUri').textContent = r.otpauthUrl || r.url || '';
+    const qr = $('#totpQr');
+    qr.alt = t('profile.totpQrAlt');
+    // Authenticated SVG endpoint (no-store); cache-bust so a new begin() shows a new QR
+    qr.src = (r.qrPath || '/api/me/totp/qr.svg') + '?t=' + Date.now();
+    $('#totpCode').value = '';
     $('#totpSetup').hidden = false;
+    $('#totpRecoveryBox').hidden = true;
   } catch (e) { alert(e.message); }
 });
+
+$('#totpCopy').addEventListener('click', async () => {
+  const text = ($('#totpSecret').textContent || '').replace(/\s+/g, '');
+  try {
+    await navigator.clipboard.writeText(text);
+    toast($('#totpMsg'), t('profile.totpCopied'));
+  } catch {
+    toast($('#totpMsg'), text);
+  }
+});
+
 $('#totpConfirm').addEventListener('click', async () => {
   try {
+    toast($('#totpMsg'));
     const r = await api('POST', '/api/auth/totp/confirm', { code: $('#totpCode').value.replace(/\s/g, '') });
-    if (r.recovery?.length) {
-      $('#totpRecovery').hidden = false;
-      $('#totpRecovery').textContent = t('profile.recoveryOnce') + ' ' + r.recovery.join(' · ');
+    const codes = r.recovery || r.recoveryCodes || [];
+    if (codes.length) {
+      const body = codes.join('\n');
+      $('#totpRecovery').textContent = body;
+      $('#totpRecoveryBox').hidden = false;
+      $('#totpRecoveryBox').dataset.codes = body;
+      $('#totpSetup').hidden = true;
     }
-    const me2 = await api('GET', '/api/auth/me'); render2fa(me2);
-  } catch (e) { alert(e.message); }
+    const me2 = await api('GET', '/api/auth/me');
+    render2fa(me2.user || me2, { keepRecovery: true });
+  } catch (e) { toast($('#totpMsg'), e.message); }
 });
+
+$('#totpRecoveryDl').addEventListener('click', () => {
+  const body = $('#totpRecoveryBox').dataset.codes || $('#totpRecovery').textContent || '';
+  const blob = new Blob([`# soundtube recovery codes\n${body}\n`], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'soundtube-recovery-codes.txt';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('#totpRecoveryCopy').addEventListener('click', async () => {
+  const body = $('#totpRecoveryBox').dataset.codes || $('#totpRecovery').textContent || '';
+  try { await navigator.clipboard.writeText(body); toast($('#totpMsg'), t('profile.totpCopied')); }
+  catch { toast($('#totpMsg'), body); }
+});
+
 $('#totpDisable').addEventListener('click', async () => {
   if (!confirm(t('profile.totpDisableConfirm'))) return;
-  try { await api('DELETE', '/api/auth/totp'); const me2 = await api('GET', '/api/auth/me'); render2fa(me2); }
+  try { await api('DELETE', '/api/auth/totp'); const me2 = await api('GET', '/api/auth/me'); render2fa(me2.user || me2); }
   catch (e) { alert(e.message); }
 });
 
@@ -79,6 +123,6 @@ $('#pkAdd').addEventListener('click', async () => {
       id: cred.id,
       response: { clientDataJSON: b64(cred.response.clientDataJSON), attestationObject: b64(cred.response.attestationObject) },
     });
-    const me2 = await api('GET', '/api/auth/me'); render2fa(me2);
+    const me2 = await api('GET', '/api/auth/me'); render2fa(me2.user || me2);
   } catch (e) { alert(e.message); }
 });

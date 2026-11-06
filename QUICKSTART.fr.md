@@ -1,11 +1,11 @@
-# Démarrage rapide — soundtube 1.20.1
+# Démarrage rapide — soundtube 1.20.2
 
 Trois étapes. Rien d’autre n’est obligatoire.
 
 ## 1. Installer
 
 ```bash
-tar xzf soundtube-1.20.1-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.20.2-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # redémarre le service soundtube
 ```
 
@@ -13,7 +13,7 @@ tar xzf soundtube-1.20.1-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 
 Ouvre `http://<IP-du-CT>:8080/setup` depuis le LAN.  
 Une seule étape : **identifiant + mot de passe**.  
-Pas de code OTP — la double authentification est optionnelle plus tard dans **Mon profil**.
+Pas de code OTP à l’installation — la 2FA reste optionnelle dans **Mon profil** (QR TOTP + codes de récupération).
 
 ## 3. Derrière NPM (internet)
 

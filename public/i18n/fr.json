@@ -716,8 +716,8 @@
   "profile.totpEnable": "Activer TOTP",
   "profile.totpDisable": "Désactiver TOTP",
   "profile.totpDisableConfirm": "Désactiver le TOTP sur ce compte ?",
-  "profile.totpScan": "Scanne ce secret dans ton app, puis entre un code pour confirmer :",
-  "profile.recoveryOnce": "Codes de récupération (à conserver) :",
+  "profile.totpScan": "Scanne le QR code avec ton application d’authentification, ou saisis le secret manuellement :",
+  "profile.recoveryOnce": "Codes de récupération (à conserver — affichés une seule fois)",
   "profile.pkOff": "Passkeys : aucune",
   "profile.pkOn": "Passkeys : {n}",
   "profile.pkAdd": "Ajouter une passkey",
@@ -821,5 +821,12 @@
   "start.ctaTour": "Visite guidée dans le studio",
   "start.ctaStyles": "Choisir un style",
   "start.ctaAdmin": "Ouvrir l’Admin",
-  "start.footDocs": "Documentation complète : README et docs/STYLES.md"
+  "start.footDocs": "Documentation complète : README et docs/STYLES.md",
+  "profile.totpSecretLabel": "Secret (base32)",
+  "profile.totpCopy": "Copier",
+  "profile.totpCopied": "Copié dans le presse-papiers.",
+  "profile.totpQrAlt": "QR code TOTP à scanner",
+  "profile.totpConfirm": "Confirmer et activer",
+  "profile.recoveryHint": "Chaque code ne peut servir qu’une fois si tu perds ton application. Télécharge-les ou copie-les maintenant.",
+  "profile.recoveryDownload": "Télécharger"
 }

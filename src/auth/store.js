@@ -5,7 +5,7 @@ import {
   ensureMasterKey, hashPassword, verifyPassword, hashToken, randomId, randomToken,
   encrypt, decrypt,
 } from '../security/crypto.js';
-import { generateSecret, verifyTotp, otpauthUrl, makeRecoveryCodes, consumeRecovery } from '../security/totp.js';
+import { generateSecret, verifyTotp, otpauthUrl, groupSecret, makeRecoveryCodes, consumeRecovery } from '../security/totp.js';
 
 const ROLES = ['admin', 'creator', 'viewer'];
 const DEFAULT_QUOTA = { generationsPerDay: 50, maxDuration: 3600 };
@@ -259,10 +259,29 @@ export class AuthStore {
   }
 
   /* ---- TOTP ---- */
+  totpIssuer() {
+    const name = String(this.security?.publisher?.name || '').trim();
+    return name || 'soundtube';
+  }
   async beginTotp(user) {
     const secret = generateSecret();
-    this.challenges.set('totp:' + user.id, { secret, at: Date.now() });
-    return { secret, url: otpauthUrl(secret, user.username) };
+    const issuer = this.totpIssuer();
+    const otpauth = otpauthUrl(secret, user.username, issuer);
+    this.challenges.set('totp:' + user.id, { secret, otpauth, at: Date.now() });
+    return {
+      secret,
+      secretGrouped: groupSecret(secret),
+      otpauthUrl: otpauth,
+      url: otpauth, // alias
+      issuer,
+      qrPath: '/api/me/totp/qr.svg',
+    };
+  }
+  /** Pending otpauth URI for the current TOTP enrolment challenge (or null). */
+  pendingTotpOtpauth(user) {
+    const ch = this.challenges.get('totp:' + user.id);
+    if (!ch || Date.now() - ch.at > 600_000) return null;
+    return ch.otpauth || otpauthUrl(ch.secret, user.username, this.totpIssuer());
   }
   async confirmTotp(user, code) {
     const ch = this.challenges.get('totp:' + user.id);
@@ -274,7 +293,7 @@ export class AuthStore {
     this.challenges.delete('totp:' + user.id);
     this.saveUsers();
     this.audit('totp.enable', { userId: user.id });
-    return { recoveryCodes: codes };
+    return { recovery: codes, recoveryCodes: codes };
   }
   disableTotp(user) {
     user.totpSecret = null; user.recoveryHashes = []; this.saveUsers();

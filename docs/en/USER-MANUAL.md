@@ -68,3 +68,8 @@ In **Admin**, configure public RSS sources (defaults provided) and optionally a 
 ## v1.20.0 — Security & public exposure
 
 See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).
+
+## Profile & two-factor (v1.20.2)
+
+Under **My profile** you can enable optional TOTP: a **QR code** (SVG from `/api/me/totp/qr.svg`, no external service) plus the base32 secret, then confirm with a code. Recovery codes are shown **once** (download available). Passkeys stay optional.
+

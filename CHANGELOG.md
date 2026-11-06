@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 1.20.2 — QR TOTP sur le profil
+
+- Activation MFA (TOTP) : génération d’un URI `otpauth://` (émetteur *soundtube* ou nom éditeur Admin, SHA1, 6 chiffres, 30 s) et **QR code SVG** servi par `/api/me/totp/qr.svg` (session requise, `Cache-Control: no-store`, encodeur JS vendored, aucun service externe).
+- Affichage secret base32 groupé + copie ; activation seulement après un code valide ; codes de récupération une fois + téléchargement.
+- Tests `test/v1202.js` (décodage QR + round-trip TOTP) ; i18n FR/EN.
+
 ## 1.20.1 — Configuration simple, auth stricte, i18n & légal
 
 - Setup LAN en **une étape** (user + mot de passe) ; **pas d’OTP** imposé (2FA/passkeys optionnelles dans `/profile`).
