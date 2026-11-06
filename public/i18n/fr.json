@@ -135,8 +135,8 @@
   "admin.rules": "Règles",
   "admin.pcComboHint": "Option « Faire la musique et la vidéo en même temps sur le PC / Mac » (formulaire Générer) : quelle que soit la durée, la musique est rendue sur le nœud (PC Windows NVIDIA ou Mac Apple Silicon) puis la vidéo longue y est encodée aussitôt, sans attendre le CT ; le ZIP unique (vidéo, mix MP3 + WAV, morceaux, MIDI, samples) est prêt à télécharger à la fin. Si le nœud tombe, le CT reprend (musique ou vidéo) et le statut le dit.",
   "admin.hist": "Où ont tourné les derniers rendus",
-  "admin.ai": "PC IA (Ollama)",
-  "admin.aiHint": "Directeur artistique et, en repli, veille tendances. Sans PC joignable : propositions locales.",
+  "admin.ai": "Modèles IA",
+  "admin.aiHint": "Deux réglages Ollama distincts : directeur artistique et veille. Sans PC joignable : propositions locales.",
   "admin.aiUrl": "Adresse Ollama",
   "admin.aiModel": "Modèle",
   "admin.aiTimeout": "Délai max d’une réponse (s)",
@@ -209,11 +209,13 @@
   "admin.h.err": "échec",
   "admin.h.fb": "repris sur le CT",
   "admin.aiDirector": "Directeur artistique",
-  "admin.aiWatch": "Veille tendances (modèle dédié)",
-  "admin.aiWatchHint": "URL optionnelle (sinon celle du directeur). Modèle propre recommandé. Si vide : repli sur le directeur, avec avis.",
+  "admin.aiWatch": "Veille",
+  "admin.aiWatchHint": "URL optionnelle (sinon celle du directeur). Modèle propre recommandé. Si vide : repli sur le directeur, avec avis visible.",
   "admin.watchUrl": "Adresse Ollama veille",
   "admin.watchModel": "Modèle veille",
   "admin.testDirector": "Tester le directeur",
   "admin.testWatch": "Tester la veille",
-  "admin.trendsHint": "Crawl autonome de métadonnées publiques, résumé par le modèle veille. Rien n’est appliqué automatiquement."
+  "admin.trendsHint": "Crawl autonome de métadonnées publiques, résumé par le modèle veille. Rien n’est appliqué automatiquement.",
+  "admin.aiModels": "Modèles IA",
+  "admin.aiDirectorHint": "Modèle utilisé pour « Proposer » sur la page Générer. Liste /api/tags — jamais de nom en dur."
 }

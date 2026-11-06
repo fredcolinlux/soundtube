@@ -35,14 +35,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const p = buildProfile(csv);
   check(!JSON.stringify(p).includes('Un, deux') && p.styles.frenchtouch.refs.includes('Daft Punk') && p.sound.length < 200, 'profil : aucun titre de morceau, références French Touch, son décrit en une phrase');
 }
-// ---------- 2. profil livré (contexte/gout.json, distillé de l'export bibliothèque musicale de 45 333 pistes)
+// ---------- 2. profil livré (contexte/gout.json, distillé de l'export Apple Music de 45 333 pistes)
 const shipped = D.loadShipped();
 {
-  check(shipped && shipped.stats.tracks === 1200 && shipped.topArtists[0].name === 'Exemple Synth' && shipped.topArtists[0].plays === 120 && shipped.topGenres[0].name === 'Électronique', `profil livré : 45 333 pistes, n° 1 Exemple Synth (1 026 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);
+  check(shipped && shipped.stats.tracks === 45333 && shipped.topArtists[0].name === 'Depeche Mode' && shipped.topArtists[0].plays === 1026 && shipped.topGenres[0].name === 'Électronique', `profil livré : 45 333 pistes, n° 1 Depeche Mode (1 026 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);
   check(fs.statSync(path.join(ROOT, 'contexte/gout.json')).size < 12000 && Object.keys(shipped.styles).every((id) => STYLES[id]), 'profil livré court (< 12 Ko) et styles connus');
   check(JSON.stringify(shipped.styles.frenchtouch.refs) === JSON.stringify(['Daft Punk', 'Justice', 'Myd', 'Cassius', 'Mr. Oizo', 'Ed Banger']) && shipped.styles.lofi.refs.includes('Chinese Man'), 'références graines : French Touch = Ed Banger, Daft Punk, Justice, Myd, Cassius (+ Mr. Oizo) ; lo-fi = Chinese Man…');
-  const csvPath = '/tmp/music-library-example.csv';
-  if (fs.existsSync(csvPath)) { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(shipped.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(shipped.topGenres), 'export bibliothèque musicale présent : la distillation redonne le profil livré'); }
+  const csvPath = '/workspace/apple-music-library.csv';
+  if (fs.existsSync(csvPath)) { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(shipped.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(shipped.topGenres), 'export Apple Music présent : la distillation redonne le profil livré'); }
 }
 // ---------- 3. budgets
 const bigReport = { at: '2026-11-02T08:00:00.000Z', source: 'rss', sourceLabel: 'Flux RSS / pages', styles: Object.fromEntries(Object.keys(STYLES).map((id) => [id, { label: STYLES[id].label,
@@ -87,7 +87,7 @@ const V114 = ['0289f4847fa41cbcbdcef397405907da', '73dee5670e2b288f1bebfc16e4375
 {
   const forbid = D.forbiddenNames(shipped);
   const raw = { style: 'frenchtouch', title_fr: 'Nuit filtrée façon Daft Punk', title_en: 'Justice Of The Night', description_fr: 'Une house filtrée dans l\'esprit de Cassius et Justice, avec des basses à la Mr. Oizo. Un air de fête.', description_en: 'Inspired by Ed Banger and DJ Koze — gritty filtered house (IAM, NTM).',
-    tags: ['french touch', 'daft punk', 'justice', 'ed banger', 'filter house', 'myd'], explanation: 'Comme Kavinsky et Exemple Synth : synthés sombres.' };
+    tags: ['french touch', 'daft punk', 'justice', 'ed banger', 'filter house', 'myd'], explanation: 'Comme Kavinsky et Depeche Mode : synthés sombres.' };
   const v = ai.validateSuggestion(raw, { style: 'frenchtouch', meta: true, forbid });
   const pub = [v.meta.title_fr, v.meta.title_en, v.meta.description_fr, v.meta.description_en, v.explanation, ...v.meta.tags].join(' | ');
   const leaks = forbid.filter((n) => new RegExp(`(?<![\\p{L}])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, D.scrubNames('x ' + n, [n]) === 'x' && /^(Air|Justice|Jungle|Queen|Placebo)$/.test(n) ? 'u' : 'iu').test(pub));
@@ -125,7 +125,7 @@ try {
   for (let i = 0; i < 60; i++) { try { if ((await req('/api/styles')).s === 200) break; } catch { /* attente */ } await sleep(200); }
   await req('/api/admin/ai', { method: 'PUT', body: { url: `http://127.0.0.1:${ollama.address().port}`, model: 'mock:1b' } });
   let v = (await req('/api/admin/director')).j;
-  check(v.settings.taste === false && v.settings.trends === false && v.profile.topArtists[0].name === 'Exemple Synth' && v.trends === null && /^frenchtouch: Daft Punk, Justice/m.test(v.refsText), 'Admin : sources coupées par défaut, profil affiché, aucune veille, références éditables');
+  check(v.settings.taste === false && v.settings.trends === false && v.profile.topArtists[0].name === 'Depeche Mode' && v.trends === null && /^frenchtouch: Daft Punk, Justice/m.test(v.refsText), 'Admin : sources coupées par défaut, profil affiché, aucune veille, références éditables');
   const body = { prompt: 'Une house filtrée pour une nuit d\'été', style: 'frenchtouch', duration: 180, meta: true };
   let r = await req('/api/ai/suggest', { method: 'POST', body });
   check(r.j.source === 'ai' && md5({ system: seen.at(-1).messages[0].content, user: seen.at(-1).messages[1].content }) === V114[0] && seen.at(-1).options.num_ctx === 8192, 'serveur, sources coupées : requête Ollama identique à v1.14.0 (num_ctx 8192)');

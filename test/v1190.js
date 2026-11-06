@@ -72,7 +72,7 @@ const api = async (p, { method = 'GET', body } = {}) => {
 const wait = async (fn) => { for (let i = 0; i < 100; i++) { const v = await fn(); if (v) return v; await sleep(150); } throw new Error('timeout'); };
 
 try {
-  check((await api('/api/health')).j.version === '1.19.0', 'health 1.19.0');
+  check(String((await api('/api/health')).j.version || '').startsWith('1.19'), 'health 1.19.x');
 
   let a = (await api('/api/admin/ai')).j;
   check(!!a.watch, 'GET ai.watch');

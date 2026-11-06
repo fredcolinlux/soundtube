@@ -762,6 +762,16 @@ app.get('/styles/:id', (req, res, next) => (STYLE_IDS().includes(req.params.id) 
 app.get('/api/openapi.json', (req, res) => res.json(openapi));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi, { customSiteTitle: 'soundtube — API', customCss: '.topbar{display:none}' }));
 
+// Pages Admin / studio : jamais de cache navigateur (les ?v= versionnent CSS/JS).
+app.get(['/admin', '/admin.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'admin.html'));
+});
+app.get(['/', '/index.html'], (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(config.publicDir, 'index.html'));
+});
+
 // HTML toujours revalidé (les CSS/JS sont versionnés par ?v=) : une mise à jour de l'interface est visible tout de suite.
 
 /* ---------- v1.18.0 : langue d’interface (indépendante de la langue YouTube getLang/setLang) ---------- */
@@ -780,7 +790,7 @@ app.put('/api/ui/lang', (req, res) => {
   res.json({ lang });
 });
 
-app.use(express.static(config.publicDir, { extensions: ['html'], maxAge: '1h', setHeaders: (res, p) => { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
+app.use(express.static(config.publicDir, { extensions: ['html'], maxAge: '1h', setHeaders: (res, p) => { if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate'); } }));
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Route inconnue' }));
 app.use((err, req, res, next) => {

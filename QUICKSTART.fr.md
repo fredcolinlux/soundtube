@@ -1,12 +1,12 @@
-# Démarrage rapide — soundtube 1.19.0
+# Démarrage rapide — soundtube 1.19.1
 
 ## 1. Installer le serveur central (CT)
 
 Sur Debian 13, **en root** (pas de `sudo` si vous l’êtes déjà) :
 
 ```bash
-tar -xzf soundtube-1.19.0-standalone.tar.gz
-cd soundtube-1.19.0
+tar -xzf soundtube-1.19.1-standalone.tar.gz
+cd soundtube-1.19.1
 ./install.sh --port 8080
 ```
 
@@ -26,7 +26,7 @@ Ouvrez `http://<hôte>:8080/` → **Studio**. Langue : **FR | EN** dans la barre
 
 ## 3. Optionnel : nœud Windows ou Mac
 
-Décompressez `dist/soundtube-node-agent-1.19.0-windows.zip` ou `…-macos.zip`, lancez l’installeur, puis dans **Admin → Nœuds de rendu** ajoutez `http://<nœud>:8765` (jeton si défini). Voir [docs/NODES.md](docs/NODES.md).
+Décompressez `dist/soundtube-node-agent-1.19.1-windows.zip` ou `…-macos.zip`, lancez l’installeur, puis dans **Admin → Nœuds de rendu** ajoutez `http://<nœud>:8765` (jeton si défini). Voir [docs/NODES.md](docs/NODES.md).
 
 ## 4. Optionnel : directeur Ollama
 

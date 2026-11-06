@@ -1,4 +1,4 @@
-import { $, $$, esc, bootSite, mountBackground, reveal, colorOf } from './site.js?v=1.18.0';
+import { $, $$, esc, bootSite, mountBackground, reveal, colorOf } from './site.js?v=1.19.1';
 
 mountBackground(); await bootSite('/demarrer');
 // Chaque étape : texte + petite illustration en HTML/CSS (aucune image externe)

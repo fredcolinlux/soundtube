@@ -53,7 +53,7 @@ const ok = (desc, schema) => ({ description: desc, content: { 'application/json'
 export const openapi = {
   openapi: '3.0.3',
   components: { schemas: { SplitOptions } },
-  info: { title: 'soundtube API', version: '1.19.0', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
+  info: { title: 'soundtube API', version: '1.19.1', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
   paths: {
     '/api/health': { get: { summary: 'État du service', responses: { 200: ok('OK', { type: 'object' }) } } },
     '/api/options': { get: { summary: 'Styles, ambiances, tonalités, gammes, instruments disponibles', responses: { 200: ok('Options', { type: 'object' }) } } },
@@ -133,7 +133,7 @@ export const openapi = {
     '/api/advanced/defaults': { post: { summary: 'v1.9.0 : valeurs réelles des réglages avancés pour ces paramètres et cette graine (absente = tirée et renvoyée) : ce qui est affiché est ce qui sera utilisé. Réponse { seed, engine, style, bpm, key, scale, values, exact, notes }.', requestBody: { content: { 'application/json': { schema: Params } } }, responses: { 200: ok('Valeurs', { type: 'object' }) } } },
     '/api/ai/suggest': { post: { summary: 'v1.9.0 : directeur artistique. Description d’ambiance → paramètres validés et bornés (style, mood, key, scale, bpm, adv), explication ; options meta (titres, descriptions, tags FR + EN) et plan (mix ≥ 1 h). IA Ollama du PC IA (Admin), sinon proposition locale (source: local, fallback: true, error).', requestBody: { content: { 'application/json': { schema: { type: 'object', required: ['prompt'], properties: { prompt: { type: 'string', maxLength: 1200 }, style: { type: 'string' }, duration: { type: 'number' }, meta: { type: 'boolean' }, plan: { type: 'boolean' } } } } } }, responses: { 200: ok('Proposition', { type: 'object' }), 400: ok('Description vide', { type: 'object' }) } } },
     '/api/admin/trends': {
-      get: { tags: ['Admin'], summary: 'v1.19.0 : veille — réglages (crawl RSS, discover DuckDuckGo, allowPrivateSources), watchAi, historique, dernier rapport; clé YT jamais renvoyée', responses: { 200: ok('Veille', { type: 'object' }) } },
+      get: { tags: ['Admin'], summary: 'v1.19.1 : veille — réglages (crawl RSS, discover DuckDuckGo, allowPrivateSources), watchAi, historique, dernier rapport; clé YT jamais renvoyée', responses: { 200: ok('Veille', { type: 'object' }) } },
       put: { tags: ['Admin'], summary: 'Réglages veille : enabled, intervalDays, ytKey, feeds, html, crawl, discover, allowPrivateSources, perStyle, styles, keywords, resetFeeds', requestBody: { content: { 'application/json': { schema: { type: 'object' } } } }, responses: { 200: ok('Veille', { type: 'object' }), 400: ok('Invalide', { type: 'object' }) } },
     },
     // v1.15.0 : contexte du directeur artistique
