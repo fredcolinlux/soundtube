@@ -1,17 +1,25 @@
-// v1.10.0 : visite guidée du studio (/?tour=1) — bulles posées sur les vrais blocs de la page, sans toucher à leur style.
-const STEPS = [
-  ['#create', 'Le style', 'Chaque carte est un genre complet : tempos, gammes, machines. Clique pour choisir ; la page du style détaille tout.'],
-  ['#aiBox', 'Directeur artistique', 'Décris l’ambiance en une phrase, puis « Proposer » : les réglages sont vérifiés par le serveur et remplissent le formulaire.'],
-  ['#durPresets', 'La durée', 'De 20 secondes à 4 heures. Au-delà d’une heure, le mix enchaîne des titres variés.'],
-  ['#advBox', 'Avancé', 'Les valeurs affichées sont exactement celles que le style utilisera. Une valeur changée est mémorisée pour ce style.'],
-  ['#genBtn', 'Générer', 'Le rendu se fait sur le serveur. La progression s’affiche ici, puis le morceau joue tout seul.'],
-  ['#library', 'Bibliothèque', 'Tous les morceaux : écoute, téléchargements, variation, vidéo et textes YouTube.'],
-];
+// v1.10.0 / v1.20.0 : visite guidée du studio (/?tour=1)
+import { t } from './i18n.js';
+
+function steps() {
+  return [
+    ['#create', t('tour.style'), t('tour.styleBody')],
+    ['#aiBox', t('tour.ai'), t('tour.aiBody')],
+    ['#durPresets', t('tour.dur'), t('tour.durBody')],
+    ['#advBox', t('tour.adv'), t('tour.advBody')],
+    ['#genBtn', t('tour.gen'), t('tour.genBody')],
+    ['#library', t('tour.lib'), t('tour.libBody')],
+  ];
+}
+
 export function startTour() {
   let i = 0;
-  if (!document.querySelector('link[data-tour]')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/css/tour.css?v=1.19.2'; l.dataset.tour = '1'; document.head.append(l); }
-  const ov = document.createElement('div'); ov.className = 'st-tour'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'false'); ov.setAttribute('aria-label', 'Visite guidée');
-  ov.innerHTML = '<div class="st-ring"></div><div class="st-pop"><p class="st-n"></p><b class="st-t"></b><p class="st-p"></p><div class="st-act"><button type="button" class="btn btn-ghost btn-mini" data-a="end">Terminer</button><button type="button" class="btn btn-ghost btn-mini" data-a="prev">←</button><button type="button" class="btn btn-primary btn-mini" data-a="next">Suivant</button></div></div>';
+  const STEPS = steps();
+  if (!document.querySelector('link[data-tour]')) {
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/css/tour.css?v=1.20.0'; l.dataset.tour = '1'; document.head.append(l);
+  }
+  const ov = document.createElement('div'); ov.className = 'st-tour'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'false'); ov.setAttribute('aria-label', t('tour.label'));
+  ov.innerHTML = `<div class="st-ring"></div><div class="st-pop"><p class="st-n"></p><b class="st-t"></b><p class="st-p"></p><div class="st-act"><button type="button" class="btn btn-ghost btn-mini" data-a="end">${t('tour.end')}</button><button type="button" class="btn btn-ghost btn-mini" data-a="prev">←</button><button type="button" class="btn btn-primary btn-mini" data-a="next">${t('tour.next')}</button></div></div>`;
   document.body.append(ov);
   const ring = ov.querySelector('.st-ring'), pop = ov.querySelector('.st-pop');
   const place = () => {
@@ -23,10 +31,12 @@ export function startTour() {
     Object.assign(pop.style, { width: pw + 'px', left: Math.max(12, Math.min(innerWidth - pw - 12, r.left)) + 'px', top: Math.max(12, Math.min(innerHeight - pop.offsetHeight - 12, top)) + 'px' });
   };
   const show = (k) => {
-    i = Math.max(0, Math.min(STEPS.length - 1, k)); const [q, t, p] = STEPS[i]; const el = document.querySelector(q);
+    i = Math.max(0, Math.min(STEPS.length - 1, k)); const [q, title, body] = STEPS[i]; const el = document.querySelector(q);
     if (el?.tagName === 'DETAILS') el.open = true;
-    ov.querySelector('.st-n').textContent = `Visite · ${i + 1} / ${STEPS.length}`; ov.querySelector('.st-t').textContent = t; ov.querySelector('.st-p').textContent = p;
-    ov.querySelector('[data-a="prev"]').disabled = i === 0; ov.querySelector('[data-a="next"]').textContent = i === STEPS.length - 1 ? 'Terminer' : 'Suivant';
+    ov.querySelector('.st-n').textContent = t('tour.progress', { i: i + 1, n: STEPS.length });
+    ov.querySelector('.st-t').textContent = title; ov.querySelector('.st-p').textContent = body;
+    ov.querySelector('[data-a="prev"]').disabled = i === 0;
+    ov.querySelector('[data-a="next"]').textContent = i === STEPS.length - 1 ? t('tour.end') : t('tour.next');
     el?.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     setTimeout(place, 420); place();
   };

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title data-i18n="title.login">soundtube — connexion</title>
+  <meta name="theme-color" content="#0b1022">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/app.css?v=1.20.0">
+  <link rel="stylesheet" href="/css/auth.css?v=1.20.0">
+</head>
+<body class="auth-body">
+  <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
+  <main class="auth-card" id="authMain">
+    <a class="brand auth-brand" href="/accueil" data-i18n-aria="nav.brandAria" aria-label="soundtube">
+      <svg class="brand-mark" viewBox="0 0 28 20" width="28" height="20" aria-hidden="true"><rect x="0" y="7" width="4" height="6" rx="2"/><rect x="6" y="2" width="4" height="16" rx="2"/><rect x="12" y="5" width="4" height="10" rx="2"/><rect x="18" y="0" width="4" height="20" rx="2"/><rect x="24" y="7" width="4" height="6" rx="2"/></svg>
+      <span>sound<em>tube</em></span>
+    </a>
+    <div class="auth-lang" id="langHost"></div>
+    <h1 data-i18n="login.title">Connexion</h1>
+    <p class="hint" data-i18n="login.lead">Accède au studio. Depuis internet, un compte est obligatoire.</p>
+
+    <form id="loginForm" class="auth-form" autocomplete="on">
+      <div class="field"><label for="user" data-i18n="login.user">Nom d’utilisateur</label><input id="user" name="username" required minlength="3" maxlength="32" autocomplete="username" spellcheck="false"></div>
+      <div class="field"><label for="pass" data-i18n="login.pass">Mot de passe</label><input id="pass" name="password" type="password" required minlength="10" autocomplete="current-password"></div>
+      <div class="row"><button class="btn btn-primary" type="submit" data-i18n="login.submit">Se connecter</button>
+        <button class="btn btn-ghost" type="button" id="pkBtn" hidden data-i18n="login.passkey">Passkey</button></div>
+      <p class="hint err" id="msg" role="alert" hidden></p>
+    </form>
+
+    <form id="totpForm" class="auth-form" hidden autocomplete="one-time-code">
+      <div class="field"><label for="code" data-i18n="login.totp">Code d’authentification</label><input id="code" inputmode="numeric" pattern="[0-9 ]{6,8}" maxlength="8" placeholder="123 456"></div>
+      <div class="field"><label for="recovery" data-i18n="login.recovery">Ou code de récupération</label><input id="recovery" autocomplete="off" spellcheck="false"></div>
+      <div class="row"><button class="btn btn-primary" type="submit" data-i18n="login.verify">Vérifier</button></div>
+      <p class="hint err" id="msg2" role="alert" hidden></p>
+    </form>
+
+    <p class="hint auth-foot"><a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/accueil" data-i18n="nav.home">Accueil</a></p>
+  </main>
+  <script type="module" src="/js/login.js?v=1.20.0"></script>
+</body>
+</html>

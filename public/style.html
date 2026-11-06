@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.19.2">
-  <link rel="stylesheet" href="/css/site.css?v=1.19.2">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.0">
+  <link rel="stylesheet" href="/css/site.css?v=1.20.0">
 </head>
 <body class="site page-style">
   <header class="style-hero" id="sHero">
@@ -42,13 +42,13 @@
           <div class="row"><input type="text" id="pIdea" maxlength="300" placeholder="Ex. : fin de soirée, lumière orange, basse ronde"><button class="btn btn-mini" type="button" id="pAsk">Proposer</button></div>
           <p class="hint" id="pAiOut" hidden></p></div>
         <p class="hint" id="pTweaks"></p>
-        <button class="btn btn-primary btn-lg" type="button" id="pGo">Générer dans ce style</button>
+        <button class="btn btn-primary btn-lg" type="button" id="pGo" data-i18n="style.generate">Générer dans ce style</button>
         <div class="p-job" id="pJob" hidden><div class="p-bar"><span id="pBar"></span></div><span id="pStage"></span></div>
       </aside>
     </div>
 
     <section class="style-lib" aria-labelledby="hLib">
-      <div class="sec-head"><h2 id="hLib"><span class="num">04</span>Bibliothèque <span id="sLibName"></span></h2><span class="hint" id="sLibCount"></span></div>
+      <div class="sec-head"><h2 id="hLib"><span class="num">04</span><span data-i18n="style.library">Bibliothèque</span> <span id="sLibName"></span></h2><span class="hint" id="sLibCount"></span></div>
       <ul class="tr-list" id="sLib"></ul>
       <button class="btn btn-ghost" type="button" id="sMore" hidden>Afficher plus</button>
     </section>
@@ -72,14 +72,14 @@
         <p class="hint">Désactivée par défaut. Rien n’est publié tant que cette case n’est pas cochée et enregistrée avec la confirmation ci-dessous.</p>
         <div class="pub-confirm" id="pubConfirmRow" hidden><span class="hint">Pour activer, tape <b id="pubWord">PUBLIER</b> :</span><input type="text" id="pubConfirm" autocomplete="off" spellcheck="false"></div>
       </div>
-      <div class="row"><button class="btn btn-primary" id="pubSave" type="button">Enregistrer le profil</button><button class="btn btn-ghost" id="pubReset" type="button">Valeurs par défaut</button><span class="hint" id="pubMsg"></span></div>
+      <div class="row"><button class="btn btn-primary" id="pubSave" type="button" data-i18n="style.saveProfile">Enregistrer le profil</button><button class="btn btn-ghost" id="pubReset" type="button" data-i18n="style.defaults">Valeurs par défaut</button><span class="hint" id="pubMsg"></span></div>
       <div class="field" style="margin-top:18px"><label>File de publication de ce style</label><div class="yt-queue" id="pubQueue"></div></div>
     </section>
 
     <nav class="style-next" aria-label="Autres styles" id="sNext"></nav>
   </main>
   <footer class="site-foot"><span>Fiche tirée de <code>docs/STYLES.md</code></span><a href="/styles">Tous les styles</a></footer>
-  <script type="module" src="/js/style.js?v=1.19.2"></script>
-  <script type="module" src="/js/stylepublish.js?v=1.19.2"></script>
+  <script type="module" src="/js/style.js?v=1.20.0"></script>
+  <script type="module" src="/js/stylepublish.js?v=1.20.0"></script>
 </body>
 </html>

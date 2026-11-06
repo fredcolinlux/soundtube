@@ -79,3 +79,7 @@ Puis **Ctrl+F5** sur Admin : pastille **v1.19.2**, section **03 Modèles IA** (D
 
 > Si une ancienne archive (préfixe `soundtube/`) a créé `/opt/soundtube/app/soundtube/`, ce dossier est **ignoré** par le serveur. Supprimez-le après avoir appliqué un patch plat, ou : `tar xzf …-patch.tar.gz -C /opt/soundtube/app --strip-components=1 --no-same-owner`.
 
+## v1.20.0 — sécurité / exposition
+
+- [SECURITY.md](./SECURITY.md)
+- [EXPOSITION.md](./EXPOSITION.md)

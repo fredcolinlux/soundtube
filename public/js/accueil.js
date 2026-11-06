@@ -1,4 +1,4 @@
-import { $, api, esc, bootSite, mountBackground, reveal, styleCardHtml, MiniPlayer, trackRowHtml, colorOf, t } from './site.js?v=1.19.2';
+import { $, api, esc, bootSite, mountBackground, reveal, styleCardHtml, MiniPlayer, trackRowHtml, colorOf, t } from './site.js?v=1.20.0';
 
 const field = mountBackground();
 await bootSite('/accueil');
@@ -13,8 +13,8 @@ $('#latestList').addEventListener('click', (e) => { const b = e.target.closest('
   $('#homeGrid').innerHTML = st.styles.map(styleCardHtml).join('');
   $('#ticker').innerHTML = [...st.styles, ...st.styles].map((s) => `<span style="--c:${colorOf(s.id)}">${esc(s.label)}</span>`).join('');
   $('#hsStyles').textContent = st.styles.length; $('#hsTracks').textContent = String(lib.total ?? 0);
-  $('#hsAi').textContent = ai?.url ? 'connecté' : 'facultatif';
+  $('#hsAi').textContent = ai?.url ? t('home.aiOn') : t('home.aiOff');
   $('#ver').textContent = health.version ? 'v' + health.version : '';
   latest = (lib.items || []).filter((t) => t.status === 'done'); $('#latestSec').hidden = !latest.length; renderLatest();
   reveal();
-})().catch((e) => { $('#homeGrid').innerHTML = `<p class="err">Serveur injoignable : ${esc(e.message)}</p>`; });
+})().catch((e) => { $('#homeGrid').innerHTML = `<p class="err">${t('home.serverDown', { msg: esc(e.message) })}</p>`; });

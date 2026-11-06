@@ -6,7 +6,7 @@ bass, drums, intro / verse / chorus / bridge / outro) then **synthesised in real
 
 | | |
 |---|---|
-| **Version** | **1.19.2** |
+| **Version** | **1.20.0** |
 | **UI languages** | French and English (header **FR \| EN** switch) |
 | **Licence** | See `LICENSE` (all rights reserved) |
 | **Engine default** | 21 (harmony-aware); fingerprint `696de0f4125a` |
@@ -22,8 +22,8 @@ bass, drums, intro / verse / chorus / bridge / outro) then **synthesised in real
 The control tower (**CT**) is meant to run **as root** (typical Proxmox LXC). Do **not** wrap the installer in `sudo` when you are already root:
 
 ```bash
-tar -xzf soundtube-1.19.2-standalone.tar.gz
-cd soundtube-1.19.2
+tar -xzf soundtube-1.20.0-standalone.tar.gz
+cd soundtube-1.20.0
 ./install.sh --port 8080
 # equivalent: ./deploy/install.sh --port 8080
 ```
@@ -34,8 +34,8 @@ UI language is independent of YouTube title / description / tag language.
 
 Standalone packages also ship render agents under `dist/`:
 
-- `dist/soundtube-node-agent-1.19.2-windows.zip`
-- `dist/soundtube-node-agent-1.19.2-macos.zip`
+- `dist/soundtube-node-agent-1.20.0-windows.zip`
+- `dist/soundtube-node-agent-1.20.0-macos.zip`
 
 ## Features
 
@@ -50,7 +50,7 @@ Standalone packages also ship render agents under `dist/`:
 
 
 
-## What's new in v1.19.2
+## What's new in v1.20.0
 
 - Separate Admin Ollama settings for trend watch (optional URL, model from `/api/tags`, Test button, fall back to director with a notice)
 - Autonomous public RSS crawl (optional DuckDuckGo HTML discovery off by default); SSRF-safe; fenced untrusted content in the watch prompt
@@ -72,12 +72,12 @@ Licences and attributions: [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md).
 `./install.sh` installs the bank under `/opt/soundtube/app/assets/samples`; `GET /api/health` → `samples: true`.
 
 
-## AI models + trend watch (v1.19.2)
+## AI models + trend watch (v1.20.0)
 
 Admin › **03 AI models**: Director and Watch side by side; `?v=` cache-bust. 
 
 Separate Ollama **watch model** (falls back to the director) and autonomous RSS crawl (optional DuckDuckGo, SSRF-safe). See [docs/en/OPERATIONS.md](docs/en/OPERATIONS.md).
-## i18n (v1.19.2)
+## i18n (v1.20.0)
 
 | Piece | Path / API |
 |---|---|
@@ -96,3 +96,8 @@ npm test          # includes test/v1180.js (i18n + engine fingerprint)
 
 Styles · Theory · Nodes · YouTube · Pack · Director · API — see [docs/README.md](docs/README.md).  
 Interactive OpenAPI UI: `/docs` when the server is running (`/api/openapi.json`).
+
+
+## Sécurité / Internet (v1.20.0)
+
+Voir [docs/SECURITY.md](docs/SECURITY.md) et [docs/EXPOSITION.md](docs/EXPOSITION.md).

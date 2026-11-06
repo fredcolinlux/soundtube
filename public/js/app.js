@@ -1,13 +1,15 @@
 // soundtube — interface web (vanilla JS, sans build).
 import { AuroraField } from './aurora.js';
 import { initI18n, t, mountLangSwitcher, onLangChange, applyDom, getUiLang } from './i18n.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.19.2';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.19.2';
-import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.19.2';
+const i18n = t; // alias: track locals often shadow `t`
+import { apiFetch, refreshAuth } from './csrf.js';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.20.0';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.20.0';
+import { initPubPanel, loadPub, publishHTML, packHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.20.0';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
-  const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  const r = await apiFetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
   if (r.status === 204) return null;
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.error || t('err.generic', { status: r.status }));
@@ -271,7 +273,7 @@ function buildAdvanced(defs) {
     readAdvanced(); saveTweaks();
     if (e.type === 'change') refreshDefaults();
   };
-  $('#advGrid').addEventListener('input', (e) => { if (e.target.type === 'range') { const k = e.target.closest('.adv-field').dataset.k; $('#advv_' + k).textContent = 'Modifié : ' + advText(k, +e.target.value); } });
+  $('#advGrid').addEventListener('input', (e) => { if (e.target.type === 'range') { const k = e.target.closest('.adv-field').dataset.k; $('#advv_' + k).textContent = i18n('adv.modifiedLabel', { v: advText(k, +e.target.value) }); } });
   $('#advGrid').addEventListener('change', onEdit);
   $('#advGrid').addEventListener('click', (e) => { const b = e.target.closest('.adv-undo'); if (!b) return; state.adv[b.dataset.k] = null; state.advSession = false; readAdvanced(); saveTweaks(); refreshDefaults(); });
   $('#advRandom').addEventListener('click', () => {
@@ -298,7 +300,7 @@ function refreshDefaults() {
   clearTimeout(defTimer);
   defTimer = setTimeout(async () => {
     const seq = ++defSeq, seed = previewSeed();
-    $('#seedIn').placeholder = $('#seedIn').value === '' ? `aléatoire (prochaine : ${seed})` : 'aléatoire';
+    $('#seedIn').placeholder = $('#seedIn').value === '' ? i18n('create.seedNext', { seed }) : i18n('create.seedRandom');
     const body = { style: state.style, mood: state.mood, key: $('#keySel').value, scale: $('#scaleSel').value, bpm: $('#bpmAuto').checked ? 0 : +$('#bpmIn').value,
       duration: state.duration, instruments: state.instruments, adv: sentAdv(), engine: state.engine || state.options.engine || 21, seed, variation: state.variation || 0 };
     try { const r = await api('/api/advanced/defaults', { method: 'POST', body: JSON.stringify(body) }); if (seq === defSeq) { state.resolved = r; readAdvanced(); } }
@@ -316,7 +318,7 @@ function ambText(P, adv) {
   const opts = state.advDefs?.ambience?.options || {};
   if (adv?.ambience) return adv.ambience === 'none' ? '' : esc(opts[adv.ambience] || adv.ambience);
   const def = state.options?.moods.find((m) => m.id === P.mood)?.ambience;
-  return def ? `${esc(opts[def] || def)} <span class="muted">(selon l’ambiance)</span>` : '';
+  return def ? `${esc(opts[def] || def)} <span class="muted">${esc(i18n('adv.fromMood'))}</span>` : '';
 }
 /** Met les champs à jour : retouche (vert, ↺) ou valeur réelle du style. Renvoie les réglages à envoyer. */
 function readAdvanced() {
@@ -328,13 +330,13 @@ function readAdvanced() {
     if (set) n++;
     const v = set ? u : rv;
     if (d.type === 'range') { if (v !== null && v !== undefined) el.value = String(v); }
-    else { const o0 = el.options[0]; o0.textContent = note ? 'Du style — ' + note : 'Choix du style'; el.value = v === null || v === undefined ? '' : String(v); }
-    vb.textContent = set ? 'Modifié : ' + advText(k, u) : !R ? 'valeur du style' : ex ? 'Style : ' + advText(k, rv) : 'Style : ' + (note || 'selon la graine');
+    else { const o0 = el.options[0]; o0.textContent = note ? i18n('adv.fromStyleNote', { note }) : i18n('adv.choiceOfStyle'); el.value = v === null || v === undefined ? '' : String(v); }
+    vb.textContent = set ? i18n('adv.modifiedLabel', { v: advText(k, u) }) : !R ? i18n('adv.styleDefault') : ex ? i18n('adv.styleValue', { v: advText(k, rv) }) : i18n('adv.stylePrefix', { v: note || i18n('adv.styleSeed') });
     vb.classList.toggle('forced', set); vb.title = vb.textContent;
     document.querySelector(`.adv-undo[data-k="${k}"]`).hidden = !set;
   }
   const lbl = STYLE_LABEL[state.style] || '';
-  $('#advCount').textContent = (n ? `${n} réglage${n > 1 ? 's' : ''} modifié${n > 1 ? 's' : ''}` : 'valeurs du style') + (lbl ? ` · ${lbl}` : '') + (R ? ` · graine ${R.seed}` : '');
+  $('#advCount').textContent = (n ? (n > 1 ? i18n('adv.countSet_plural', { n }) : i18n('adv.countSet', { n })) : i18n('adv.countDefault')) + (lbl ? ` · ${lbl}` : '') + (R ? ` · ${i18n('adv.seed', { seed: R.seed })}` : '');
   renderAdvChips();
   return sentAdv();
 }
@@ -425,10 +427,10 @@ $('#genBtn').addEventListener('click', async () => {
   try {
     if (body.seed !== undefined && !preview) { // graine fixée : risque de doublon (contenu répétitif aux yeux de YouTube)
       const { duplicates = [] } = await api('/api/check-duplicates', { method: 'POST', body: JSON.stringify(body) }).catch(() => ({}));
-      if (duplicates.length && !confirm(dupText(duplicates) + '\n\nYouTube peut refuser la monétisation des contenus répétitifs ou dupliqués. Générer quand même ?')) return;
+      if (duplicates.length && !confirm(dupText(duplicates) + '\n\n' + i18n('toast.dupMonetize'))) return;
     }
     const job = await api('/api/generate', { method: 'POST', body: JSON.stringify(body) }); trackJob(job); if (body.pack) watchPack(job.id, job.title);
-    $('#lastSeed').textContent = `Dernière graine : ${job.seed}${job.variation ? ' · variation ' + job.variation : ''}`;
+    $('#lastSeed').textContent = job.variation ? i18n('create.lastSeedVar', { seed: job.seed, variation: job.variation }) : i18n('create.lastSeed', { seed: job.seed });
     if (!$('#seedLock').checked) { $('#seedIn').value = ''; state.variation = 0; }
     state.nextSeed = null; refreshDefaults(); // nouvelle graine pour la prochaine génération
     if (job.duplicates?.length) toast(`⚠ « ${job.title} » : ${job.duplicates[0].label} de « ${job.duplicates[0].title} ».`, 6000);
@@ -453,7 +455,7 @@ async function pollJobs() {
     for (const id of [...state.jobs.keys()]) {
       try {
         const j = await api(`/api/jobs/${id}`); state.jobs.set(id, j);
-        if (j.status === 'done') { state.jobs.delete(id); await loadLibrary(); const t = state.tracks.find((x) => x.id === id); if (t && (!state.current || audio.paused)) play(t); toast(t('toast.jobReady', { title: j.title })); }
+        if (j.status === 'done') { state.jobs.delete(id); await loadLibrary(); const t = state.tracks.find((x) => x.id === id); if (t && (!state.current || audio.paused)) play(t); toast(i18n('toast.jobReady', { title: j.title })); }
         if (j.status === 'error') { setTimeout(() => { state.jobs.delete(id); renderJobs(); }, 8000); }
       } catch { state.jobs.delete(id); }
     }
@@ -553,7 +555,7 @@ function detailsHTML(t) {
         ${ambText(P, adv) ? row('Fond sonore', ambText(P, adv)) : ''}
         ${t.title_en && t.title_en !== t.title ? row('Titre anglais', esc(t.title_en)) : ''}
         ${t.meta?.splitFrom ? row('Extrait de', `« ${esc(t.meta.splitFrom.title)} » · morceau ${t.meta.splitFrom.n}/${t.meta.splitFrom.of} (${fmt(t.meta.splitFrom.start)} – ${fmt(t.meta.splitFrom.end)})`) : ''}
-        ${canSplit(t) ? row('Découpage', `<button class="btn btn-mini" data-act="split" type="button"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg> Découper en morceaux individuels</button>`) : ''}
+        ${canSplit(t) ? row(i18n('lib.split'), `<button class="btn btn-mini" data-act="split" type="button"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg> Découper en morceaux individuels</button>`) : ''}
         ${row('Créé le', fmtDate(t.created_at))}
         ${t.render_ms ? row('Temps de rendu', `${(t.render_ms / 1000).toFixed(1).replace('.', ',')} s`) : ''}
         ${row('Formats', Object.keys(t.urls || {}).map((f) => ({ wav: 'WAV', mp3: 'MP3', mid: 'MIDI', midzip: 'ZIP MIDI' }[f] || f)).join(' · '))}
@@ -576,8 +578,8 @@ function detailsHTML(t) {
     </div>
     ${mixHTML(M.mix)}
     <div class="dact">
-      <button class="btn btn-primary btn-mini" data-act="reuse" type="button">Réutiliser ces réglages</button>
-      <button class="btn btn-mini" data-act="copy" type="button">Copier les réglages</button>
+      <button class="btn btn-primary btn-mini" data-act="reuse" type="button">${esc(i18n('lib.reuse'))}</button>
+      <button class="btn btn-mini" data-act="copy" type="button">${esc(i18n('lib.copySettings'))}</button>
       <span class="hint">Même graine + mêmes réglages = morceau identique.</span>
     </div>
   </div>`;
@@ -592,13 +594,13 @@ function regenHtml(t) {
 }
 function renderLibrary() {
   const done = sortedTracks();
-  $('#libCount').textContent = `${done.length} morceau${done.length > 1 ? 'x' : ''}`;
-  if (!done.length) { $('#libraryList').innerHTML = '<div class="empty">Aucun morceau pour l\'instant. Choisis un style et clique sur « Générer le morceau ».</div>'; return; }
+  $('#libCount').textContent = done.length > 1 ? i18n('pack.pieceCount_plural', { n: done.length }) : i18n('pack.pieceCount', { n: done.length });
+  if (!done.length) { $('#libraryList').innerHTML = `<div class="empty">${esc(i18n('lib.empty'))}</div>`; return; }
   $('#libraryList').innerHTML = done.map((t) => {
     const open = state.open.has(t.id);
     return `
     <div class="track ${state.current?.id === t.id ? 'playing' : ''} ${open ? 'open' : ''}" data-id="${t.id}" style="--c:${colorOf(t.style)}">
-      <button class="tplay" data-act="play" title="Écouter">${state.current?.id === t.id && !audio.paused ? '❚❚' : '▶'}</button>
+      <button class="tplay" data-act="play" title="${esc(i18n('player.listen'))}">${state.current?.id === t.id && !audio.paused ? '❚❚' : '▶'}</button>
       <div class="tinfo">
         <b title="${esc(t.title)}">${esc(t.title)}</b>
         <div class="tmeta"><span class="badge">${esc(STYLE_LABEL[t.style] || t.style)}</span>${t.duplicates?.length ? `<span class="badge dup ${isDup(t) ? 'hard' : ''}" title="${esc(dupText(t.duplicates))}">${isDup(t) ? '⚠ Doublon' : '≈ Proche'}</span>` : ''}<span>${t.bpm} BPM</span><span>${esc(KEY_FR[t.key] || t.key)} ${esc(scaleName(t.scale))}</span><span>${fmt(t.duration)}</span><span title="Graine">#${t.seed}${t.variation ? ' · v' + t.variation : ''}</span><span class="date" title="Date de création">${fmtDate(t.created_at)}</span></div>${regenHtml(t)}
@@ -656,7 +658,7 @@ async function applyBrand(id, box) {
   state.yt.set(id, await api(`/api/tracks/${id}/thumbnail`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(id) }) }));
   for (const other of state.ytOpen) if (other !== id) loadYt(other);
   renderLibrary();
-  toast(b.hidden ? 'Aucun nom sur les miniatures et vidéos. Miniature regénérée.' : `Nom affiché : « ${b.text} ». Miniature regénérée ; recrée la vidéo pour l'y voir.`);
+  toast(b.hidden ? i18n('toast.brandOff') : i18n('toast.brandOn', { text: b.text }));
 }
 $('#sortSel').addEventListener('change', () => { state.sort = $('#sortSel').value; renderLibrary(); });
 
@@ -675,29 +677,29 @@ $('#libraryList').addEventListener('click', async (e) => {
   try {
     if (act === 'play') { if (state.current?.id === t.id) togglePlay(); else play(t); }
     else if (act === 'seek') { const r = btn.getBoundingClientRect(); const p = (e.clientX - r.left) / r.width; if (state.current?.id !== t.id) await play(t); const go = () => { audio.currentTime = p * audio.duration; }; audio.duration ? go() : audio.addEventListener('loadedmetadata', go, { once: true }); }
-    else if (act === 'variation' || act === 'remix') { const j = await api(`/api/tracks/${t.id}/variation`, { method: 'POST', body: JSON.stringify({ mode: act }) }); trackJob(j); toast(act === 'variation' ? t('toast.variation') : t('toast.remix')); $('#create').scrollIntoView(); }
-    else if (act === 'regen') { btn.disabled = true; const j = await api(`/api/tracks/${t.id}/regenerate`, { method: 'POST', body: '{}' }); trackJob(j); toast(`Régénération de « ${t.title} » en v1.12.0 : même graine, harmonie corrigée. L’original est conservé.`); }
+    else if (act === 'variation' || act === 'remix') { const j = await api(`/api/tracks/${t.id}/variation`, { method: 'POST', body: JSON.stringify({ mode: act }) }); trackJob(j); toast(act === 'variation' ? i18n('toast.variation') : i18n('toast.remix')); $('#create').scrollIntoView(); }
+    else if (act === 'regen') { btn.disabled = true; const j = await api(`/api/tracks/${t.id}/regenerate`, { method: 'POST', body: '{}' }); trackJob(j); toast(i18n('toast.regen', { title: t.title })); }
     else if (act === 'yt') { if (state.ytOpen.has(t.id)) state.ytOpen.delete(t.id); else { state.ytOpen.add(t.id); loadYt(t.id); loadPub(t.id); } renderLibrary(); }
     else if (await onPubAction(act, t, btn)) { /* v1.13.0 : publication, ZIP complet */ }
-    else if (act.startsWith('ytcopy-')) { const d = ytTexts(state.yt.get(t.id)); const k = act.slice(7); const txt = k === 'tags' ? d.tags.join(', ') : d[k]; if (await copyText(txt)) toast({ title: 'Titre copié.', description: 'Description copiée (chapitres inclus).', tags: 'Tags copiés.' }[k]); else prompt('Copie manuelle :', txt); }
+    else if (act.startsWith('ytcopy-')) { const d = ytTexts(state.yt.get(t.id)); const k = act.slice(7); const txt = k === 'tags' ? d.tags.join(', ') : d[k]; if (await copyText(txt)) toast({ title: i18n('toast.copyTitle'), description: i18n('toast.copyDesc'), tags: i18n('toast.copyTags') }[k]); else prompt(i18n('prompt.copyManual'), txt); }
     else if (act === 'split') { if (state.splitOpen.has(t.id)) state.splitOpen.delete(t.id); else { state.splitOpen.add(t.id); loadSplit(t.id); } renderLibrary(); }
     else if (act === 'splitgo') { btn.disabled = true; await startSplit(t.id, btn.closest('.split-panel')); }
     else if (act === 'splitvideos') { btn.disabled = true; await startSplitVideos(t.id, btn.closest('.split-videos')); }
-    else if (act === 'splitdel') { if (confirm('Supprimer les fichiers découpés (le ZIP) ? Les morceaux ajoutés à la bibliothèque sont conservés.')) { await api(`/api/tracks/${t.id}/split`, { method: 'DELETE' }); await loadSplit(t.id); } }
+    else if (act === 'splitdel') { if (confirm(i18n('confirm.splitDel'))) { await api(`/api/tracks/${t.id}/split`, { method: 'DELETE' }); await loadSplit(t.id); } }
     else if (act === 'ytlang') { await setYtLang(btn.dataset.lang); }
     else if (act === 'yttitles') { btn.disabled = true; await saveTitles(t, btn.closest('.yt-titles')); }
     else if (act === 'ytbrand') { btn.disabled = true; await applyBrand(t.id, btn.closest('.yt-brand')); }
-    else if (act === 'ytthumb') { btn.disabled = true; state.yt.set(t.id, await api(`/api/tracks/${t.id}/thumbnail`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(t.id) }) })); renderLibrary(); toast(t('toast.thumbDone')); }
-    else if (act === 'ytvideo') { state.yt.set(t.id, await api(`/api/tracks/${t.id}/video`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(t.id) }) })); renderLibrary(); pollYt(t.id); toast(`Création de la vidéo ${ytResLabel(t.id)} lancée…`); }
+    else if (act === 'ytthumb') { btn.disabled = true; state.yt.set(t.id, await api(`/api/tracks/${t.id}/thumbnail`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(t.id) }) })); renderLibrary(); toast(i18n('toast.thumbDone')); }
+    else if (act === 'ytvideo') { state.yt.set(t.id, await api(`/api/tracks/${t.id}/video`, { method: 'POST', body: JSON.stringify({ resolution: ytRes(t.id) }) })); renderLibrary(); pollYt(t.id); toast(i18n('toast.videoStart', { res: ytResLabel(t.id) })); }
     else if (act === 'details') { state.open.has(t.id) ? state.open.delete(t.id) : state.open.add(t.id); renderLibrary(); }
-    else if (act === 'reuse') { applySettings(settingsOf(t)); genShowTrack(t.id); $('#settings').scrollIntoView({ behavior: 'smooth' }); toast(t('toast.settingsLoaded')); }
+    else if (act === 'reuse') { applySettings(settingsOf(t)); genShowTrack(t.id); $('#settings').scrollIntoView({ behavior: 'smooth' }); toast(i18n('toast.settingsLoaded')); }
     else if (act === 'copy') {
       const json = JSON.stringify(settingsOf(t), null, 2);
-      if (await copyText(json)) toast(t('toast.settingsCopied'));
-      else prompt('Copie manuelle des réglages (JSON) :', JSON.stringify(settingsOf(t)));
+      if (await copyText(json)) toast(i18n('toast.settingsCopied'));
+      else prompt(i18n('prompt.copySettings'), JSON.stringify(settingsOf(t)));
     }
     else if (act === 'rename') {
-      const title = prompt('Titre (français)', t.title); if (title == null) return;
+      const title = prompt(i18n('prompt.titleFr'), t.title); if (title == null) return;
       const en = prompt('Titre anglais (vide = traduction automatique)', t.meta?.titleEnManual ? t.title_en : (title.trim() === t.title ? t.title_en : '')); if (en == null) return;
       const body = { title_en: en.trim() }; if (title.trim()) body.title = title;
       await api(`/api/tracks/${t.id}`, { method: 'PATCH', body: JSON.stringify(body) }); await loadLibrary(); if (state.ytOpen.has(t.id)) loadYt(t.id);
@@ -723,7 +725,7 @@ async function pollSplit(id) {
       const d = await api(`/api/tracks/${id}/split`); state.split.set(id, d);
       const el = document.querySelector(`.track[data-id="${id}"] .split-job`);
       if (el && d.job?.status === 'running') el.outerHTML = splitJobHTML(d); else renderLibrary();
-      if (!d.job || d.job.status === 'done' || d.job.status === 'error') { if (d.job?.status === 'done') { if (d.result?.library?.length) await loadLibrary(); toast(`Découpage terminé : ${d.result?.pieces.length} morceaux`); if (d.videos?.running) pollSplitVideos(id); } break; }
+      if (!d.job || d.job.status === 'done' || d.job.status === 'error') { if (d.job?.status === 'done') { if (d.result?.library?.length) await loadLibrary(); toast(i18n('toast.splitDone', { n: d.result?.pieces.length })); if (d.videos?.running) pollSplitVideos(id); } break; }
     }
   } catch (e) { toast(e.message); } finally { splitPolls.delete(id); }
 }
@@ -823,7 +825,7 @@ function splitVideosHTML(t, d) {
 }
 async function startSplitVideos(id, box) {
   const resolution = box.querySelector('select[name="splitres"]').value; localStorage.setItem('st.ytRes', resolution);
-  try { const V = await api(`/api/tracks/${id}/split/videos`, { method: 'POST', body: JSON.stringify({ resolution, lang: state.ytLang }) }); const d = state.split.get(id); if (d) d.videos = V; renderLibrary(); pollSplitVideos(id); toast(`Vidéos des morceaux lancées (${({ '2160p': '4K' })[resolution] || resolution})…`); }
+  try { const V = await api(`/api/tracks/${id}/split/videos`, { method: 'POST', body: JSON.stringify({ resolution, lang: state.ytLang }) }); const d = state.split.get(id); if (d) d.videos = V; renderLibrary(); pollSplitVideos(id); toast(i18n('toast.splitVideos', { res: ({ '2160p': '4K' })[resolution] || resolution })); }
   catch (e) { toast(e.message); renderLibrary(); }
 }
 const splitVidPolls = new Set();
@@ -835,7 +837,7 @@ async function pollSplitVideos(id) {
       if (!state.splitOpen.has(id)) break;
       const V = await api(`/api/tracks/${id}/split/videos`), d = state.split.get(id); if (!d) break; d.videos = V;
       const el = document.querySelector(`.track[data-id="${id}"] .split-videos`); if (el) el.outerHTML = splitVideosHTML({ id }, d);
-      if (!V.running) { toast(`Vidéos des morceaux : ${V.ready}/${V.total} prêtes.`); break; }
+      if (!V.running) { toast(i18n('toast.splitVideosDone', { ready: V.ready, total: V.total })); break; }
     }
   } catch (e) { toast(e.message); } finally { splitVidPolls.delete(id); }
 }
@@ -854,7 +856,7 @@ async function pollYt(id) {
       const d = await api(`/api/tracks/${id}/youtube`); state.yt.set(id, d);
       const el = document.querySelector(`.track[data-id="${id}"] .yt-video`);
       if (el && d.video && d.video.status === 'running') el.outerHTML = ytVideoHTML(d, id); else renderLibrary();
-      if (!d.video || d.video.status === 'done' || d.video.status === 'error') { if (d.video?.status === 'done') { await loadLibrary(); toast('Vidéo MP4 prête 🎬'); } break; }
+      if (!d.video || d.video.status === 'done' || d.video.status === 'error') { if (d.video?.status === 'done') { await loadLibrary(); toast(i18n('toast.videoReady')); } break; }
     }
   } catch (e) { toast(e.message); } finally { ytPolls.delete(id); }
 }
@@ -866,16 +868,16 @@ async function setYtLang(l) {
   state.ytLang = l; localStorage.setItem('st.ytLang', l); renderLibrary();
   await api('/api/youtube/lang', { method: 'PUT', body: JSON.stringify({ lang: l }) });
   await Promise.all([...state.ytOpen].map((id) => loadYt(id))); // miniatures redessinées dans la langue choisie
-  toast(l === 'en' ? 'Textes YouTube en anglais (titre, description, tags, miniature et vidéo).' : 'Textes YouTube en français (titre, description, tags, miniature et vidéo).');
+  toast(l === 'en' ? i18n('toast.ytLangEn') : i18n('toast.ytLangFr'));
 }
 async function saveTitles(t, box) {
   const fr = box.querySelector('[data-yttitle="fr"]').value.trim(), en = box.querySelector('[data-yttitle="en"]').value.trim();
-  if (!fr) { toast('Le titre français ne peut pas être vide.'); return renderLibrary(); }
+  if (!fr) { toast(i18n('toast.frTitleRequired')); return renderLibrary(); }
   const d = state.yt.get(t.id), body = {};
   if (fr !== t.title) body.title = fr;
   if (en !== (d?.trackTitle?.en || '')) body.title_en = en; // vide = traduction automatique
   state.titleDraft.delete(t.id);
-  if (Object.keys(body).length) { await api(`/api/tracks/${t.id}`, { method: 'PATCH', body: JSON.stringify(body) }); await loadLibrary(); toast('Titres enregistrés : miniature mise à jour.'); }
+  if (Object.keys(body).length) { await api(`/api/tracks/${t.id}`, { method: 'PATCH', body: JSON.stringify(body) }); await loadLibrary(); toast(i18n('toast.titlesSaved')); }
   await loadYt(t.id);
 }
 state.titleDraft = new Map();
@@ -989,6 +991,7 @@ addEventListener('resize', () => { lastProg = -1; renderLibrary(); });
 
 async function boot() {
   await initI18n();
+await refreshAuth();
   mountLangSwitcher(document.querySelector('.topbar'));
   applyDom(document);
   onLangChange(() => { applyDom(document); renderLibrary(); updateStatus(); });
@@ -1001,7 +1004,7 @@ async function boot() {
     const q = new URLSearchParams(location.search), tid = q.get('track');
     const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-    if (q.get('tour') === '1') import('./tour.js?v=1.19.2').then((m) => m.startTour());
+    if (q.get('tour') === '1') import('./tour.js?v=1.20.0').then((m) => m.startTour());
   }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
 }
 function updateStatus() {

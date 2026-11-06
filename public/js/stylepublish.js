@@ -1,4 +1,5 @@
 // v1.13.0 : page Style › Publication YouTube (profil par style, chaîne liée, auto-publication avec confirmation, file du style).
+import { t } from './i18n.js';
 import { queueHtml, bindQueue } from './pubqueue.js';
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -39,9 +40,9 @@ $('#pubSched').addEventListener('change', sched);
 $('#pubAuto').addEventListener('change', confirmRow);
 $('#pubSave').addEventListener('click', async () => {
   $('#pubMsg').textContent = '';
-  try { render(await api('PUT', `/api/styles/${encodeURIComponent(id)}/publish`, { channelId: $('#pubChannel').value || null, profile: collect(), confirm: $('#pubConfirm').value.trim() })); $('#pubMsg').textContent = 'Profil enregistré.'; }
+  try { render(await api('PUT', `/api/styles/${encodeURIComponent(id)}/publish`, { channelId: $('#pubChannel').value || null, profile: collect(), confirm: $('#pubConfirm').value.trim() })); $('#pubMsg').textContent = t('toast.pubProfileSaved'); }
   catch (e) { $('#pubMsg').textContent = e.message; }
 });
-$('#pubReset').addEventListener('click', () => { fill({ ...V.defaults, autoPublish: false }); $('#pubMsg').textContent = 'Valeurs par défaut (pas encore enregistrées).'; });
+$('#pubReset').addEventListener('click', () => { fill({ ...V.defaults, autoPublish: false }); $('#pubMsg').textContent = t('toast.pubDefaults'); });
 bindQueue($('#pubQueue'), () => load().catch(() => {}));
 if (id) { load().catch((e) => { $('#pubState').textContent = e.message; }); setInterval(async () => { try { const q = await api('GET', `/api/publish/queue?style=${encodeURIComponent(id)}`); $('#pubQueue').innerHTML = queueHtml(q.items.slice(0, 50), { empty: 'Aucun envoi pour ce style.' }); } catch {} }, 5000); }

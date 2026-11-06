@@ -53,8 +53,17 @@ const ok = (desc, schema) => ({ description: desc, content: { 'application/json'
 export const openapi = {
   openapi: '3.0.3',
   components: { schemas: { SplitOptions } },
-  info: { title: 'soundtube API', version: '1.19.2', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
+  info: { title: 'soundtube API', version: '1.20.0', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
   paths: {
+
+    '/api/auth/status': { get: { summary: 'v1.20.0 : état auth (setup, session, csrf)', responses: { 200: ok('Status', { type: 'object' }) } } },
+    '/api/auth/login': { post: { summary: 'Connexion (cookie de session)', requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { username: { type: 'string' }, password: { type: 'string' } } } } } }, responses: { 200: ok('OK', { type: 'object' }), 401: { description: 'Identifiants' }, 429: { description: 'Verrouillé' } } } },
+    '/api/auth/logout': { post: { summary: 'Déconnexion', responses: { 200: ok('OK', { type: 'object' }) } } },
+    '/api/auth/me': { get: { summary: 'Utilisateur courant', responses: { 200: ok('User', { type: 'object' }), 401: { description: 'Non connecté' } } } },
+    '/api/admin/auth/users': { get: { summary: 'Liste des utilisateurs (local only)', responses: { 200: ok('Users', { type: 'object' }), 404: { description: 'Hors LAN' } } } },
+    '/api/admin/auth/security': { get: { summary: 'Réglages sécurité / exposition (local only)', responses: { 200: ok('Security', { type: 'object' }) } }, put: { summary: 'Mettre à jour sécurité', responses: { 200: ok('Security', { type: 'object' }) } } },
+    '/api/legal': { get: { summary: 'Mentions légales', responses: { 200: ok('Legal', { type: 'object' }) } } },
+    '/api/signed/{token}': { get: { summary: 'Téléchargement via lien signé (internet)', parameters: [{ name: 'token', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Fichier' }, 403: { description: 'Expiré' } } } },
     '/api/health': { get: { summary: 'État du service', responses: { 200: ok('OK', { type: 'object' }) } } },
     '/api/options': { get: { summary: 'Styles, ambiances, tonalités, gammes, instruments disponibles', responses: { 200: ok('Options', { type: 'object' }) } } },
     '/api/generate': { post: { summary: 'Lancer une génération (tâche asynchrone)', requestBody: { content: { 'application/json': { schema: Params } } }, responses: { 202: ok('Tâche créée', Track), 400: { description: 'Paramètres invalides' }, 429: { description: 'File pleine' } } } },

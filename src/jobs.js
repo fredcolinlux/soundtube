@@ -35,7 +35,28 @@ export class JobQueue {
   }
   get pending() { return this.queue.length; }
   get running() { return this.localRunning + this.remoteRunning; }
-  enqueue(id) { this.queue.push(id); this.pump(); }
+  enqueue(id) {
+    const t = this.store.get(id);
+    const owner = t?.meta?.ownerId || 'anon';
+    this._ownerOf = this._ownerOf || new Map();
+    this._ownerOf.set(id, owner);
+    // Équité : éviter qu'un même user monopolise la file
+    const counts = new Map();
+    for (const jid of this.queue) { const o = this._ownerOf.get(jid) || 'anon'; counts.set(o, (counts.get(o) || 0) + 1); }
+    const my = counts.get(owner) || 0;
+    let idx = this.queue.length;
+    if (my > 0) {
+      // placer après le premier job d'un autre propriétaire quand on est déjà sur-représenté
+      let seenMine = 0;
+      for (let i = 0; i < this.queue.length; i++) {
+        const o = this._ownerOf.get(this.queue[i]) || 'anon';
+        if (o === owner) seenMine++;
+        else if (seenMine >= my) { idx = i + 1; break; }
+      }
+    }
+    this.queue.splice(idx, 0, id);
+    this.pump();
+  }
   /** Où rendre ce morceau maintenant : { node } | { local: true } | null (attendre). */
   route(t) {
     const N = this.nodes, P = t?.params || {}, localFree = this.localRunning < config.maxConcurrentJobs;

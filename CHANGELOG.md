@@ -1,3 +1,17 @@
+# Journal des versions
+
+## 1.20.0 — Exposition Internet, auth & durcissement WebGuardian
+
+- Login state-of-the-art (scrypt, session `__Host-` / Secure / HttpOnly / SameSite=Strict, CSRF, rate-limit + verrouillage, TOTP + recovery, passkeys WebAuthn).
+- Gestion des utilisateurs (admin / creator / viewer), quotas, file d’attente équitable, jetons API.
+- Admin + `/api/admin/*` **local only** (404 depuis internet) ; snippet NPM `deploy/npm-admin-block.conf`.
+- Proxy de confiance (X-Forwarded-*) ; domaine public = réglage Admin.
+- API : auth obligatoire hors LAN ; OpenAPI sur `/api/docs` ; liens de fichiers signés.
+- Secrets YouTube chiffrés au repos ; journal d’audit ; backup/restore ; `security.txt`.
+- En-têtes CSP/HSTS/COOP/COEP/CORP/… ; plus de scripts inline ; pages Mentions légales.
+- Docs `SECURITY.md` / `EXPOSITION.md` (+ EN) ; fail2ban ; tests `test/v1200.js` + `test/security-headers.sh`.
+- i18n FR+EN complet (646 clés, was 251) ; test `test/v1200-i18n.js` échoue si une page EN laisse du chrome FR ou si les catalogues divergent.
+
 ## 1.19.2 — 2026-11-06
 
 ### Fixed
