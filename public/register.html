@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title data-i18n="title.register">soundtube — inscription</title>
+  <meta name="theme-color" content="#0b1022">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/auth.css?v=1.20.1">
+</head>
+<body class="auth-body">
+  <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
+  <main class="auth-card">
+    <a class="brand auth-brand" href="/accueil"><span>sound<em>tube</em></span></a>
+    <div class="auth-lang" id="langHost"></div>
+    <h1 data-i18n="register.title">Créer un compte</h1>
+    <p class="hint" data-i18n="register.lead">Inscription ouverte par l’administrateur. Aucune double authentification n’est demandée.</p>
+    <form id="regForm" class="auth-form" autocomplete="on">
+      <div class="field"><label for="user" data-i18n="login.user">Nom d’utilisateur</label><input id="user" required minlength="3" maxlength="32" pattern="[a-zA-Z0-9._\\-]{3,32}" autocomplete="username" spellcheck="false"></div>
+      <div class="field"><label for="pass" data-i18n="login.pass">Mot de passe</label><input id="pass" type="password" required minlength="10" autocomplete="new-password"></div>
+      <div class="pwd-meter" aria-live="polite"><span id="pwdBar"></span><em id="pwdStrength" data-i18n="register.strengthHint">Force du mot de passe</em></div>
+      <div class="field"><label for="pass2" data-i18n="setup.pass2">Confirmer</label><input id="pass2" type="password" required minlength="10" autocomplete="new-password"></div>
+      <button class="btn btn-primary" type="submit" data-i18n="register.submit">S’inscrire</button>
+      <p class="hint err" id="msg" role="alert" hidden></p>
+    </form>
+    <p class="hint auth-foot"><a href="/login" data-i18n="nav.login">Connexion</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></p>
+  </main>
+  <script type="module" src="/js/register.js?v=1.20.1"></script>
+</body>
+</html>

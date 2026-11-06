@@ -1,41 +1,28 @@
-# Démarrage rapide — soundtube 1.20.0
+# Démarrage rapide — soundtube 1.20.1
 
-## 1. Installer le serveur central (CT)
+Trois étapes. Rien d’autre n’est obligatoire.
 
-Sur Debian 13, **en root** (pas de `sudo` si vous l’êtes déjà) :
+## 1. Installer
 
 ```bash
-tar -xzf soundtube-1.20.0-standalone.tar.gz
-cd soundtube-1.20.0
-./install.sh --port 8080
+tar xzf soundtube-1.20.1-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+# redémarre le service soundtube
 ```
 
-Options : `--nodesource` | `--debian-node` | `--no-start` | `--skip-apt`.
+## 2. Créer l’admin (réseau local)
 
-Service : `systemctl status soundtube` · config : `/etc/soundtube/soundtube.env` · app : `/opt/soundtube/app` · données : `/var/lib/soundtube`.
+Ouvre `http://<IP-du-CT>:8080/setup` depuis le LAN.  
+Une seule étape : **identifiant + mot de passe**.  
+Pas de code OTP — la double authentification est optionnelle plus tard dans **Mon profil**.
 
-Ouvrez `http://<hôte>:8080/` → **Studio**. Langue : **FR | EN** dans la barre du haut.
+## 3. Derrière NPM (internet)
 
-## 2. Premier morceau
+1. Pointe le Proxy Host vers le CT.
+2. Colle le snippet `deploy/npm-admin-block.conf` (bloque `/admin` depuis internet).
+3. Ouvre **Admin → Sécurité** depuis le LAN : confirme le **proxy** et le **domaine** détectés (un clic chacun).  
+   Jusque-là, le trafic proxifié exige une connexion (défaut sûr).
 
-1. **Studio** (`/`) → choisissez un **Style** (ex. Lo-fi).
-2. Réglez la **Durée** (ex. 90 s), laissez tempo / tonalité en Auto si vous voulez.
-3. Optionnel : **Directeur artistique** → décrivez l’ambiance → **Proposer**.
-4. **Générer le morceau**.
-5. Dans la **Bibliothèque**, écoutez et téléchargez WAV / MP3 / MIDI.
+Le **studio** et la **bibliothèque** demandent toujours un compte (même en LAN).  
+Accueil, styles, mentions légales restent publics.
 
-## 3. Optionnel : nœud Windows ou Mac
-
-Décompressez `dist/soundtube-node-agent-1.20.0-windows.zip` ou `…-macos.zip`, lancez l’installeur, puis dans **Admin → Nœuds de rendu** ajoutez `http://<nœud>:8765` (jeton si défini). Voir [docs/NODES.md](docs/NODES.md).
-
-## 4. Optionnel : directeur Ollama
-
-**Admin → PC IA (Ollama)** → URL du type `http://192.168.1.50:11434` + modèle → **Tester la connexion**.
-
-La banque `assets/samples/` est installée avec le CT (licences : [SAMPLES-LICENSES.md](SAMPLES-LICENSES.md)).
-
-## Suite
-
-- [docs/MANUEL-UTILISATEUR.md](docs/MANUEL-UTILISATEUR.md)
-- [docs/MANUEL-INSTALLATION.md](docs/MANUEL-INSTALLATION.md)
-- [docs/README.md](docs/README.md)
+Inscriptions : fermées par défaut (`Admin → Inscriptions ouvertes`).

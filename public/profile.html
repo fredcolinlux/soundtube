@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title data-i18n="title.profile">soundtube — mon profil</title>
+  <meta name="theme-color" content="#0b1022">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/auth.css?v=1.20.1">
+</head>
+<body class="auth-body">
+  <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
+  <main class="auth-card auth-card-wide">
+    <a class="brand auth-brand" href="/accueil"><span>sound<em>tube</em></span></a>
+    <div class="auth-lang" id="langHost"></div>
+    <h1 data-i18n="profile.title">Mon profil</h1>
+    <p class="hint" data-i18n="profile.lead">Mot de passe et sécurité optionnelle. La double authentification n’est jamais exigée : active-la seulement si tu le souhaites.</p>
+
+    <section class="profile-sec">
+      <h2 data-i18n="profile.account">Compte</h2>
+      <p class="hint"><span data-i18n="profile.signedInAs">Connecté en tant que</span> <b id="profUser">—</b> · <span id="profRole"></span></p>
+      <form id="pwdForm" class="auth-form">
+        <div class="field"><label for="pwdCur" data-i18n="profile.pwdCur">Mot de passe actuel</label><input id="pwdCur" type="password" required autocomplete="current-password"></div>
+        <div class="field"><label for="pwdNew" data-i18n="profile.pwdNew">Nouveau mot de passe</label><input id="pwdNew" type="password" required minlength="10" autocomplete="new-password"></div>
+        <button class="btn btn-primary" type="submit" data-i18n="profile.pwdSave">Changer le mot de passe</button>
+        <p class="hint err" id="pwdMsg" hidden></p>
+      </form>
+    </section>
+
+    <section class="profile-sec">
+      <h2 data-i18n="profile.twofa">Double authentification (optionnelle)</h2>
+      <p class="hint" data-i18n="profile.twofaHint">Désactivée par défaut. Tu peux activer un code TOTP (application d’authentification) et/ou une passkey. Rien n’est demandé à la connexion tant que tu n’actives rien ici.</p>
+      <div class="row" id="totpState">
+        <span class="hint" id="totpLabel" data-i18n="profile.totpOff">TOTP : désactivé</span>
+        <button class="btn btn-mini" type="button" id="totpEnable" data-i18n="profile.totpEnable">Activer TOTP</button>
+        <button class="btn btn-mini btn-ghost" type="button" id="totpDisable" hidden data-i18n="profile.totpDisable">Désactiver TOTP</button>
+      </div>
+      <div id="totpSetup" hidden>
+        <p class="hint" data-i18n="profile.totpScan">Scanne ce secret dans ton app, puis entre un code pour confirmer :</p>
+        <p><code id="totpSecret"></code></p>
+        <p class="hint" id="totpUri"></p>
+        <div class="field"><label for="totpCode" data-i18n="login.totp">Code d’authentification</label><input id="totpCode" inputmode="numeric" maxlength="8" autocomplete="one-time-code"></div>
+        <button class="btn btn-primary" type="button" id="totpConfirm" data-i18n="login.verify">Vérifier</button>
+        <p class="hint" id="totpRecovery" hidden></p>
+      </div>
+      <div class="row" style="margin-top:.8rem">
+        <span class="hint" id="pkLabel" data-i18n="profile.pkOff">Passkeys : aucune</span>
+        <button class="btn btn-mini" type="button" id="pkAdd" data-i18n="profile.pkAdd">Ajouter une passkey</button>
+      </div>
+      <ul id="pkList" class="hint"></ul>
+    </section>
+
+    <p class="hint auth-foot"><a href="/" data-i18n="nav.studio">Studio</a> · <a href="/admin" data-i18n="nav.admin">Admin</a> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a></p>
+  </main>
+  <script type="module" src="/js/profile.js?v=1.20.1"></script>
+</body>
+</html>

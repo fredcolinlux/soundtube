@@ -7,7 +7,9 @@ try { new AuroraField(document.getElementById('bgCanvas')); } catch {}
 
 const st = await refreshAuth();
 if (st?.setupRequired && st.local) location.replace('/setup');
-if (st?.authenticated) location.replace('/');
+const next = new URLSearchParams(location.search).get('next') || '/';
+if (st?.authenticated) location.replace(next);
+if (st?.openRegistration) { const a = document.createElement('a'); a.href='/register'; a.className='hint'; a.style.display='block'; a.style.marginTop='.6rem'; a.dataset.i18n='nav.register'; a.textContent='Register'; document.querySelector('.auth-foot')?.before(a); }
 
 const $ = (s) => document.querySelector(s);
 function show(el, msg) { el.hidden = !msg; el.textContent = msg || ''; }
@@ -20,7 +22,7 @@ $('#loginForm').addEventListener('submit', async (e) => {
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || t('err.generic', { status: r.status }));
     if (j.needs2fa) { $('#loginForm').hidden = true; $('#totpForm').hidden = false; $('#pkBtn').hidden = !j.passkeys; return; }
-    location.replace('/');
+    location.replace(next);
   } catch (err) { show($('#msg'), err.message); }
 });
 
@@ -31,7 +33,7 @@ $('#totpForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({ code: $('#code').value.replace(/\s/g, ''), recovery: $('#recovery').value.trim() || undefined }) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || t('err.generic', { status: r.status }));
-    location.replace('/');
+    location.replace(next);
   } catch (err) { show($('#msg2'), err.message); }
 });
 
@@ -54,6 +56,6 @@ $('#pkBtn').addEventListener('click', async () => {
     } };
     const r = await apiFetch('/api/auth/passkey/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Passkey');
-    location.replace('/');
+    location.replace(next);
   } catch (err) { show($('#msg'), err.message); }
 });

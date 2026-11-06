@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#0b1022">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=1.20.0">
-  <link rel="stylesheet" href="/css/auth.css?v=1.20.0">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/auth.css?v=1.20.1">
 </head>
 <body class="auth-body">
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -16,7 +16,7 @@
     <a class="brand auth-brand" href="/accueil"><span>sound<em>tube</em></span></a>
     <div class="auth-lang" id="langHost"></div>
     <h1 data-i18n="setup.title">Créer le compte admin</h1>
-    <p class="hint" data-i18n="setup.lead">Première installation — accessible uniquement depuis le réseau local.</p>
+    <p class="hint" data-i18n="setup.lead">Une seule étape : choisis un identifiant et un mot de passe admin. Réseau local uniquement. Pas de code OTP — la double authentification reste optionnelle plus tard dans ton profil.</p>
     <form id="setupForm" class="auth-form" autocomplete="on">
       <div class="field"><label for="user" data-i18n="login.user">Nom d’utilisateur</label><input id="user" required minlength="3" maxlength="32" autocomplete="username" spellcheck="false"></div>
       <div class="field"><label for="pass" data-i18n="login.pass">Mot de passe</label><input id="pass" type="password" required minlength="10" autocomplete="new-password"></div>
@@ -24,7 +24,8 @@
       <button class="btn btn-primary" type="submit" data-i18n="setup.submit">Créer l’admin</button>
       <p class="hint err" id="msg" role="alert" hidden></p>
     </form>
+    <p class="hint auth-foot"><a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a></p>
   </main>
-  <script type="module" src="/js/setup.js?v=1.20.0"></script>
+  <script type="module" src="/js/setup.js?v=1.20.1"></script>
 </body>
 </html>

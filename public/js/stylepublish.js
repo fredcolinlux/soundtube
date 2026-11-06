@@ -20,15 +20,15 @@ function sched() { const m = $('#pubSched').value; $('#pubDelay').hidden = m !==
 function confirmRow() { $('#pubConfirmRow').hidden = !($('#pubAuto').checked && !V?.profile.autoPublish); }
 function render(v) {
   V = v;
-  $('#pubMode').textContent = v.transport === 'mock' ? 'Mode simulation : aucun envoi réel' : '';
+  $('#pubMode').textContent = v.transport === 'mock' ? t('style.pubMock') : '';
   $('#pubWord').textContent = v.confirmWord;
   const st = $('#pubState');
   st.className = 'pub-state ' + (v.ready ? 'ok' : 'bad');
-  st.textContent = v.ready ? `Publication vers « ${v.channel.name} »${v.channelId ? '' : ' (chaîne par défaut)'} — ${v.profile.autoPublish ? 'auto-publication ACTIVÉE' : 'auto-publication désactivée (envoi manuel seulement)'}.` : v.reason;
-  $('#pubChannel').innerHTML = `<option value="">Chaîne par défaut${v.channels.find((c) => c.isDefault) ? ' (' + esc(v.channels.find((c) => c.isDefault).name) + ')' : ''}</option>` + v.channels.map((c) => `<option value="${esc(c.id)}" ${v.channelId === c.id ? 'selected' : ''}>${esc(c.name)}${c.ready ? '' : ' — incomplète'}</option>`).join('');
+  st.textContent = v.ready ? t(v.profile.autoPublish ? 'style.pubReadyOn' : 'style.pubReadyOff', { name: v.channel.name, def: v.channelId ? '' : t('style.pubDefault') }) : v.reason;
+  $('#pubChannel').innerHTML = `<option value="">${t('style.channelDefault')}${v.channels.find((c) => c.isDefault) ? ' (' + esc(v.channels.find((c) => c.isDefault).name) + ')' : ''}</option>` + v.channels.map((c) => `<option value="${esc(c.id)}" ${v.channelId === c.id ? 'selected' : ''}>${esc(c.name)}${c.ready ? '' : t('style.incomplete')}</option>`).join('');
   $('#pubVis').innerHTML = v.visibilities.map((x) => `<option value="${x.id}">${esc(x.label)}</option>`).join('');
   fill(v.profile);
-  $('#pubQueue').innerHTML = queueHtml(v.queue, { empty: 'Aucun envoi pour ce style.' });
+  $('#pubQueue').innerHTML = queueHtml(v.queue, { empty: t('pub.queueEmpty') });
 }
 function collect() {
   const at = $('#pubAt').value ? new Date($('#pubAt').value).toISOString() : '';
@@ -45,4 +45,4 @@ $('#pubSave').addEventListener('click', async () => {
 });
 $('#pubReset').addEventListener('click', () => { fill({ ...V.defaults, autoPublish: false }); $('#pubMsg').textContent = t('toast.pubDefaults'); });
 bindQueue($('#pubQueue'), () => load().catch(() => {}));
-if (id) { load().catch((e) => { $('#pubState').textContent = e.message; }); setInterval(async () => { try { const q = await api('GET', `/api/publish/queue?style=${encodeURIComponent(id)}`); $('#pubQueue').innerHTML = queueHtml(q.items.slice(0, 50), { empty: 'Aucun envoi pour ce style.' }); } catch {} }, 5000); }
+if (id) { load().catch((e) => { $('#pubState').textContent = e.message; }); setInterval(async () => { try { const q = await api('GET', `/api/publish/queue?style=${encodeURIComponent(id)}`); $('#pubQueue').innerHTML = queueHtml(q.items.slice(0, 50), { empty: t('pub.queueEmpty') }); } catch {} }, 5000); }

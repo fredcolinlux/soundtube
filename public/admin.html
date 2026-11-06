@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.20.0">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
 </head>
 <body>
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -27,6 +27,7 @@
       <a href="/login" data-i18n="nav.login">Connexion</a>
       <a href="/docs" target="_blank" rel="noopener" data-i18n="nav.api">API</a>
     </nav>
+    <span class="top-auth" id="topAuth"></span>
     <span class="status-pill ver-pill" id="appVersion" title="version">…</span>
     <span class="status-pill" id="statusPill"><span class="live-dot"></span><span id="statusText" data-i18n="status.nodes">Nœuds…</span></span>
   </header>
@@ -225,20 +226,52 @@
       <div class="module-head">
         <h2><span class="num">09</span><span data-i18n="admin.security">Sécurité & exposition</span></h2>
       </div>
-      <p class="hint" data-i18n="admin.securityHint">Proxy de confiance (NPM), domaine public, textes légaux. Ne jamais mettre le domaine dans le dépôt GitHub.</p>
-      <div class="grid-3">
-        <div class="field span-2"><label for="secProxies">IP / CIDR du reverse proxy (une par ligne)</label><textarea id="secProxies" rows="3" spellcheck="false" placeholder="192.168.0.1&#10;10.0.0.0/8"></textarea></div>
-        <div class="field"><label for="secDomain">Domaine public</label><input id="secDomain" placeholder="soundtube.example.com" spellcheck="false"></div>
-        <div class="field span-2"><label for="secLocal">CIDR LAN supplémentaires</label><textarea id="secLocal" rows="2" spellcheck="false"></textarea></div>
-        <div class="field"><label for="secTtl">Session (h)</label><input type="number" id="secTtl" min="1" max="168"></div>
-        <div class="field"><label for="secAttempts">Tentatives max</label><input type="number" id="secAttempts" min="3" max="30"></div>
-        <div class="field"><label for="secLock">Verrouillage (min)</label><input type="number" id="secLock" min="1" max="1440"></div>
-        <div class="field"><label for="secSigned">Lien signé (s)</label><input type="number" id="secSigned" min="60" max="86400"></div>
+      <p class="hint" data-i18n="admin.securityHintSimple">Derrière NPM : confirme le domaine et le proxy détectés (un clic). Jusque-là, le trafic proxifié exige une connexion — défaut sûr. La 2FA est optionnelle, dans ton profil.</p>
+
+      <div class="sec-suggest" id="secSuggest" hidden>
+        <div class="sec-suggest-card" id="secSugProxy" hidden>
+          <p><b data-i18n="admin.sec.proxyDetected">Proxy détecté</b> · <code id="secSugProxyVal"></code></p>
+          <p class="hint" data-i18n="admin.sec.proxyDetectedHint">Première requête privée avec X-Forwarded-For. Confirme seulement si c’est bien Nginx Proxy Manager (ou ton reverse proxy).</p>
+          <button class="btn btn-primary" type="button" id="secConfirmProxy" data-i18n="admin.sec.confirmProxy">Confirmer ce proxy</button>
+        </div>
+        <div class="sec-suggest-card" id="secSugDomain" hidden>
+          <p><b data-i18n="admin.sec.domainDetected">Domaine détecté</b> · <code id="secSugDomainVal"></code></p>
+          <p class="hint" data-i18n="admin.sec.domainDetectedHint">Lu depuis l’en-tête Host / X-Forwarded-Host. Confirme pour l’utiliser (cookies Secure, liens, security.txt…).</p>
+          <button class="btn btn-primary" type="button" id="secConfirmDomain" data-i18n="admin.sec.confirmDomain">Confirmer ce domaine</button>
+        </div>
       </div>
-      <div class="field"><label for="secLegalFr">Mentions légales (FR)</label><textarea id="secLegalFr" rows="5"></textarea></div>
-      <div class="field"><label for="secLegalEn">Legal notice (EN)</label><textarea id="secLegalEn" rows="5"></textarea></div>
+
+      <div class="grid-3" id="secSimple">
+        <div class="field span-2"><label for="secDomain" data-i18n="admin.sec.domain">Domaine public</label><input id="secDomain" placeholder="soundtube.example.com" spellcheck="false"></div>
+        <div class="field span-2"><label for="secProxies" data-i18n="admin.sec.proxies">IP du reverse proxy (une par ligne)</label><textarea id="secProxies" rows="2" spellcheck="false" placeholder="192.168.0.1"></textarea></div>
+        <div class="field span-2"><label class="toggle"><input type="checkbox" id="secOpenReg"><span data-i18n="admin.sec.openReg">Inscriptions ouvertes</span></label>
+          <p class="hint" data-i18n="admin.sec.openRegHint">Par défaut fermées. Si activé, la page /register permet de créer un compte « creator ».</p></div>
+        <div class="field span-2"><label class="toggle"><input type="checkbox" id="secRegApproval"><span data-i18n="admin.sec.regApproval">Validation admin avant activation</span></label></div>
+      </div>
       <div class="row"><button class="btn btn-primary" type="button" id="secSave" data-i18n="admin.save">Enregistrer</button>
-        <button class="btn" type="button" id="backupBtn" data-i18n="admin.backup">Sauvegarder users/config</button></div>
+        <button class="btn" type="button" id="backupBtn" data-i18n="admin.backup">Sauvegarder users/config</button>
+        <a class="btn btn-ghost" href="/profile" data-i18n="admin.sec.profileLink">Mon profil (2FA optionnelle)</a></div>
+
+      <details class="sec-advanced" id="secAdvanced">
+        <summary data-i18n="admin.sec.advanced">Avancé</summary>
+        <div class="grid-3" style="margin-top:.8rem">
+          <div class="field span-2"><label for="secLocal" data-i18n="admin.sec.localCidrs">CIDR LAN supplémentaires</label><textarea id="secLocal" rows="2" spellcheck="false"></textarea></div>
+          <div class="field"><label for="secTtl" data-i18n="admin.sec.ttl">Session (h)</label><input type="number" id="secTtl" min="1" max="168"></div>
+          <div class="field"><label for="secAttempts" data-i18n="admin.sec.attempts">Tentatives max</label><input type="number" id="secAttempts" min="3" max="30"></div>
+          <div class="field"><label for="secLock" data-i18n="admin.sec.lock">Verrouillage (min)</label><input type="number" id="secLock" min="1" max="1440"></div>
+          <div class="field"><label for="secSigned" data-i18n="admin.sec.signed">Lien signé (s)</label><input type="number" id="secSigned" min="60" max="86400"></div>
+        </div>
+        <div class="field"><label for="secPubName" data-i18n="admin.sec.pubName">Éditeur / responsable</label><input id="secPubName" placeholder="Nom ou raison sociale" autocomplete="organization"></div>
+        <div class="field span-2"><label for="secPubAddress" data-i18n="admin.sec.pubAddress">Adresse</label><input id="secPubAddress" placeholder="Adresse postale" autocomplete="street-address"></div>
+        <div class="field"><label for="secPubEmail" data-i18n="admin.sec.pubEmail">Contact</label><input id="secPubEmail" type="email" placeholder="contact@example.com" autocomplete="email"></div>
+        <div class="field"><label for="secPubHost" data-i18n="admin.sec.pubHost">Hébergeur</label><input id="secPubHost" placeholder="Nom de l’hébergeur"></div>
+        <div class="field"><label for="secLegalFr" data-i18n="admin.secLegalFr">Mentions légales (FR) — complément libre</label><textarea id="secLegalFr" rows="3"></textarea></div>
+        <div class="field"><label for="secLegalEn" data-i18n="admin.secLegalEn">Legal notice (EN) — free-form addendum</label><textarea id="secLegalEn" rows="3"></textarea></div>
+        <div class="field"><label for="secPrivacyFr" data-i18n="admin.sec.privacyFr">Politique de confidentialité (FR) — complément</label><textarea id="secPrivacyFr" rows="3"></textarea></div>
+        <div class="field"><label for="secPrivacyEn" data-i18n="admin.sec.privacyEn">Privacy policy (EN) — addendum</label><textarea id="secPrivacyEn" rows="3"></textarea></div>
+        <div class="field"><label for="secTermsFr" data-i18n="admin.sec.termsFr">Conditions d’utilisation (FR) — complément</label><textarea id="secTermsFr" rows="3"></textarea></div>
+        <div class="field"><label for="secTermsEn" data-i18n="admin.sec.termsEn">Terms of use (EN) — addendum</label><textarea id="secTermsEn" rows="3"></textarea></div>
+      </details>
     </section>
 
     <section class="module panel" id="tokens">
@@ -258,14 +291,14 @@
     </section>
 
     <footer class="foot">
-      <p>soundtube · agent de rendu : <code>node agent.mjs</code> sur le PC (port 8765) · <a href="/docs" target="_blank" rel="noopener">documentation de l’API</a></p>
+      <p>soundtube · agent de rendu : <code>node agent.mjs</code> sur le PC (port 8765) · <a href="/docs" target="_blank" rel="noopener">documentation de l’API</a></p> · <a href="/legal" data-i18n="nav.legal">Mentions légales</a> · <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> · <a href="/terms" data-i18n="nav.terms">Conditions</a>
     </footer>
   </main>
   <div class="toast" id="toast" hidden></div>
-  <script type="module" src="/js/admin.js?v=1.20.0"></script>
-  <script type="module" src="/js/ytadmin.js?v=1.20.0"></script>
-  <script type="module" src="/js/adminmedia.js?v=1.20.0"></script>
-  <script type="module" src="/js/admindirector.js?v=1.20.0"></script>
-  <script type="module" src="/js/adminauth.js?v=1.20.0"></script>
+  <script type="module" src="/js/admin.js?v=1.20.1"></script>
+  <script type="module" src="/js/ytadmin.js?v=1.20.1"></script>
+  <script type="module" src="/js/adminmedia.js?v=1.20.1"></script>
+  <script type="module" src="/js/admindirector.js?v=1.20.1"></script>
+  <script type="module" src="/js/adminauth.js?v=1.20.1"></script>
 </body>
 </html>

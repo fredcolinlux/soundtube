@@ -53,7 +53,7 @@ const ok = (desc, schema) => ({ description: desc, content: { 'application/json'
 export const openapi = {
   openapi: '3.0.3',
   components: { schemas: { SplitOptions } },
-  info: { title: 'soundtube API', version: '1.20.0', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
+  info: { title: 'soundtube API', version: '1.20.1', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
   paths: {
 
     '/api/auth/status': { get: { summary: 'v1.20.0 : état auth (setup, session, csrf)', responses: { 200: ok('Status', { type: 'object' }) } } },

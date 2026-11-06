@@ -1,4 +1,4 @@
-import { $, api, esc, bootSite, mountBackground, reveal, styleCardHtml, MiniPlayer, trackRowHtml, colorOf, t } from './site.js?v=1.20.0';
+import { $, api, esc, bootSite, mountBackground, reveal, styleCardHtml, MiniPlayer, trackRowHtml, colorOf, t } from './site.js?v=1.20.1';
 
 const field = mountBackground();
 await bootSite('/accueil');

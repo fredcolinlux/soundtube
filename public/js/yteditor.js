@@ -67,10 +67,10 @@ function render(ed) {
   const d = deps.getYt(st.id), noChapters = st.target === 'video' && !(d?.chapters?.length);
   const tile = (mid, label, img, kind) => `<div class="yd-tile ${B.media === mid ? 'on' : ''}" role="radio" aria-checked="${B.media === mid}" tabindex="0" data-ydmedia="${mid || ''}" title="${esc(label)}">
       ${img ? `<img src="${img}" alt="" loading="lazy">` : '<span class="yd-gen" aria-hidden="true"></span>'}<span class="yd-tname">${esc(label)}</span>${kind ? `<span class="yd-kind">${kind}</span>` : ''}
-      ${mid ? `<button class="yd-del" type="button" data-yddel="${mid}" title="Supprimer de la bibliothèque" aria-label="Supprimer ${esc(label)}">✕</button>` : ''}</div>`;
+      ${mid ? `<button class="yd-del" type="button" data-yddel="${mid}" title="${t('yd.delLib')}" aria-label="Supprimer ${esc(label)}">✕</button>` : ''}</div>`;
   body.innerHTML = `
     <div class="yd-head">
-      <div class="seg" role="radiogroup" aria-label="Mise en page à modifier">
+      <div class="seg" role="radiogroup" aria-label="${t('yd.layoutAria')}">
         <button type="button" role="radio" aria-checked="${st.target === 'thumb'}" class="${st.target === 'thumb' ? 'on' : ''}" data-ydtarget="thumb">Miniature</button>
         <button type="button" role="radio" aria-checked="${st.target === 'video'}" class="${st.target === 'video' ? 'on' : ''}" data-ydtarget="video">Vidéo</button>
       </div>
@@ -85,14 +85,14 @@ function render(ed) {
           ${st.server ? `<img class="yd-server" src="${st.server}" alt="Rendu du serveur">` : ''}
         </div>
         <div class="row">
-          <button class="btn btn-mini ${st.server ? 'on' : ''}" type="button" data-ydcompare ${st.serverBusy ? 'disabled' : ''}>${st.serverBusy ? 'Rendu en cours…' : st.server ? 'Revenir à l\'éditeur' : 'Comparer au rendu'}</button>
-          <span class="hint">Glisse les textes · flèches : 1 px, Maj + flèches : 10 px · repères de centre et d'alignement automatiques</span>
+          <button class="btn btn-mini ${st.server ? 'on' : ''}" type="button" data-ydcompare ${st.serverBusy ? 'disabled' : ''}>${st.serverBusy ? t('yd.compareBusy') : st.server ? t('yd.compareBack') : t('yd.compare')}</button>
+          <span class="hint">${t('yd.dragHint')}</span>
         </div>
         ${noChapters ? '<p class="hint">Ce morceau n\'a pas de chapitres : « Chapitre » est un exemple, rien ne s\'affichera dans sa vidéo.</p>' : ''}
       </div>
       <div class="yd-side">
         <h5>Textes</h5>
-        <ul class="yd-els" role="listbox" aria-label="Éléments">
+        <ul class="yd-els" role="listbox" aria-label="${t('yd.elements')}">
           ${TARGETS[st.target].map((k) => `<li class="${st.sel === k ? 'on' : ''}"><label class="yd-vis" title="Afficher / masquer"><input type="checkbox" data-ydvis="${k}" ${L[k].visible ? 'checked' : ''} aria-label="Afficher ${esc(LABELS[k])}"></label><button type="button" role="option" aria-selected="${st.sel === k}" data-ydsel="${k}">${esc(LABELS[k])}</button></li>`).join('')}
         </ul>
         <div class="yd-props">
@@ -102,11 +102,11 @@ function render(ed) {
           ${isText ? `<label class="yt-check"><input type="checkbox" data-ydprop="shadow" ${e.shadow ? 'checked' : ''}> Ombre</label>` : ''}</div>
           ${st.sel === 'title' ? `<div class="yd-row"><span>Lignes max.</span><select data-ydprop="lines">${[1, 2, 3].map((n) => `<option ${e.lines === n ? 'selected' : ''}>${n}</option>`).join('')}</select><span>Largeur</span><input type="range" min="20" max="100" step="1" value="${Math.round(e.width * 100)}" data-ydprop="width" aria-label="Largeur max. du titre"></div>` : ''}
           ${st.sel === 'sub' ? `<label class="yt-check"><input type="checkbox" data-ydprop="follow" ${e.follow ? 'checked' : ''}> Toujours sous le titre</label>` : ''}
-          ${st.sel === 'spectrum' || st.sel === 'wave' ? '<p class="hint">Se déplace verticalement.</p>' : ''}
+          ${st.sel === 'spectrum' || st.sel === 'wave' ? `<p class="hint">${t('yd.verticalOnly')}</p>` : ''}
         </div>
         <h5>Fond</h5>
         <div class="yd-lib" role="radiogroup" aria-label="Fond">
-          ${tile(null, 'Visuel généré', null, '')}
+          ${tile(null, t('yd.generatedVisual'), null, '')}
           ${items.map((m) => tile(m.id, m.name, m.poster, m.kind === 'video' ? `${(m.duration || 0).toFixed(1)} s` : m.kind === 'gif' ? 'GIF' : 'image')).join('')}
         </div>
         <div class="row">
@@ -117,15 +117,15 @@ function render(ed) {
         ${B.media ? `
         <div class="yd-row"><span>${t('yd.fit')}</span><div class="seg seg-sm" role="radiogroup" aria-label="${t('yd.fit')}"><button type="button" role="radio" aria-checked="${B.fit === 'cover'}" class="${B.fit === 'cover' ? 'on' : ''}" data-ydfit="cover" title="Remplit l'image, quitte à recadrer">${t('yd.cover')}</button><button type="button" role="radio" aria-checked="${B.fit === 'contain'}" class="${B.fit === 'contain' ? 'on' : ''}" data-ydfit="contain" title="Animation entière, bandes sur les côtés">${t('yd.contain')}</button></div></div>
         <label>Voile sombre <input type="range" min="0" max="80" step="5" value="${Math.round(B.dim * 100)}" data-ydbg="dim"><output>${Math.round(B.dim * 100)} %</output></label>
-        <label class="yt-check"><input type="checkbox" data-ydbg="overlay" ${B.overlay ? 'checked' : ''}> Garder le spectre (vidéo) et la forme d'onde (miniature) par-dessus</label>
-        <div class="yd-row"><span>Miniature</span><div class="seg seg-sm" role="radiogroup" aria-label="Fond de la miniature"><button type="button" role="radio" aria-checked="${B.thumb === 'media'}" class="${B.thumb === 'media' ? 'on' : ''}" data-ydthumb="media">Image de l'animation</button><button type="button" role="radio" aria-checked="${B.thumb === 'generated'}" class="${B.thumb === 'generated' ? 'on' : ''}" data-ydthumb="generated">Visuel généré</button></div></div>` : ''}
+        <label class="yt-check"><input type="checkbox" data-ydbg="overlay" ${B.overlay ? 'checked' : ''}> ${t('yd.keepSpectrum')}</label>
+        <div class="yd-row"><span>${t('yd.thumb')}</span><div class="seg seg-sm" role="radiogroup" aria-label="${t('yd.thumbBg')}"><button type="button" role="radio" aria-checked="${B.thumb === 'media'}" class="${B.thumb === 'media' ? 'on' : ''}" data-ydthumb="media">${t('yd.thumbMedia')}</button><button type="button" role="radio" aria-checked="${B.thumb === 'generated'}" class="${B.thumb === 'generated' ? 'on' : ''}" data-ydthumb="generated">${t('yd.generatedVisual')}</button></div></div>` : ''}
       </div>
     </div>
     <div class="row yd-actions">
       <button class="btn btn-mini btn-primary" type="button" data-ydsave ${dirty(st) || st.scopeChanged ? '' : 'disabled'}>${t('yd.save')}</button>
       <button class="btn btn-mini" type="button" data-ydundo ${dirty(st) ? '' : 'disabled'}>Annuler les modifications</button>
       <button class="btn btn-mini" type="button" data-ydreset title="Disposition et fond d'origine">Réinitialiser</button>
-      <span class="hint" data-ydstatus>${dirty(st) ? 'Modifications non enregistrées' : st.scope === 'track' ? 'Réglage propre à ce morceau' : 'Réglage commun à tous les morceaux'}</span>
+      <span class="hint" data-ydstatus>${dirty(st) ? t('yd.dirty') : st.scope === 'track' ? t('yd.scopeTrack') : t('yd.scopeAll')}</span>
     </div>`;
   bind(ed);
   draw(ed);
@@ -320,7 +320,7 @@ function upload(ed, file) {
     x.setRequestHeader('Content-Type', 'application/octet-stream');
     const set = (s) => { st.upload = s; const h = ed.el.querySelector('.yd-up + .hint'); if (h) h.textContent = s || ''; else render(ed); };
     x.upload.onprogress = (e) => { if (e.lengthComputable) set(`Envoi ${Math.round(e.loaded / e.total * 100)} %…`); };
-    x.upload.onload = () => set('Vérification (ffprobe)…');
+    x.upload.onload = () => set(t('yd.probing'));
     x.onload = async () => {
       let j = {}; try { j = JSON.parse(x.responseText); } catch {}
       st.upload = null;

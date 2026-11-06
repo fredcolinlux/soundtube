@@ -1,4 +1,4 @@
-// v1.20.0 — auth, headers, local-only admin, signed links, CSP sans inline
+// v1.20.1 — auth, headers, local-only admin, signed links, CSP sans inline
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -16,8 +16,8 @@ let fail = 0;
 const check = (ok, msg) => { if (!ok) fail++; console.log(`${ok ? 'OK   ' : 'ÉCHEC'} ${msg}`); return ok; };
 
 const ver = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf8').trim();
-check(ver === '1.20.0', `VERSION ${ver}`);
-check(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version === '1.20.0', 'package.json version');
+check(ver === '1.20.1', `VERSION ${ver}`);
+check(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version === '1.20.1', 'package.json version');
 
 // Files exist
 for (const f of [
@@ -34,7 +34,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'public')).filter((x) => x.endsWi
   const html = fs.readFileSync(path.join(ROOT, 'public', f), 'utf8');
   const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/gi)];
   check(inline.length === 0, `${f}: pas de script inline (${inline.length})`);
-  check(html.includes('?v=1.20.0') || f === 'favicon.svg', `${f} cache-bust` ) || true;
+  check(html.includes('?v=1.20.1') || f === 'favicon.svg', `${f} cache-bust`);
 }
 
 check(CSP.includes("script-src 'self'") && CSP.includes("frame-ancestors 'none'"), 'CSP strict');
@@ -93,5 +93,5 @@ const npm = fs.readFileSync(path.join(ROOT, 'deploy/npm-admin-block.conf'), 'utf
 check(!/colin-alves\.com/.test(npm), 'NPM snippet sans domaine perso');
 check(/location \^~ \/admin/.test(npm), 'NPM bloque /admin');
 
-console.log(fail ? fail + ' échec(s)' : 'v1.20.0 : OK');
+console.log(fail ? fail + ' échec(s)' : 'v1.20.1 : OK');
 process.exit(fail ? 1 : 0);

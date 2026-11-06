@@ -13,11 +13,19 @@ const DEFAULT_SEC = {
   trustedProxies: [],
   localCidrs: [],
   publicDomain: '',
+  // Suggestions auto-détectées (jamais appliquées sans confirmation Admin LAN)
+  suggestedTrustedProxy: '',
+  suggestedPublicDomain: '',
   sessionTtlHours: 12,
   loginMaxAttempts: 5,
   loginLockMinutes: 15,
   signedLinkTtlSec: 3600,
   legal: { fr: '', en: '' },
+  privacy: { fr: '', en: '' },
+  terms: { fr: '', en: '' },
+  publisher: { name: '', address: '', email: '', host: '' },
+  openRegistration: false,
+  registrationRequireApproval: false,
   bodyLimitKb: 64,
 };
 
@@ -58,13 +66,31 @@ export class AuthStore {
   saveTokens() { writePrivate(this.tokensFile, this.tokens); }
   saveSecurity() { writePrivate(this.secFile, this.security); }
 
+  /** Inscription publique (si openRegistration). Rôle creator ; disabled si approval requis. */
+  async registerPublic({ username, password }) {
+    if (!this.security.openRegistration) {
+      const err = new Error('registrationClosed'); err.status = 403; throw err;
+    }
+    const pending = !!this.security.registrationRequireApproval;
+    const u = await this.createUser({ username, password, role: 'creator' });
+    if (pending) {
+      const full = this.getUser(u.id);
+      full.disabled = true;
+      full.pendingApproval = true;
+      this.saveUsers();
+      this.audit('register.pending', { userId: u.id, username: u.username });
+      return { ...this.publicUser(full), pendingApproval: true };
+    }
+    this.audit('register.ok', { userId: u.id, username: u.username });
+    return { ...u, pendingApproval: false };
+  }
   needsSetup() { return !this.users.users.some((u) => u.role === 'admin' && !u.disabled); }
 
   publicUser(u) {
     if (!u) return null;
     return {
       id: u.id, username: u.username, role: u.role, disabled: !!u.disabled,
-      totpEnabled: !!u.totpSecret, passkeys: (u.passkeys || []).length,
+      totpEnabled: !!u.totpSecret, passkeys: (u.passkeys || []).length, pendingApproval: !!u.pendingApproval,
       quota: { ...DEFAULT_QUOTA, ...(u.quota || {}) },
       createdAt: u.createdAt, lastLoginAt: u.lastLoginAt || null,
     };
@@ -291,20 +317,89 @@ export class AuthStore {
 
   /* ---- security settings ---- */
   securityView() {
-    return { ...this.security, legal: { ...(this.security.legal || {}) } };
+    const s = this.security;
+    return {
+      ...s,
+      legal: { ...(s.legal || {}) },
+      privacy: { ...(s.privacy || {}) },
+      terms: { ...(s.terms || {}) },
+      publisher: { name: '', address: '', email: '', host: '', ...(s.publisher || {}) },
+      proxyConfirmed: (s.trustedProxies || []).length > 0,
+      domainConfirmed: !!s.publicDomain,
+      needsProxyConfirm: !!(s.suggestedTrustedProxy && !(s.trustedProxies || []).length),
+      needsDomainConfirm: !!(s.suggestedPublicDomain && !s.publicDomain),
+    };
+  }
+  /** Enregistre des suggestions détectées (idempotent, n’écrase jamais une valeur confirmée). */
+  observeHints(hints = {}) {
+    const s = this.security;
+    let changed = false;
+    if (hints.suggestedTrustedProxy && !s.suggestedTrustedProxy && !(s.trustedProxies || []).length) {
+      s.suggestedTrustedProxy = String(hints.suggestedTrustedProxy).replace(/^::ffff:/, '');
+      changed = true;
+    }
+    if (hints.suggestedPublicDomain && !s.suggestedPublicDomain && !s.publicDomain) {
+      s.suggestedPublicDomain = String(hints.suggestedPublicDomain).toLowerCase();
+      changed = true;
+    }
+    if (changed) { this.saveSecurity(); this.audit('security.hint', { ...hints }); }
+    return changed;
+  }
+  /** Un clic Admin : applique la suggestion proxy et/ou domaine. */
+  confirmSuggestions({ proxy = false, domain = false } = {}) {
+    const s = this.security;
+    const patch = {};
+    if (proxy && s.suggestedTrustedProxy) {
+      const ip = s.suggestedTrustedProxy;
+      if (!(s.trustedProxies || []).includes(ip)) s.trustedProxies = [...(s.trustedProxies || []), ip];
+      patch.trustedProxies = s.trustedProxies;
+    }
+    if (domain && s.suggestedPublicDomain) {
+      s.publicDomain = s.suggestedPublicDomain;
+      patch.publicDomain = s.publicDomain;
+    }
+    if (Object.keys(patch).length) {
+      this.saveSecurity();
+      this.audit('security.confirm', patch);
+    }
+    return this.securityView();
   }
   updateSecurity(patch) {
     const s = this.security;
     if (Array.isArray(patch.trustedProxies)) s.trustedProxies = patch.trustedProxies.map(String).map((x) => x.trim()).filter(Boolean);
     if (Array.isArray(patch.localCidrs)) s.localCidrs = patch.localCidrs.map(String).map((x) => x.trim()).filter(Boolean);
     if (patch.publicDomain !== undefined) s.publicDomain = String(patch.publicDomain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+    if (patch.suggestedTrustedProxy !== undefined) s.suggestedTrustedProxy = String(patch.suggestedTrustedProxy || '').replace(/^::ffff:/, '');
+    if (patch.suggestedPublicDomain !== undefined) s.suggestedPublicDomain = String(patch.suggestedPublicDomain || '').toLowerCase();
     for (const k of ['sessionTtlHours', 'loginMaxAttempts', 'loginLockMinutes', 'signedLinkTtlSec', 'bodyLimitKb']) {
       if (patch[k] != null && Number.isFinite(+patch[k])) s[k] = +patch[k];
     }
+    if (patch.openRegistration !== undefined) s.openRegistration = !!patch.openRegistration;
+    if (patch.registrationRequireApproval !== undefined) s.registrationRequireApproval = !!patch.registrationRequireApproval;
     if (patch.legal && typeof patch.legal === 'object') {
       s.legal = s.legal || {};
       if (patch.legal.fr !== undefined) s.legal.fr = String(patch.legal.fr).slice(0, 20000);
       if (patch.legal.en !== undefined) s.legal.en = String(patch.legal.en).slice(0, 20000);
+    }
+    for (const bucket of ['privacy', 'terms']) {
+      if (patch[bucket] && typeof patch[bucket] === 'object') {
+        s[bucket] = s[bucket] || {};
+        if (patch[bucket].fr !== undefined) s[bucket].fr = String(patch[bucket].fr).slice(0, 20000);
+        if (patch[bucket].en !== undefined) s[bucket].en = String(patch[bucket].en).slice(0, 20000);
+      }
+    }
+    if (patch.publisher && typeof patch.publisher === 'object') {
+      s.publisher = s.publisher || { name: '', address: '', email: '', host: '' };
+      for (const k of ['name', 'address', 'email', 'host']) {
+        if (patch.publisher[k] !== undefined) s.publisher[k] = String(patch.publisher[k] || '').slice(0, 500);
+      }
+    }
+    if (patch.confirmSuggestedProxy && s.suggestedTrustedProxy) {
+      const ip = s.suggestedTrustedProxy;
+      if (!(s.trustedProxies || []).includes(ip)) s.trustedProxies = [...(s.trustedProxies || []), ip];
+    }
+    if (patch.confirmSuggestedDomain && s.suggestedPublicDomain) {
+      s.publicDomain = s.suggestedPublicDomain;
     }
     this.saveSecurity();
     this.audit('security.update', { keys: Object.keys(patch) });

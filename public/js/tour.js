@@ -16,7 +16,7 @@ export function startTour() {
   let i = 0;
   const STEPS = steps();
   if (!document.querySelector('link[data-tour]')) {
-    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/css/tour.css?v=1.20.0'; l.dataset.tour = '1'; document.head.append(l);
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = '/css/tour.css?v=1.20.1'; l.dataset.tour = '1'; document.head.append(l);
   }
   const ov = document.createElement('div'); ov.className = 'st-tour'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'false'); ov.setAttribute('aria-label', t('tour.label'));
   ov.innerHTML = `<div class="st-ring"></div><div class="st-pop"><p class="st-n"></p><b class="st-t"></b><p class="st-p"></p><div class="st-act"><button type="button" class="btn btn-ghost btn-mini" data-a="end">${t('tour.end')}</button><button type="button" class="btn btn-ghost btn-mini" data-a="prev">←</button><button type="button" class="btn btn-primary btn-mini" data-a="next">${t('tour.next')}</button></div></div>`;

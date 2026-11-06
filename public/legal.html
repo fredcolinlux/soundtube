@@ -6,16 +6,28 @@
   <title data-i18n="title.legal">soundtube — mentions légales</title>
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=1.20.0">
-  <link rel="stylesheet" href="/css/site.css?v=1.20.0">
+  <link rel="stylesheet" href="/css/app.css?v=1.20.1">
+  <link rel="stylesheet" href="/css/site.css?v=1.20.1">
 </head>
-<body class="site">
+<body class="site" data-legal-kind="notice">
   <main class="site-wrap legal-wrap">
     <p class="kicker" data-i18n="legal.kicker">Mentions & confidentialité</p>
     <h1 class="mega mega-2" data-i18n="legal.title">Mentions légales</h1>
-    <article class="doc panel" id="legalBody"><p class="hint" data-i18n="legal.empty">Texte à renseigner dans Admin › Sécurité.</p></article>
+    <nav class="legal-nav hint">
+      <a href="/legal" data-i18n="nav.legal">Mentions légales</a> ·
+      <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> ·
+      <a href="/terms" data-i18n="nav.terms">Conditions</a>
+    </nav>
+    <article class="doc panel" id="legalBody"><p class="hint" data-i18n="legal.empty">Texte à compléter dans Admin › Sécurité › Avancé (éditeur, adresse, contact, hébergeur).</p></article>
     <p class="hint"><a href="/accueil" data-i18n="nav.home">Accueil</a> · <a href="/login" data-i18n="nav.login">Connexion</a></p>
   </main>
-  <script type="module" src="/js/legal.js?v=1.20.0"></script>
+  <footer class="site-foot legal-foot">
+    <span>
+      <a href="/legal" data-i18n="nav.legal">Mentions légales</a> ·
+      <a href="/privacy" data-i18n="nav.privacy">Confidentialité</a> ·
+      <a href="/terms" data-i18n="nav.terms">Conditions</a>
+    </span>
+  </footer>
+  <script type="module" src="/js/legal.js?v=1.20.1"></script>
 </body>
 </html>

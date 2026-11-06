@@ -68,7 +68,7 @@ const get = (url) => new Promise((res, rej) => {
     let b = ''; r.on('data', (c) => b += c); r.on('end', () => res({ status: r.statusCode, body: b }));
   }).on('error', rej);
 });
-const pages = ['/login', '/legal', '/accueil', '/demarrer', '/styles', '/', '/admin', '/setup'];
+const pages = ['/login', '/legal', '/privacy', '/terms', '/accueil', '/demarrer', '/styles', '/register', '/setup', '/', '/admin', '/profile'];
 const PAGE_FR = /\b(Connexion|Bibliothèque|Réglages|Enregistrer|Mentions légales|Utilisateurs|Sécurité & exposition|Veille tendances|Chaînes YouTube|Générer le morceau|Accueil)\b/;
 for (const pg of pages) {
   try {
@@ -81,7 +81,7 @@ for (const pg of pages) {
     // Allow brand soundtube, French Touch
     const hits = stripped.match(PAGE_FR) || [];
     // setup/admin may 200; login etc.
-    check(status === 200 || status === 302 || status === 404, `${pg} status ${status}`);
+    check([200, 302, 404].includes(status), `${pg} status ${status}`);
     // For pages with heavy data-i18n, leftover FR chrome after strip should be low
     if (['/login', '/legal'].includes(pg) && status === 200) {
       check(hits.length === 0, `${pg} EN shell sans FR chrome (${hits})`);
@@ -103,7 +103,45 @@ await new Promise((res) => {
   req.end();
 });
 
+
+// Headless EN DOM scan (zero tolerance for common French chrome words)
+try {
+  const puppeteer = await import('/workspace/soundtube/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js');
+  const browser = await puppeteer.default.launch({
+    executablePath: '/usr/bin/google-chrome', headless: true,
+    args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+  });
+  const FR_WORDS = /\b(Connexion|Bibliothèque|Réglages|Enregistrer|Mentions légales|Utilisateurs|Sécurité|Veille tendances|Chaînes YouTube|Générer le morceau|Accueil|Inscriptions ouvertes|Créer un compte|Mot de passe|Déconnexion|Confidentialité|Conditions d’utilisation|S’inscrire|Se connecter)\b/;
+  const enPages = [
+    { url: '/login', wait: 'body' },
+    { url: '/legal', wait: 'body' },
+    { url: '/privacy', wait: 'body' },
+    { url: '/terms', wait: 'body' },
+    { url: '/accueil', wait: 'body' },
+    { url: '/demarrer', wait: 'body' },
+    { url: '/styles', wait: 'body' },
+    { url: '/register', wait: 'body' },
+  ];
+  for (const pg of enPages) {
+    const page = await browser.newPage();
+    await page.setCookie({ name: 'soundtube_ui_lang', value: 'en', domain: '127.0.0.1', path: '/' });
+    await page.goto(`http://127.0.0.1:${port}${pg.url}?lang=en`, { waitUntil: 'networkidle0', timeout: 30000 }).catch(() => {});
+    await page.waitForSelector(pg.wait, { timeout: 8000 }).catch(() => {});
+    await new Promise((r) => setTimeout(r, 400));
+    const text = await page.evaluate(() => document.body?.innerText || '');
+    // Allow brand / French Touch / Néons samples in demos
+    const cleaned = text.replace(/French Touch|Ed Banger|Néons sur la Seine|soundtube/gi, '');
+    const hit = cleaned.match(FR_WORDS);
+    check(!hit, `EN DOM ${pg.url} sans chrome FR (${hit && hit[0]})`);
+    await page.close();
+  }
+  await browser.close();
+} catch (e) {
+  check(false, `headless DOM scan: ${e.message}`);
+}
+
+
 srv.kill('SIGTERM');
 try { fs.rmSync(data, { recursive: true, force: true }); } catch {}
-console.log(fail ? fail + ' échec(s)' : `v1.20.0-i18n : OK (${Object.keys(fr).length} keys)`);
+console.log(fail ? fail + ' échec(s)' : `v1.20.1-i18n : OK (${Object.keys(fr).length} keys)`);
 process.exit(fail ? 1 : 0);

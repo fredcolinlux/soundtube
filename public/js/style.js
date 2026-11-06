@@ -1,5 +1,5 @@
 // v1.10.0 : page d'un style — en-tête coloré, fiche (docs/STYLES.md), machines, préréglage, bibliothèque du style.
-import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t } from './site.js?v=1.20.0';
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t } from './site.js?v=1.20.1';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
 await bootSite('/styles/' + id);

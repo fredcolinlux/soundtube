@@ -13,3 +13,14 @@
 .auth-lang { position: absolute; top: 16px; right: 16px; }
 .err { color: var(--danger) !important; }
 .legal-wrap { max-width: 720px; padding: 48px 20px; }
+
+.pwd-meter{margin:.35rem 0 1rem;height:6px;background:color-mix(in oklab,#fff 12%,transparent);border-radius:99px;position:relative;overflow:hidden}
+.pwd-meter span{display:block;height:100%;width:20%;background:#f66;border-radius:99px;transition:width .2s,background .2s}
+.pwd-meter span[data-score="1"]{background:#f90}
+.pwd-meter span[data-score="2"]{background:#fc0}
+.pwd-meter span[data-score="3"]{background:#8c6}
+.pwd-meter span[data-score="4"]{background:#4c8}
+.pwd-meter em{display:block;margin-top:.35rem;font-size:.8rem;opacity:.75;font-style:normal}
+.auth-card-wide{max-width:32rem}
+.profile-sec{margin:1.4rem 0;padding-top:1rem;border-top:1px solid color-mix(in oklab,#fff 10%,transparent)}
+.profile-sec h2{font-size:1.05rem;margin:0 0 .5rem}

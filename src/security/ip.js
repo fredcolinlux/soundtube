@@ -68,15 +68,57 @@ export function clientMeta(req, settings = {}) {
   const raw = String(req.socket?.remoteAddress || req.connection?.remoteAddress || '').replace(/^::ffff:/, '');
   const trusted = compileCidrs(settings.trustedProxies || []);
   const fromProxy = trusted.length && trusted.some((c) => ipInCidr(raw, c));
+  const xffList = String(req.headers['x-forwarded-for'] || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const hasXff = xffList.length > 0;
   let ip = raw;
   let proto = req.protocol || 'http';
   if (fromProxy) {
-    const xff = String(req.headers['x-forwarded-for'] || '').split(',').map((s) => s.trim()).filter(Boolean);
-    if (xff.length) ip = xff[0].replace(/^::ffff:/, '');
+    if (xffList.length) ip = xffList[0].replace(/^::ffff:/, '');
     const xp = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim().toLowerCase();
     if (xp === 'https' || xp === 'http') proto = xp;
   }
   const extra = compileCidrs(settings.localCidrs || []);
-  const local = isPrivateIp(ip) || extra.some((c) => ipInCidr(ip, c)) || ip === '127.0.0.1' || ip === '::1';
-  return { ip, proto, local, fromProxy, socketIp: raw };
+  let local = isPrivateIp(ip) || extra.some((c) => ipInCidr(ip, c)) || ip === '127.0.0.1' || ip === '::1';
+  // Safe default (v1.20.1): X-Forwarded-* without a confirmed trusted proxy → never LAN privileges.
+  // Direct LAN (no XFF) still reaches /setup and /admin; traffic via NPM requires login until Admin confirms the proxy.
+  const untrustedForward = hasXff && !fromProxy;
+  if (untrustedForward) local = false;
+  return { ip, proto, local, fromProxy, socketIp: raw, untrustedForward };
+}
+
+/** Host header sans port ; null si localhost / IP littérale / vide. */
+export function publicHostCandidate(hostHeader) {
+  const raw = String(hostHeader || '').split(',')[0].trim().toLowerCase();
+  if (!raw) return null;
+  const host = raw.replace(/:\d+$/, '').replace(/^\[|\]$/g, '');
+  if (!host || host === 'localhost' || host.endsWith('.localhost')) return null;
+  if (net.isIP(host)) return null;
+  // refuse bare .local / .lan unless user confirms later — still a candidate for suggestion
+  return host;
+}
+
+/**
+ * Observe hints from a request WITHOUT trusting them.
+ * Call on every request: if the TCP peer is private and XFF is present, suggest that peer as proxy.
+ * If a public Host is seen on such a request (or any request with X-Forwarded-Host), suggest the domain.
+ * @returns {{ suggestedTrustedProxy?: string, suggestedPublicDomain?: string }}
+ */
+export function observeProxyHints(req, settings = {}) {
+  const raw = String(req.socket?.remoteAddress || req.connection?.remoteAddress || '').replace(/^::ffff:/, '');
+  const out = {};
+  const xff = String(req.headers['x-forwarded-for'] || '').trim();
+  const alreadyTrusted = compileCidrs(settings.trustedProxies || []).some((c) => ipInCidr(raw, c));
+  if (xff && isPrivateIp(raw) && !alreadyTrusted) {
+    // first hop from LAN → this socket IP is almost certainly NPM / reverse proxy
+    if (!settings.suggestedTrustedProxy) out.suggestedTrustedProxy = raw;
+  }
+  const xfHost = req.headers['x-forwarded-host'] || req.headers['host'];
+  const cand = publicHostCandidate(xfHost);
+  if (cand && !settings.publicDomain && !settings.suggestedPublicDomain) {
+    // only suggest domain when we also see proxying (XFF) or already have a trusted proxy
+    if (xff || alreadyTrusted || (settings.trustedProxies || []).length) {
+      out.suggestedPublicDomain = cand;
+    }
+  }
+  return out;
 }

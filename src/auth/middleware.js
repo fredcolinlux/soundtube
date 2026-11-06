@@ -1,6 +1,6 @@
 import { msg } from '../i18n-server.js';
 // Middleware : IP client, auth locale vs internet, Admin local-only, CSRF.
-import { clientMeta } from '../security/ip.js';
+import { clientMeta, observeProxyHints } from '../security/ip.js';
 
 const COOKIE = '__Host-soundtube_sess';
 const COOKIE_FALLBACK = 'soundtube_sess'; // LAN HTTP (pas de Secure / __Host-)
@@ -45,6 +45,10 @@ export function attachAuth(auth) {
   return async (req, res, next) => {
     try {
       req.clientMeta = clientMeta(req, auth.security);
+      try {
+        const hints = observeProxyHints(req, auth.security);
+        if (hints.suggestedTrustedProxy || hints.suggestedPublicDomain) auth.observeHints(hints);
+      } catch {}
       req.authUser = null; req.session = null; req.apiToken = null; req.csrfToken = null;
 
       const cookies = parseCookies(req);
@@ -89,13 +93,12 @@ export function requireLocalAdmin(req, res, next) {
 }
 
 /**
- * API hors LAN : session ou Bearer obligatoires (sauf allowlist).
- * LAN : libre comme aujourd'hui.
+ * v1.20.1 — session ou Bearer obligatoires pour toute l’API (LAN inclus), sauf allowlist publique.
+ * Plus de contournement « IP locale = admin ».
  */
-export function requireAuthUnlessLocal(allowlist = []) {
+export function requireAuth(allowlist = []) {
   const allow = allowlist.map((r) => (typeof r === 'string' ? { method: '*', path: r } : r));
   return (req, res, next) => {
-    if (req.clientMeta?.local) return next();
     const p = req.path;
     for (const a of allow) {
       const methodOk = a.method === '*' || a.method === req.method;
@@ -110,22 +113,41 @@ export function requireAuthUnlessLocal(allowlist = []) {
     return res.status(401).json({ error: msg(req, 'authRequired') });
   };
 }
+/** @deprecated alias — même comportement que requireAuth (plus de bypass LAN). */
+export function requireAuthUnlessLocal(allowlist = []) { return requireAuth(allowlist); }
 
 /** Rôle minimum. */
 export function requireRole(...roles) {
   return (req, res, next) => {
-    if (req.clientMeta?.local && !req.authUser) return next(); // LAN anonyme = admin de facto
     if (!req.authUser) return res.status(401).json({ error: msg(req, 'authRequired') });
     if (!roles.includes(req.authUser.role)) return res.status(403).json({ error: msg(req, 'forbidden') });
     next();
   };
 }
 
+/** Admin HTML/API : LAN + compte admin connecté. */
+export function requireAdminSession(req, res, next) {
+  if (!req.clientMeta?.local) {
+    if (req.path?.startsWith('/api/') || req.headers.accept?.includes('application/json')) {
+      return res.status(404).json({ error: msg(req, 'notFound') });
+    }
+    return res.status(404).type('html').send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>404</title></head><body><h1>404</h1></body></html>');
+  }
+  if (!req.authUser) {
+    if (req.path?.startsWith('/api/') || req.headers.accept?.includes('application/json')) {
+      return res.status(401).json({ error: msg(req, 'authRequired') });
+    }
+    const nextUrl = encodeURIComponent(req.originalUrl || '/admin');
+    return res.redirect('/login?next=' + nextUrl);
+  }
+  if (req.authUser.role !== 'admin') return res.status(403).json({ error: msg(req, 'forbidden') });
+  next();
+}
+
 /** CSRF pour mutations cookie-session (pas pour Bearer). */
 export function requireCsrf(req, res, next) {
-  if (req.clientMeta?.local && !req.session) return next();
   if (req.apiToken) return next(); // Bearer
-  if (!req.session) return next(); // will fail auth elsewhere
+  if (!req.session) return next(); // auth middleware will 401 on protected routes
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
   const sent = req.headers['x-csrf-token'] || req.body?.csrf;
   if (!sent || sent !== req.csrfToken) return res.status(403).json({ error: msg(req, 'csrf') });
