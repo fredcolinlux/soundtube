@@ -115,6 +115,8 @@ try {
   const it = r.d.items || [];
   check(r.d.total === 2 && it.every((x) => x.listenOnly && x.urls && Object.keys(x.urls).join() === 'mp3' && x.urls.mp3.startsWith('/api/demo/tracks/') && !x.params && !x.settings && !x.files && !x.meta),
     `visiteur : 2 morceaux de démo, écoute seule (une URL /api/demo/tracks/…/audio, ni fichiers, ni réglages, ni méta)`);
+  r = await anon('GET', '/api/demo/tracks');
+  check(r.status === 200 && r.d.total === 2 && r.d.max === 10 && r.d.items.every((x) => x.listenOnly && !x.files), `visiteur : GET /api/demo/tracks → 2 morceaux en écoute seule (${r.status})`);
   r = await anon('GET', '/api/tracks?style=house&status=done');
   check(r.d.total === 1 && r.d.items[0].id === A.id, 'visiteur : filtre par style (page Styles)');
   r = await anon('GET', '/api/styles');

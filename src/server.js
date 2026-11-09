@@ -195,6 +195,7 @@ const AUTH_ALLOW = [
   { method: 'GET', path: '/demo/jobs/*' },
   { method: 'GET', path: '/demo/audio/*' },
   // v1.21.4 : morceaux choisis pour la démo (Admin) — écoute seule
+  { method: 'GET', path: '/demo/tracks' },
   { method: 'GET', path: '/demo/tracks/*' },
 ];
 app.use('/api', (req, res, next) => {
