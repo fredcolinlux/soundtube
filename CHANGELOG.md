@@ -7,18 +7,20 @@
 ### Morceaux de la démo (Admin › 06b)
 - Carte **Morceaux de la démo** : morceaux terminés de moins de 5 min (titre, style, durée, date, auteur), filtre, « Sélection seulement », écoute, « Tout décocher », **Enregistrer**. Au plus **10** cases cochées (cases désactivées au-delà) ; le serveur refuse aussi > 10, un morceau inexistant, trop long ou non terminé (`400` avec l’`id` fautif).
 - Stockage `dataDir/demo-tracks.json` (`ids`, `updatedAt`). API `GET/PUT /api/admin/demo-tracks` : local + session admin + CSRF.
-- Visiteurs non connectés : la liste « Bibliothèque » des pages Styles ne montre que ces morceaux, en **écoute seule** (pas de téléchargement, YouTube, variation, renommage, suppression). `GET /api/demo/tracks`, `GET /api/demo/tracks/{id}/audio` (inline, `no-store`). Aucun choix → aucune piste visible.
+- Visiteurs non connectés : la liste « Bibliothèque » des pages Styles ne montre que ces morceaux, en **écoute seule** (pas de téléchargement, YouTube, variation, renommage, suppression). `GET /api/demo/tracks`, `GET /api/demo/tracks/{id}/audio` (inline, `no-store`). Aucun choix → aucune piste visible. Fiche d’un morceau inconnu ou hors démo → 404 (même réponse : l’existence d’un morceau privé n’est pas révélée) ; toute autre route → 401.
 - **Bibliothèque par compte** : `GET /api/tracks`, `/api/tracks/{id}/…` et `/api/jobs/{id}` sont filtrés — anonyme : morceaux de la démo seulement (lecture), sinon 401/404 ; créateur / lecteur : ses morceaux (`meta.ownerId`) ; admin : tout. Variations et régénérations gardent le propriétaire. Comptes par style calculés pour la personne connectée.
 
 ### Samples du NAS (Admin › 06c) et kit « Mes samples »
 - Réglage **Dossier de samples externes** (défaut `/mnt/samples` ou `SOUNDTUBE_EXT_SAMPLES_DIR`), case « Utiliser ces samples », **Re-scanner**, comptes par catégorie, exemples, fichiers ignorés (non classés, trop longs, illisibles, silencieux). Chemin absolu obligatoire ; dossiers système, application et données refusés. Lecture seule : rien n’est écrit ni copié.
 - Scan : `.wav`, `.aif`, `.aiff`, `.flac` (profondeur 12, liens symboliques de dossiers ignorés, `@eaDir` / `#recycle` / `._*` Synology-Mac ignorés) ; classement par nom de fichier puis dossiers parents ; boucles (`loop`, `break`, `fill`, `groove`, `bpm`) et fichiers ≥ 6 s ignorés ; analyse ffmpeg (crête, attaque, durée). Index `dataDir/external-samples-index.json`, scan auto au démarrage si besoin.
 - Moteur : kit **« Mes samples (dossier externe) »** dans Créer › Avancé › Kit de batterie (`adv.drumKit = "user"`). Un fichier par catégorie et par morceau tiré de la graine ; normalisation en crête ; catégorie absente → synthèse ; ni kick ni caisse claire/clap → kit synthétisé. Pas de caisse claire → les claps la remplacent ; notes fantômes = même caisse claire, plus douce. Rendu toujours sur le CT (`route` « samples-externes ») ; aperçu anonyme 15 s sans ce kit. `meta.extSamples` (dossier, empreinte, comptes) dans le morceau.
+- Directeur artistique (Ollama) : l’option « user » n’est jamais proposée au modèle ni acceptée de sa réponse (le prompt reste identique à v1.14 quand les sources sont coupées).
 - Rendus existants inchangés (empreintes audio identiques sur 9 rendus de référence) ; empreinte du moteur `22573aa0f775` (code modifié) → zips d’agent `dist/soundtube-node-agent-1.21.4-{windows,macos}.zip`.
 
 ### Docs
 - Manuels d’installation FR/EN : section **Samples du NAS** (Synology SMB → hôte Proxmox → CT, `cifs-utils`, `/root/.smb-samples` en 600, ligne fstab, `pct set … -mp0 …,ro=1`, vérifications `pct exec`) + « Comment le moteur utilise ces samples » ; section v1.21.4.
 - Manuels utilisateur, API (FR/EN + OpenAPI), SECURITY, EXPLOITATION / OPERATIONS, NODES (zips et empreinte 1.21.4), `deploy/soundtube.env` (`#SOUNDTUBE_EXT_SAMPLES_DIR`).
+- `test/v1180.js` / `test/v1190.js` : empreinte moteur attendue `22573aa0f775`.
 - `test/v1214.js` (dossier NAS simulé, classement, limites, cloisonnement, API admin + CSRF, 404 depuis Internet, i18n FR/EN, déterminisme du moteur).
 
 ## 1.21.3 — 2026-11-09

@@ -74,7 +74,7 @@ const PW = 'test-password-12345';
 
 // Copie de l'app SANS profil personnel = installation autonome
 const app = path.join(tmp, 'app');
-fs.cpSync(ROOT, app, { recursive: true, filter: (s) => !/node_modules|\.git(\/|$)|[\\/]data([\\/]|$)|samples/.test(path.relative(ROOT, s)) && !s.endsWith(path.join('contexte', 'gout.json')) });
+fs.cpSync(ROOT, app, { recursive: true, filter: (s) => !/node_modules|\.git(\/|$)|[\\/]data([\\/]|$)|(^|[\\/])samples([\\/]|$)/.test(path.relative(ROOT, s)) && !s.endsWith(path.join('contexte', 'gout.json')) });
 fs.symlinkSync(path.join(ROOT, 'node_modules'), path.join(app, 'node_modules'));
 check(!fs.existsSync(path.join(app, 'contexte/gout.json')), 'copie autonome sans gout.json personnel');
 
