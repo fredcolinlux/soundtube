@@ -13,9 +13,9 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createAudio, safeRel } from './audio.mjs';
-import { SPEC_VERSION, ENCODER_LABEL, DEFAULT_SLOTS, buildArgs, validateSpec, runFfmpeg, detectEncoders, safeName } from './render-core.mjs';
+import { SPEC_VERSION, ENCODER_LABEL, DEFAULT_SLOTS, buildArgs, validateSpec, runFfmpeg, detectEncoders, safeName, stripFilter } from './render-core.mjs';
 
-export const AGENT_VERSION = '1.17.0';
+export const AGENT_VERSION = '1.21.3';
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 export function loadConfig(over = {}) {
@@ -53,6 +53,7 @@ export function startAgent(over = {}) {
   const det = over.detected || detectEncoders(cfg.ffmpeg, cfg.encoder ? { only: [cfg.encoder, 'libx264'] } : {});
   const best = cfg.encoder && det.working.includes(cfg.encoder) ? cfg.encoder : det.best;
   const slots = cfg.slots || DEFAULT_SLOTS[best] || 1;
+  const hasDrawtext = det.drawtext !== false; // v1.21.3 : inconnu = supposé présent
   const jobs = new Map(); let running = 0; const waiting = [];
   const started = Date.now();
   const log = (...a) => {
@@ -65,12 +66,13 @@ export function startAgent(over = {}) {
     } catch {}
   };
   const audio = createAudio(cfg, log);
-  log(`[agent] ${cfg.name} — ffmpeg : ${det.ffmpeg || det.error} — encodeurs : ${det.working.join(', ') || 'aucun'} — choisi : ${best || 'aucun'} (${slots} en parallèle) — musique : ${audio.health().ok ? `moteur ${audio.engine.version} (${audio.engine.hash})` : audio.health().reason}`);
+  log(`[agent] ${cfg.name} — ffmpeg : ${det.ffmpeg || det.error} — encodeurs : ${det.working.join(', ') || 'aucun'} — choisi : ${best || 'aucun'} (${slots} en parallèle)${hasDrawtext ? '' : ' — ATTENTION drawtext absent (titres de chapitre omis ; brew install ffmpeg-full)'} — musique : ${audio.health().ok ? `moteur ${audio.engine.version} (${audio.engine.hash})` : audio.health().reason}`);
 
   const health = () => ({
     ok: !!best, app: 'soundtube-node', version: AGENT_VERSION, spec: SPEC_VERSION, name: cfg.name, hostname: os.hostname(), platform: process.platform, arch: process.arch,
     cpus: os.cpus().length, cpuModel: os.cpus()[0]?.model || '', memGB: +(os.totalmem() / 1e9).toFixed(1), loadavg: os.loadavg()[0],
     encoders: det.working, listed: det.listed, failed: det.failed, best, bestLabel: ENCODER_LABEL[best] || best, ffmpeg: det.ffmpeg || null,
+    drawtext: hasDrawtext, filters: det.filters || null, ffmpegPath: cfg.ffmpeg,
     slots, running, queued: waiting.length, load: +((running + waiting.length) / slots).toFixed(2), uptime: Math.round((Date.now() - started) / 1000), auth: !!cfg.token,
     audio: audio.health(),
   });
@@ -83,7 +85,10 @@ export function startAgent(over = {}) {
       const j = waiting.shift(); if (j.status !== 'queued') continue;
       running++; j.status = 'running'; j.startedAt = Date.now();
       const enc = j.encoder;
-      const R = runFfmpeg(cfg.ffmpeg, buildArgs(j.spec, enc, 'out.mp4'), { cwd: j.dir, total: j.spec.dur, onProgress: (p) => { j.progress = p; } });
+      // v1.21.3 : ffmpeg sans drawtext (Homebrew « ffmpeg » sans freetype) → rendu sans les titres de chapitre au lieu d'échouer
+      let spec = j.spec;
+      if (!hasDrawtext && /drawtext=/.test(spec.graph)) { const s = stripFilter(spec.graph, 'drawtext'); spec = { ...spec, graph: s.graph }; j.warning = `drawtext absent de ffmpeg : ${s.removed} texte(s) de chapitre omis (brew install ffmpeg-full)`; log(`[job ${j.id}] ${j.warning}`); }
+      const R = runFfmpeg(cfg.ffmpeg, buildArgs(spec, enc, 'out.mp4'), { cwd: j.dir, total: j.spec.dur, onProgress: (p) => { j.progress = p; } });
       j.proc = R.proc;
       R.done.then(() => { j.status = 'done'; j.progress = 1; j.size = fs.statSync(path.join(j.dir, 'out.mp4')).size; log(`[job ${j.id}] terminé en ${((Date.now() - j.startedAt) / 1000).toFixed(1)} s (${enc})`); },
         (e) => { if (j.status !== 'cancelled') { j.status = 'error'; j.error = String(e.message).slice(0, 800); log(`[job ${j.id}] erreur : ${j.error}`); } })
@@ -159,7 +164,7 @@ export function startAgent(over = {}) {
         if (j.status === 'upload') { j.status = 'queued'; waiting.push(j); pump(); }
         return send(res, 202, { status: j.status });
       }
-      if (req.method === 'GET' && !sub) return send(res, 200, { id: j.id, status: j.status, progress: +j.progress.toFixed(4), error: j.error, encoder: j.encoder, size: j.size || null, position: waiting.indexOf(j) });
+      if (req.method === 'GET' && !sub) return send(res, 200, { id: j.id, status: j.status, progress: +j.progress.toFixed(4), error: j.error, warning: j.warning || null, encoder: j.encoder, size: j.size || null, position: waiting.indexOf(j) });
       if (req.method === 'GET' && sub === 'output') {
         if (j.status !== 'done') return send(res, 409, { error: 'Vidéo pas prête' });
         const f = path.join(j.dir, 'out.mp4');
@@ -188,7 +193,7 @@ export function startAgent(over = {}) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes('--detect')) {
   // node agent.mjs --detect : encodeurs utilisables (utilisé par l'installateur)
   const cfg = loadConfig(), det = detectEncoders(cfg.ffmpeg);
-  console.log(JSON.stringify({ ffmpeg: cfg.ffmpeg, version: det.ffmpeg || null, best: det.best, working: det.working, failed: det.failed || {} }, null, 2));
+  console.log(JSON.stringify({ ffmpeg: cfg.ffmpeg, version: det.ffmpeg || null, best: det.best, working: det.working, failed: det.failed || {}, drawtext: det.drawtext, filters: det.filters || {} }, null, 2));
   process.exit(det.best ? 0 : 1);
 } else if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const a = startAgent();

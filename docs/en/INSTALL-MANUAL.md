@@ -50,7 +50,7 @@ See `deploy/soundtube.env` for the full commented list:
 
 ## Windows node
 
-1. Unpack `dist/soundtube-node-agent-1.18.0-windows.zip`.
+1. Unpack `dist/soundtube-node-agent-1.21.3-windows.zip`.
 2. PowerShell **as Administrator**:
 
 ```powershell
@@ -123,6 +123,17 @@ Hard-refresh Admin: pill **v1.19.2**, section **03 AI models** (Director | Watch
 ## v1.20.0 — Security & public exposure
 
 See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).
+
+## v1.21.3
+
+```bash
+/opt/soundtube/app/scripts/update.sh /root/soundtube-1.21.3-patch.tar.gz
+curl -s http://127.0.0.1:8080/healthz   # {"ok":true,"version":"1.21.3"}
+```
+- New: art director system prompt configurable in Admin › 07 (`/var/lib/soundtube/director-prompt.json`, created on first save; see [DIRECTOR.md](./DIRECTOR.md)). Audio engine unchanged.
+- macOS agent: installer fixed. On the Mac, unzip
+  `dist/soundtube-node-agent-1.21.3-macos.zip`, run `./install-macos.sh --system --generate-token --name "Mac-mini"` and
+  paste the printed token into Admin → Render nodes. `ECONNREFUSED` / `401` diagnosis: [NODES.md](./NODES.md).
 
 ## v1.21.2
 

@@ -78,6 +78,13 @@ Under **My profile** you can enable optional TOTP: a **QR code** (SVG from `/api
 
 Without an account, each style page offers a **15-second preview** (audio only). Demo files never join the library and are deleted automatically. **Sign in to create full tracks** opens login.
 
+## What's new in v1.21.3
+
+- **Admin › 07 → Art director system prompt**: paste your own prompt (up to 20,000 characters, with a counter), choose the
+  source (built-in / custom / Modelfile), the temperature (default 0.7) and `num_ctx` (default 8192, 16384 recommended for a
+  long prompt). "Restore built-in prompt" button. Details: [DIRECTOR.md](./DIRECTOR.md).
+- macOS agent: installer fixed (see [NODES.md](./NODES.md)).
+
 ## What's new in v1.21.2
 
 - **Tracks**: a generation started with "Split into individual tracks" opens the mix's **Tracks** panel as soon as rendering ends and follows the split; the library also refreshes by itself (every 15 s) when tracks are added elsewhere (another tab, ZIP, API).

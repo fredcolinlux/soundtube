@@ -1,5 +1,34 @@
 # Journal des versions
 
+## 1.21.3 — 2026-11-09
+
+**EN summary** — macOS node agent installer fixed: the "Configuration" step crashed with `NameError: name 'true' is not defined` (JSON booleans inside the Python heredoc, now `True`/`False`), and with `--system` `config.json` in `/usr/local/soundtube-node` is now written with `sudo`. The installer warns when `--token` looks like a copied placeholder (or is empty) and prints where the token is stored (`config.json`, readable without sudo) with the command to read it. Docs: Mac node troubleshooting (`ECONNREFUSED` = agent not running, `401` = token mismatch). Node-agent zips rebuilt for 1.21.3. New: **art director system prompt** in Admin › 07 — prompt source selector (soundtube built-in / custom Admin prompt up to 20,000 characters with the mandatory JSON contract + catalogue appended / Modelfile SYSTEM with no system message and no forced temperature), temperature (default 0.7, empty = model default) and `num_ctx` (default 8192, empty = model default, 16384 hint for long prompts), stored in the data dir (`director-prompt.json`), local-only admin API with CSRF. Nodes: an ffmpeg without `drawtext` (Homebrew build without freetype) no longer fails the video (`No such filter: drawtext`) — chapter titles are dropped, the agent reports `drawtext` in `--detect`/`/health`, Admin shows "drawtext missing", and the macOS installer prefers/recommends `ffmpeg-full`. Agent zips carry the CT engine (1.21.3 · 7afdf699074e). Audio engine unchanged (hash unchanged).
+
+### Directeur artistique — prompt système (Admin › 07)
+- Nouveau bloc **Prompt système du directeur artistique** : zone de texte (20 000 caractères max, compteur caractères / jetons estimés), **Enregistrer** et **Restaurer le prompt intégré**. Libellés FR + EN.
+- **Source du prompt** : « Prompt intégré de soundtube » (défaut, prompt identique à 1.21.2) ; « Prompt personnalisé (Admin) » (texte Admin en message système, suivi du contrat JSON + catalogue obligatoires du code) ; « Prompt du Modelfile » (aucun message système : Ollama applique le `SYSTEM` du modèle ; contrat + catalogue dans le message utilisateur ; température jamais imposée).
+- **Température** (défaut 0.7, vide = défaut du modèle) et **`num_ctx`** (défaut 8192, vide = défaut du modèle ; l’Admin conseille 16384 au-delà de ~2 000 jetons de prompt). La veille garde ses propres réglages (0.4).
+- Stockage `dataDir/director-prompt.json` (mode 600, jamais dans le dossier de l’application). API `GET/PUT /api/admin/director/prompt` : local + session admin + CSRF comme les autres réglages admin ; plafond serveur 20 000 caractères (corps JSON jusqu’à 256 Ko pour cette route seulement).
+- Utilisé par Créer → « Décris l’ambiance » et par « Tester avec Ollama » ; l’aperçu affiche le mode, la température et le `num_ctx` effectifs. Le modèle reste celui d’Admin › PC IA (jamais codé en dur).
+- `test/v1213.js` (Ollama simulé : messages, options, plafond, CSRF, stockage, i18n).
+
+### Nœuds : ffmpeg sans drawtext, moteur audio
+- **Cause de « ffmpeg code 8 : No such filter: drawtext »** sur le Mac : le `ffmpeg` Homebrew est compilé sans freetype. L’agent détecte maintenant les filtres (`--detect`, `/health` : `drawtext`, `filters`) et, sans drawtext, retire les filtres `drawtext` du graphe (`stripFilter`, guillemets respectés) : la vidéo est rendue sans les titres de chapitre au lieu d’échouer ; avertissement renvoyé au CT (historique du nœud).
+- Admin › carte du nœud : avertissement **« drawtext absent »** (FR + EN, conseil `brew install ffmpeg-full` sur Mac).
+- `install-macos.sh` : vérifie drawtext, préfère automatiquement `ffmpeg-full` (keg-only) s’il est installé, sinon recommande `brew install ffmpeg-full` + `--ffmpeg "$(brew --prefix ffmpeg-full)/bin/ffmpeg"`.
+- `AGENT_VERSION` 1.21.3. Zips de l’agent reconstruits avec le moteur du CT (`core/ENGINE.json` : 1.21.3 · `7afdf699074e`) : un agent 1.19.x (`696de0f4125a`) est refusé pour la musique, il faut le réinstaller.
+
+### Agent macOS (`node-agent/install-macos.sh`)
+- **Cause de l’échec « NameError: name 'true' is not defined »** : `AUDIO_JSON` / `DISCOVERY_JSON` valaient `true`/`false` et étaient injectés dans le code Python qui écrit `config.json`. Corrigé : `True`/`False` (le JSON produit reste `true`/`false`).
+- Mode `--system` : `config.json` dans `/usr/local/soundtube-node` est écrit avec `sudo python3` (l’écriture sans sudo aurait échoué juste après).
+- Avertissement si le jeton ressemble à un texte d’exemple (`…JETON…`, `…TOKEN…`, `<…>`) ou s’il est vide ; fin d’installation : chemin de `config.json` + commande pour relire le jeton sans sudo.
+- `node-agent/package.json` → 1.21.3 ; zips `dist/soundtube-node-agent-1.21.3-{macos,windows}.zip` (moteur inchangé).
+
+### Docs
+- `docs/NODES.md` / `docs/en/NODES.md` : diagnostic « Offline » (`ECONNREFUSED` = agent non lancé, `401` = jetons différents, injoignable), lecture du jeton dans `config.json` (pas `agent-config.json`) sans sudo.
+- Manuels d’installation FR/EN : section v1.21.3 ; `node-agent/README.md`.
+- `docs/DIRECTEUR.md` / `docs/en/DIRECTOR.md` : prompt système (modes, température, num_ctx, exemple de Modelfile) ; manuels utilisateur FR/EN.
+
 ## 1.21.2 — 2026-11-09
 
 **EN summary** — Admin card 07 (listening profile) shows again and "Restore shipped profile" works (missing `apiFetch` import); profile lives in the data dir, generic example in the standalone. Auth files are loaded schema-tolerantly (`sessions.json` = `{}` no longer crashes login) and never overwritten from stale memory. 2FA step fixed (CSRF token of the partial session), ±1 step TOTP, clock-skew audit. New `scripts/admin-reset.js <user> [--disable-2fa] [--password]` (root, hidden prompt, works with the service running, audit entry). Studio opens the **Tracks** panel after a generation with auto-split. Complete ZIP: English texts (README.txt, youtube-en.txt, per-track `.en.txt`) and per-track videos fixed (audio pinned at queue time; `ffmpeg code 254 … audio.wav` gone). Full `npm test` green again; e2e test `npm run test:e2e`.

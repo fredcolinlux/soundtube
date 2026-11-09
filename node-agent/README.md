@@ -1,4 +1,4 @@
-# soundtube-node 1.18.0 — agent de rendu musique + vidéo
+# soundtube-node 1.21.3 — agent de rendu musique + vidéo
 
 Petit serveur Node.js (**aucune dépendance npm**) qui reçoit les rendus de soundtube depuis le CT :
 
@@ -12,11 +12,11 @@ Petit serveur Node.js (**aucune dépendance npm**) qui reçoit les rendus de sou
 
 ## Windows 11 (NVIDIA)
 
-1. Décompressez `soundtube-node-agent-1.18.0-windows.zip`.
+1. Décompressez `soundtube-node-agent-1.21.3-windows.zip`.
 2. PowerShell **en administrateur** :
 
 ```powershell
-cd $env:USERPROFILE\Downloads\soundtube-node-agent-1.18.0
+cd $env:USERPROFILE\Downloads\soundtube-node-agent-1.21.3
 Set-ExecutionPolicy -Scope Process Bypass -Force
 .\install-windows.ps1
 # ou : .\install-windows.ps1 -GenerateToken -AudioSlots 2
@@ -28,11 +28,11 @@ Désinstallation : `.\uninstall-windows.ps1`.
 
 ## macOS Apple Silicon (Mac mini M4…)
 
-1. Décompressez `soundtube-node-agent-1.18.0-macos.zip`.
+1. Décompressez `soundtube-node-agent-1.21.3-macos.zip`.
 2. Terminal :
 
 ```bash
-cd ~/Downloads/soundtube-node-agent-1.18.0
+cd ~/Downloads/soundtube-node-agent-1.21.3
 chmod +x install-macos.sh uninstall-macos.sh
 ./install-macos.sh
 # ou : ./install-macos.sh --generate-token --audio-slots 2
@@ -44,6 +44,10 @@ chmod +x install-macos.sh uninstall-macos.sh
 - Homebrew installe **Node 24** (même majeure que le CT) et **ffmpeg** (VideoToolbox inclus) s’ils manquent.
 - Journal : `…/soundtube-node/agent.log` (+ `agent.launchd.*.log`).
 - Désinstallation : `./uninstall-macos.sh` (ou `--system`).
+- ffmpeg : `ffmpeg-full` (avec drawtext = titres de chapitre) est préféré s’il est installé ; sinon `brew install ffmpeg-full`. Sans drawtext, les vidéos sont rendues sans titres de chapitre (Admin : « drawtext absent »).
+- Jeton : enregistré dans `config.json` du dossier d’installation (lisible sans sudo) :
+  `python3 -c "import json;print(json.load(open('/usr/local/soundtube-node/config.json'))['token'])"` (`--system`).
+  Admin « ECONNREFUSED » = agent non lancé ; « jeton refusé (401) » = jetons différents. v1.21.3 : correctif `NameError: name 'true'` + écriture de `config.json` avec sudo en `--system`.
 
 ### Pare-feu macOS
 

@@ -181,7 +181,7 @@ export class RenderNodes {
         if (slot.local) { const r = await localExec({ ...job, onProgress }); this.record({ kind: 'video', node: null, nodeName: 'CT (local)', title: job.title || '', trackId: job.trackId || null, status: lastErr ? 'fallback' : 'done', ms: Date.now() - t0, note: lastErr ? 'repris sur le CT : ' + lastErr.message.slice(0, 120) : null }); return { ...r, node: null, nodeName: 'CT (local)', retries: attempt }; }
         const r = await this.remoteExec(slot.node, { ...job, onProgress });
         const st = this.st(slot.node.id); st.jobs++; st.lastJob = Date.now();
-        this.record({ kind: 'video', node: slot.node.id, nodeName: this.nameOf(slot.node), title: job.title || '', trackId: job.trackId || null, status: 'done', ms: Date.now() - t0, encoder: r.encoder || null });
+        this.record({ kind: 'video', node: slot.node.id, nodeName: this.nameOf(slot.node), title: job.title || '', trackId: job.trackId || null, status: 'done', ms: Date.now() - t0, encoder: r.encoder || null, note: r.warning || null });
         return { ...r, retries: attempt };
       } catch (e) {
         if (slot.local) throw e;
@@ -202,7 +202,7 @@ export class RenderNodes {
       for (const name of c.data.need) { const r = await call('PUT', `/jobs/${id}/files/${encodeURIComponent(name)}`, { file: files[name], timeout: 120000 }); if (r.status !== 200) throw new Error(r.data?.error || `envoi ${name} refusé`); }
       const s = await call('POST', `/jobs/${id}/start`); if (s.status !== 202) throw new Error(s.data?.error || 'démarrage refusé');
       onStage?.('encode');
-      let fails = 0, last = -1, lastAt = Date.now();
+      let fails = 0, last = -1, lastAt = Date.now(), warning = null;
       for (;;) {
         await new Promise((r) => setTimeout(r, this.pollMs));
         let r; try { r = await call('GET', `/jobs/${id}`, { timeout: 5000 }); } catch (e) { if (++fails >= 3) throw new Error('nœud injoignable pendant le rendu : ' + e.message); continue; }
@@ -211,6 +211,7 @@ export class RenderNodes {
         if (j.status === 'error' || j.status === 'cancelled') throw new Error('erreur ffmpeg sur le nœud : ' + (j.error || j.status));
         if (j.progress !== last) { last = j.progress; lastAt = Date.now(); onProgress?.(Math.min(0.99, j.progress)); }
         else if (j.status === 'running' && Date.now() - lastAt > this.stallMs) throw new Error('rendu bloqué sur le nœud');
+        if (j.warning) warning = String(j.warning).slice(0, 200); // v1.21.3 : ex. drawtext absent → titres de chapitre omis
         if (j.status === 'done') break;
       }
       onStage?.('download');
@@ -219,7 +220,7 @@ export class RenderNodes {
       if (d.status !== 200) throw new Error('récupération de la vidéo impossible');
       if (!fs.existsSync(part) || fs.statSync(part).size < 1000) throw new Error('vidéo reçue vide');
       fs.renameSync(part, outFile);
-      return { encoder: d.headers['x-encoder'] || this.st(n.id).health?.best || null, node: n.url, nodeName: n.name || this.st(n.id).health?.name || n.url };
+      return { encoder: d.headers['x-encoder'] || this.st(n.id).health?.best || null, node: n.url, nodeName: n.name || this.st(n.id).health?.name || n.url, ...(warning ? { warning } : {}) };
     } finally { call('DELETE', `/jobs/${id}`, { timeout: 5000 }).catch(() => {}); try { fs.rmSync(outFile + '.part.mp4', { force: true }); } catch {} }
   }
 
@@ -269,7 +270,7 @@ export class RenderNodes {
       return { id: n.id, url: n.url, name: n.name || h.name || '', enabled: n.enabled, forced: this.s.forceUrl === n.url, hasToken: !!n.token,
         status: !n.enabled ? 'disabled' : st.up == null ? 'unknown' : st.up ? 'up' : 'down', latency: st.latency, error: st.error, checkedAt: st.checkedAt ? new Date(st.checkedAt).toISOString() : null,
         encoder: h.best || null, encoderLabel: h.best ? ENCODER_LABEL[h.best] || h.best : null, encoders: h.encoders || [], slots: h.slots || null, running: st.running, nodeRunning: h.running ?? null, queued: h.queued ?? null,
-        load: h.slots ? +((st.running) / h.slots).toFixed(2) : null, platform: h.platform || null, arch: h.arch || null, hostname: h.hostname || null, cpu: h.cpuModel || null, version: h.version || null, ffmpeg: h.ffmpeg || null, jobs: st.jobs, auth: h.auth ?? null,
+        load: h.slots ? +((st.running) / h.slots).toFixed(2) : null, platform: h.platform || null, arch: h.arch || null, hostname: h.hostname || null, cpu: h.cpuModel || null, version: h.version || null, ffmpeg: h.ffmpeg || null, jobs: st.jobs, auth: h.auth ?? null, drawtext: h.drawtext ?? null, ffmpegPath: h.ffmpegPath || null,
         audio: { ...this.audioState(n), audioJobs: st.audioJobs || 0 }, history: this.history.filter((x) => x.node === n.id).slice(-12).reverse() };
     });
     const order = this.candidates().slice().sort((a, b) => { const x = this.score(a), y = this.score(b); return x[0] - y[0] || x[2] - y[2]; }).map((n) => n.name || this.st(n.id).health?.name || n.url);

@@ -72,6 +72,13 @@ Dans **Mon profil**, tu peux activer un TOTP optionnel : un **QR code** (SVG ser
 
 Sans connexion, chaque page de style propose un **aperçu de 15 secondes** (audio seul). Les fichiers démo ne rejoignent pas la bibliothèque et sont effacés automatiquement. Le bouton **Connectez-vous pour créer des morceaux complets** mène au login.
 
+## Nouveautés v1.21.3
+
+- **Admin › 07 → Prompt système du directeur artistique** : colle ton propre prompt (jusqu’à 20 000 caractères, compteur),
+  choisis la source (intégré / personnalisé / Modelfile), la température (défaut 0.7) et le contexte `num_ctx` (défaut 8192,
+  16384 conseillé pour un long prompt). Bouton « Restaurer le prompt intégré ». Détails : [DIRECTEUR.md](./DIRECTEUR.md).
+- Agent macOS : installateur corrigé (voir [NODES.md](./NODES.md)).
+
 ## Nouveautés v1.21.2
 
 - **Morceaux** : une génération lancée avec « Découper en morceaux individuels » ouvre le panneau **Morceaux** du mix dès la fin du rendu et suit la découpe ; la bibliothèque se met aussi à jour seule (toutes les 15 s) quand des morceaux sont ajoutés ailleurs (autre onglet, ZIP, API).

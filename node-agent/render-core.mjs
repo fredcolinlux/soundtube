@@ -81,6 +81,35 @@ export function runFfmpeg(ffmpeg, args, { cwd, total, onProgress } = {}) {
   return { done, proc };
 }
 
+/**
+ * v1.21.3 : retire d'un filtergraph tous les filtres `name=…` (ex. drawtext absent d'un ffmpeg Homebrew sans freetype).
+ * Respecte les guillemets simples et les échappements (`enable='between(t,1,2)'` contient des virgules).
+ * Un filtre seul entre deux étiquettes devient `null`. Renvoie { graph, removed }.
+ */
+export function stripFilter(graph, name = 'drawtext') {
+  const g = String(graph || ''); let out = '', i = 0, removed = 0;
+  const atBoundary = (k) => k === 0 || /[,;\]\s]/.test(g[k - 1]);
+  while (i < g.length) {
+    if (g.startsWith(name + '=', i) && atBoundary(i)) {
+      let j = i, q = false;
+      for (; j < g.length; j++) { const c = g[j]; if (c === '\\') { j++; continue; } if (c === "'") q = !q; else if (!q && (c === ',' || c === ';' || c === '[')) break; }
+      removed++;
+      if (out.endsWith(',')) { out = out.slice(0, -1); i = j; continue; } // « …,drawtext=… » → « … »
+      if (g[j] === ',') { i = j + 1; continue; } // « [a]drawtext=…,format » → « [a]format »
+      out += 'null'; i = j; continue; // « [a]drawtext=…[b] » → « [a]null[b] »
+    }
+    const c = g[i]; out += c; i++;
+    if (c === "'") { const k = g.indexOf("'", i); const e = k < 0 ? g.length : k + 1; out += g.slice(i, e); i = e; }
+  }
+  return { graph: out, removed };
+}
+/** v1.21.3 : filtres ffmpeg utiles au rendu (drawtext = textes de chapitre ; absent si ffmpeg est compilé sans freetype). */
+export function detectFilters(ffmpeg, names = ['drawtext', 'showcqt', 'overlay']) {
+  const r = spawnSync(ffmpeg, ['-hide_banner', '-filters'], { encoding: 'utf8', windowsHide: true, timeout: 20000 });
+  if (r.error || r.status !== 0) return Object.fromEntries(names.map((n) => [n, null]));
+  return Object.fromEntries(names.map((n) => [n, new RegExp(`^\\s*\\S+\\s+${n}\\s`, 'm').test(r.stdout)]));
+}
+
 /** Encodeurs H.264/HEVC réellement utilisables : listés par « ffmpeg -encoders » ET réussissant un mini-encodage (0,2 s). */
 export function detectEncoders(ffmpeg, { only = null } = {}) {
   const r = spawnSync(ffmpeg, ['-hide_banner', '-encoders'], { encoding: 'utf8', windowsHide: true, timeout: 20000 });
@@ -94,5 +123,6 @@ export function detectEncoders(ffmpeg, { only = null } = {}) {
     if (t.status === 0) working.push(enc); else { const L = String(t.stderr || t.error?.message || '').trim().split('\n'); failed[enc] = (L.find((l) => /error|cannot|fail|not (found|supported|available)|driver|minimum/i.test(l) && !/Nothing was written/.test(l)) || L.pop() || '').slice(0, 200); }
   }
   const v = spawnSync(ffmpeg, ['-hide_banner', '-version'], { encoding: 'utf8', windowsHide: true });
-  return { ok: working.length > 0, listed, working, failed, best: working[0] || null, ffmpeg: String(v.stdout || '').split('\n')[0] };
+  const filters = detectFilters(ffmpeg);
+  return { ok: working.length > 0, listed, working, failed, best: working[0] || null, ffmpeg: String(v.stdout || '').split('\n')[0], filters, drawtext: filters.drawtext !== false };
 }

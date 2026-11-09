@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# soundtube — installation de l'agent de rendu (musique + vidéo, v1.17.0) sur macOS Apple Silicon (Mac mini M4…).
+# soundtube — installation de l'agent de rendu (musique + vidéo, v1.17.0 · correctifs v1.21.3) sur macOS Apple Silicon (Mac mini M4…).
 #
 # Usage (depuis le dossier décompressé) :
 #   chmod +x install-macos.sh uninstall-macos.sh
@@ -8,6 +8,7 @@
 #   ./install-macos.sh --token "monjeton" --name "Mac-mini-M4"
 #   ./install-macos.sh --no-audio --audio-slots 2
 #   ./install-macos.sh --system          # LaunchDaemon (sudo) : démarre sans session ouverte
+#   ./install-macos.sh --ffmpeg "$(brew --prefix ffmpeg-full)/bin/ffmpeg"   # ffmpeg avec drawtext
 #
 # Par défaut : installation utilisateur (pas de sudo) dans
 #   ~/Library/Application Support/soundtube-node
@@ -47,7 +48,7 @@ warn() { printf '    ATTENTION : %s\n' "$*" >&2; }
 fail() { printf '\nÉCHEC : %s\n' "$*" >&2; exit 1; }
 
 usage() {
-  sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'
   exit 0
 }
 
@@ -137,12 +138,19 @@ find_ffmpeg() {
     [[ -x "$FFMPEG_PATH" ]] || fail "--ffmpeg $FFMPEG_PATH introuvable"
     echo "$FFMPEG_PATH"; return 0
   fi
-  local p
+  local p full=""
+  # v1.21.3 : ffmpeg-full (keg-only, avec freetype → drawtext) préféré automatiquement s'il est installé
+  command -v brew >/dev/null 2>&1 && full="$(brew --prefix ffmpeg-full 2>/dev/null || true)/bin/ffmpeg"
+  for p in "$full" /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg /usr/local/opt/ffmpeg-full/bin/ffmpeg; do
+    [[ -n "$p" && -x "$p" ]] && has_drawtext "$p" && { echo "$p"; return 0; }
+  done
   for p in "$(command -v ffmpeg 2>/dev/null || true)" /opt/homebrew/bin/ffmpeg /usr/local/bin/ffmpeg; do
     [[ -n "$p" && -x "$p" ]] && { echo "$p"; return 0; }
   done
   return 1
 }
+# v1.21.3 : drawtext (titres de chapitre des vidéos) absent du « ffmpeg » Homebrew compilé sans freetype
+has_drawtext() { local f; f="$("$1" -hide_banner -filters 2>/dev/null || true)"; grep -qE '^[[:space:]]*[^[:space:]]+[[:space:]]+drawtext[[:space:]]' <<<"$f"; }
 FF="$(find_ffmpeg || true)"
 if [[ -z "$FF" ]]; then
   [[ "$SKIP_BREW" -eq 1 ]] && fail "ffmpeg introuvable (--skip-brew)"
@@ -153,6 +161,15 @@ if [[ -z "$FF" ]]; then
 fi
 [[ -n "$FF" ]] || fail "ffmpeg introuvable"
 info "source : $FF"
+if has_drawtext "$FF"; then
+  info "drawtext : oui (titres de chapitre des vidéos)"
+else
+  warn "ce ffmpeg n'a pas le filtre drawtext (compilé sans freetype) : les vidéos seront rendues SANS les titres de chapitre."
+  info "Correctif recommandé :"
+  info "  brew install ffmpeg-full"
+  info "  ./install-macos.sh $([ "$SYSTEM" -eq 1 ] && echo '--system ')--ffmpeg \"\$(brew --prefix ffmpeg-full)/bin/ffmpeg\""
+  info "(sans --ffmpeg, ffmpeg-full est de toute façon choisi automatiquement s'il est installé)"
+fi
 
 # --- 3. Copie de l'agent -------------------------------------------------------------------------
 step "Copie dans $INSTALL_DIR"
@@ -188,11 +205,20 @@ if [[ "$GENERATE_TOKEN" -eq 1 ]]; then
 elif [[ -z "$TOKEN" && -n "$OLD_TOKEN" ]]; then
   TOKEN="$OLD_TOKEN"; info "jeton existant conservé"
 fi
-AUDIO_JSON="true"; [[ "$NO_AUDIO" -eq 1 ]] && AUDIO_JSON="false"
-DISCOVERY_JSON="true"; [[ "$NO_DISCOVERY" -eq 1 ]] && DISCOVERY_JSON="false"
+# v1.21.3 : jeton d'exemple recopié tel quel (LE_JETON_DE_L_ADMIN, TON_VRAI_JETON, monjeton…) ou jeton vide.
+TOKEN_UPPER="$(printf '%s' "$TOKEN" | tr '[:lower:]' '[:upper:]')"
+if [[ "$TOKEN_UPPER" == *JETON* || "$TOKEN_UPPER" == *TOKEN* || "$TOKEN" == *"<"* ]]; then
+  warn "le jeton « $TOKEN » ressemble à un texte d'exemple : l'Admin refusera le nœud (401) tant que les deux jetons diffèrent."
+  info "Relancez avec --generate-token (puis copiez le jeton affiché dans Admin > Nœuds), ou --token \"<jeton saisi dans l'Admin>\"."
+elif [[ -z "$TOKEN" ]]; then
+  warn "aucun jeton : l'agent accepte toute requête du réseau local. Recommandé : --generate-token."
+fi
+AUDIO_JSON="True"; [[ "$NO_AUDIO" -eq 1 ]] && AUDIO_JSON="False"
+DISCOVERY_JSON="True"; [[ "$NO_DISCOVERY" -eq 1 ]] && DISCOVERY_JSON="False"
 ASLOTS="$AUDIO_SLOTS"; [[ "$ASLOTS" -eq 0 && "$OLD_ASLOTS" != "0" ]] && ASLOTS="$OLD_ASLOTS"
 SLOTS="$OLD_SLOTS"
-python3 - "$CFG" <<PY
+PYRUN=(python3); [[ "$SYSTEM" -eq 1 ]] && PYRUN=(sudo python3)
+"${PYRUN[@]}" - "$CFG" <<PY
 import json, sys
 cfg = {
   "port": int("$PORT"),
@@ -338,5 +364,7 @@ echo
 echo "Ajoutez dans soundtube > Admin > Nœuds :"
 echo "  http://${IP}:${PORT}"
 [[ -n "$TOKEN" ]] && echo "  jeton : $TOKEN"
+echo "Jeton enregistré dans : $CFG (lisible sans sudo) — pour le relire :"
+echo "  python3 -c \"import json;print(json.load(open('$CFG'))['token'])\""
 echo "Journal : $INSTALL_DIR/agent.log"
 echo "Désinstallation : $INSTALL_DIR/uninstall-macos.sh$([ "$SYSTEM" -eq 1 ] && echo ' --system')"

@@ -35,7 +35,7 @@ Voir `deploy/soundtube.env` : `SOUNDTUBE_HOST/PORT`, `DATA_DIR`, `MAX_JOBS`, `MA
 
 ## Nœud Windows
 
-Décompresser `dist/soundtube-node-agent-1.18.0-windows.zip`, PowerShell **administrateur** : `.\install-windows.ps1`.  
+Décompresser `dist/soundtube-node-agent-1.21.3-windows.zip`, PowerShell **administrateur** : `.\install-windows.ps1`.  
 Détails : [NODES.md](NODES.md).
 
 ## Nœud macOS (Apple Silicon)
@@ -94,6 +94,17 @@ Puis **Ctrl+F5** sur Admin : pastille **v1.19.2**, section **03 Modèles IA** (D
 
 - [SECURITY.md](./SECURITY.md)
 - [EXPOSITION.md](./EXPOSITION.md)
+
+## v1.21.3
+
+```bash
+/opt/soundtube/app/scripts/update.sh /root/soundtube-1.21.3-patch.tar.gz
+curl -s http://127.0.0.1:8080/healthz   # {"ok":true,"version":"1.21.3"}
+```
+- Nouveau : prompt système du directeur réglable dans Admin › 07 (`/var/lib/soundtube/director-prompt.json`, créé au premier enregistrement ; voir [DIRECTEUR.md](./DIRECTEUR.md)). Moteur audio inchangé.
+- Agent macOS : installateur corrigé. Sur le Mac, décompresser
+  `dist/soundtube-node-agent-1.21.3-macos.zip` puis `./install-macos.sh --system --generate-token --name "Mac-mini"` et
+  copier le jeton affiché dans Admin → Nœuds. Diagnostic `ECONNREFUSED` / `401` : [NODES.md](./NODES.md#nœud-mac-offline--diagnostic-rapide-v1213).
 
 ## v1.21.2
 

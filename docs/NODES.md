@@ -97,7 +97,7 @@ Par nœud :
 - en bas de Répartition : « Où ont tourné les derniers rendus » (CT et nœuds, 30 derniers). L’historique est gardé
   dans `data/render-history.json` (300 entrées).
 
-## 6. Réinstallation de l’agent Windows (1.16.0+, zip 1.19.0 recommandé)
+## 6. Réinstallation de l’agent Windows (1.16.0+, zip 1.21.3 recommandé)
 
 Le protocole vidéo passe en version 2 et la musique demande `core/`. **Un agent 1.15 ou plus ancien reste utilisable
 pour la vidéo seulement** : Admin affiche « agent 1.15.0 : rend la vidéo seulement (réinstaller l’agent 1.16.0) ».
@@ -105,8 +105,8 @@ pour la vidéo seulement** : Admin affiche « agent 1.15.0 : rend la vidéo seul
 Sur le PC Windows, dans PowerShell **en administrateur** :
 
 ```powershell
-Expand-Archive "$env:USERPROFILE\Downloads\soundtube-node-agent-1.19.0-windows.zip" -DestinationPath "$env:USERPROFILE\Downloads\st-agent" -Force
-cd "$env:USERPROFILE\Downloads\st-agent\soundtube-node-agent-1.19.0"
+Expand-Archive "$env:USERPROFILE\Downloads\soundtube-node-agent-1.21.3-windows.zip" -DestinationPath "$env:USERPROFILE\Downloads\st-agent" -Force
+cd "$env:USERPROFILE\Downloads\st-agent\soundtube-node-agent-1.21.3"
 Set-ExecutionPolicy -Scope Process Bypass -Force
 .\install-windows.ps1
 ```
@@ -129,7 +129,7 @@ celle du CT).
 ### Installation
 
 ```bash
-cd ~/Downloads/soundtube-node-agent-1.19.0
+cd ~/Downloads/soundtube-node-agent-1.21.3
 chmod +x install-macos.sh uninstall-macos.sh
 ./install-macos.sh                         # utilisateur, pas de sudo
 ./install-macos.sh --generate-token        # avec jeton
@@ -185,12 +185,65 @@ Node et ffmpeg Homebrew ne sont pas retirés (`brew uninstall node@24 ffmpeg` si
 
 | Symptôme | Piste |
 |---|---|
+| `No such filter: drawtext` (vidéo en échec, < 1.21.3) | `brew install ffmpeg-full` ; voir ci-dessous |
 | `VideoToolbox indisponible` | `brew reinstall ffmpeg` ; vérifier `ffmpeg -encoders \| grep videotoolbox` |
 | Agent muet après reboot | LaunchAgent = session ouverte ? Sinon `--system` ou ouverture de session auto |
 | « Moteur différent » | Réinstaller l’agent fourni avec **cette** version de soundtube (même `ENGINE.json`) |
 | Empreinte de rendu différente | Aligner la version de Node sur le CT (`node -v`) |
-| Connexion refusée depuis le CT | Autoriser node dans le pare-feu ; vérifier IP/route ; ajouter l’URL à la main |
+| Connexion refusée depuis le CT (`ECONNREFUSED`) | Agent non lancé : voir « Nœud Mac Offline » ci-dessous |
+| `jeton refusé (401)` | Jetons différents : lire `config.json` (ci-dessous) |
+| `NameError: name 'true' is not defined` à l’installation | Zip < 1.21.3 : prendre le zip 1.21.3 |
 | Samples jamais reçus | Premier rendu musical depuis le CT ; journal `agent.log` : lignes `[samples]` |
+
+### Nœud Mac « Offline » : diagnostic rapide (v1.21.3)
+
+Le message affiché dans Admin → Nœuds indique la cause :
+
+| Message dans l’Admin | Signification | Que faire |
+|---|---|---|
+| `connect ECONNREFUSED <IP>:8765` | Le Mac répond, mais **rien n’écoute** sur 8765 : l’agent n’est pas lancé (jamais installé, désinstallé ou planté). | `launchctl print gui/$(id -u)/com.soundtube.node` (ou `sudo launchctl print system/com.soundtube.node` avec `--system`) ; si « Could not find service », (ré)installer avec `install-macos.sh`. Sinon `launchctl kickstart -k …` et lire `agent.launchd.err.log`. |
+| `jeton refusé (401)` | L’agent tourne mais son jeton **diffère** de celui saisi dans l’Admin. | Lire le jeton de l’agent (ci-dessous) et le recopier dans le champ « jeton » du nœud, ou réinstaller avec `--token "<jeton de l’Admin>"`. |
+| `ETIMEDOUT` / `EHOSTUNREACH` | Le Mac n’est pas joignable (IP changée, routage, pare-feu). | `ipconfig getifaddr en0` sur le Mac ; `curl http://<IP-du-Mac>:8765/health` depuis le CT ; autoriser `node` dans le pare-feu. |
+
+**Lire le jeton de l’agent sur le Mac (sudo inutile, le fichier est en 644)** — le fichier s’appelle `config.json` :
+
+```bash
+# installation --system
+python3 -c "import json;print(json.load(open('/usr/local/soundtube-node/config.json'))['token'])"
+# installation utilisateur (défaut)
+python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/Library/Application Support/soundtube-node/config.json')))['token'])"
+```
+
+Ne recopiez pas tels quels les textes d’exemple (`LE_JETON_DE_L_ADMIN`, `TON_VRAI_JETON`…) : depuis 1.21.3 l’installateur
+le signale. Le plus simple : `./install-macos.sh --system --generate-token --name "Mac-mini"`, puis copier le jeton affiché
+(et rappelé avec le chemin de `config.json` en fin d’installation) dans l’Admin.
+
+**Correctif 1.21.3 de `install-macos.sh`** : l’étape « Configuration » échouait avec
+`NameError: name 'true' is not defined` (booléens JSON écrits dans du code Python) ; en mode `--system`, `config.json`
+dans `/usr/local/soundtube-node` est désormais écrit avec `sudo`. Si vous avez un zip plus ancien, prenez
+`soundtube-node-agent-1.21.3-macos.zip` (ou corrigez la copie locale :
+`perl -pi -e 's/_JSON="true"/_JSON="True"/g; s/_JSON="false"/_JSON="False"/g; s/^python3 - "\$CFG" <<PY/sudo python3 - "\$CFG" <<PY/' install-macos.sh`).
+
+### Vidéo en échec « No such filter: drawtext » / musique refusée (v1.21.3)
+
+**drawtext** : le `ffmpeg` de Homebrew peut être compilé sans freetype, donc sans le filtre `drawtext` (titres de chapitre
+des vidéos). Avant 1.21.3, le rendu échouait avec `ffmpeg code 8 : No such filter: 'drawtext'`. Depuis 1.21.3 :
+
+- l’agent détecte les filtres au démarrage (`agent.mjs --detect` affiche `"drawtext": true/false`, `/health` aussi) ;
+- sans drawtext, la vidéo est **rendue quand même, sans les titres de chapitre** (le reste — fond, textes fixes déjà
+  rendus en PNG par le CT, spectre, barre de progression — est identique) ; l’historique du nœud l’indique ;
+- la carte du nœud dans Admin affiche **« drawtext absent »** ;
+- `install-macos.sh` vérifie drawtext, **préfère automatiquement `ffmpeg-full`** s’il est installé, et sinon recommande :
+
+```bash
+brew install ffmpeg-full
+./install-macos.sh --system --ffmpeg "$(brew --prefix ffmpeg-full)/bin/ffmpeg"
+```
+
+**Moteur audio** : la musique n’est envoyée qu’à un agent dont l’empreinte du moteur est **identique** à celle du CT
+(Admin → Répartition). Le moteur a changé en 1.20.5 (`7afdf699074e`) : un agent installé depuis un zip 1.19.x
+(`696de0f4125a`) affiche « Musique : non » / moteur différent. Réinstaller avec `soundtube-node-agent-1.21.3-macos.zip`
+(ou `-windows.zip`), dont `core/ENGINE.json` vaut `{ "version": "1.21.3", "hash": "7afdf699074e" }`.
 
 ### Ordre vidéo et musique
 

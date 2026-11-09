@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.21.2">
+  <link rel="stylesheet" href="/css/app.css?v=1.21.3">
 </head>
 <body>
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -244,6 +244,31 @@
           <pre id="dirTrText" class="dir-pre"></pre>
         </div>
       </div>
+      <div class="dir-sys" id="dirSys">
+        <h3 data-i18n="admin.dirSysTitle">Prompt système du directeur artistique</h3>
+        <p class="hint" data-i18n="admin.dirSysHint">Choisis d’où vient le prompt système envoyé à Ollama. Le contrat JSON et le catalogue des styles de soundtube sont toujours ajoutés pour que la réponse reste valide. Stocké dans le dossier de données (survit aux mises à jour).</p>
+        <div class="grid-3">
+          <div class="field span-2"><label for="dirSysMode" data-i18n="admin.dirSysMode">Source du prompt</label>
+            <select id="dirSysMode">
+              <option value="builtin" data-i18n="admin.dirSysModeBuiltin">Prompt intégré de soundtube</option>
+              <option value="custom" data-i18n="admin.dirSysModeCustom">Prompt personnalisé (Admin)</option>
+              <option value="modelfile" data-i18n="admin.dirSysModeModelfile">Prompt du Modelfile</option>
+            </select>
+            <span class="hint" id="dirSysModeHint"></span></div>
+          <div class="field"><label for="dirSysTemp" data-i18n="admin.dirSysTemp">Température</label>
+            <input type="number" id="dirSysTemp" min="0" max="2" step="0.05" placeholder="0.7">
+            <span class="hint" data-i18n="admin.dirSysTempHint">Défaut 0.7 ; vide = défaut du modèle. Ignorée en mode Modelfile.</span></div>
+          <div class="field"><label for="dirSysCtx" data-i18n="admin.dirSysCtx">Contexte (num_ctx)</label>
+            <input type="number" id="dirSysCtx" min="2048" max="131072" step="1024" placeholder="8192">
+            <span class="hint" data-i18n="admin.dirSysCtxHint">Défaut 8192 ; vide = défaut du modèle. 16384 recommandé avec un long prompt.</span></div>
+        </div>
+        <div class="field"><label for="dirSysPrompt"><span data-i18n="admin.dirSysPrompt">Prompt système personnalisé</span> <span class="opt" id="dirSysCount">0 / 20 000</span></label>
+          <textarea id="dirSysPrompt" rows="12" maxlength="20000" spellcheck="false"></textarea>
+          <p class="warn" id="dirSysCtxWarn" hidden data-i18n="admin.dirSysCtxWarn">Prompt long : passe num_ctx à 16384 (ou plus) pour qu’il ne soit pas tronqué par Ollama.</p></div>
+        <div class="row"><button class="btn btn-primary" id="dirSysSave" type="button" data-i18n="common.save">Enregistrer</button>
+          <button class="btn btn-ghost btn-mini" id="dirSysRestore" type="button" data-i18n="admin.dirSysRestore">Restaurer le prompt intégré</button>
+          <span class="hint" id="dirSysMsg"></span></div>
+      </div>
       <div class="field"><label>Tester le directeur</label>
         <div class="row"><select id="dirStyle"></select><input type="text" id="dirPrompt" value="Une house filtrée pour une nuit d’été, montées au filtre et basse ronde" maxlength="1200" spellcheck="false">
           <button class="btn" id="dirPreview" type="button" data-i18n="admin.dirPreview">Voir ce qui est envoyé</button><button class="btn btn-primary" id="dirRun" type="button" data-i18n="admin.dirRun">Tester avec Ollama</button></div>
@@ -348,11 +373,12 @@
     </footer>
   </main>
   <div class="toast" id="toast" hidden></div>
-  <script type="module" src="/js/admin.js?v=1.21.2"></script>
-  <script type="module" src="/js/ytadmin.js?v=1.21.2"></script>
-  <script type="module" src="/js/adminmedia.js?v=1.21.2"></script>
-  <script type="module" src="/js/admindirector.js?v=1.21.2"></script>
-  <script type="module" src="/js/adminauth.js?v=1.21.2"></script>
-  <script type="module" src="/js/adminsocial.js?v=1.21.2"></script>
+  <script type="module" src="/js/admin.js?v=1.21.3"></script>
+  <script type="module" src="/js/ytadmin.js?v=1.21.3"></script>
+  <script type="module" src="/js/adminmedia.js?v=1.21.3"></script>
+  <script type="module" src="/js/admindirector.js?v=1.21.3"></script>
+  <script type="module" src="/js/adminprompt.js?v=1.21.3"></script>
+  <script type="module" src="/js/adminauth.js?v=1.21.3"></script>
+  <script type="module" src="/js/adminsocial.js?v=1.21.3"></script>
 </body>
 </html>

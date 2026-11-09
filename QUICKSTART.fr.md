@@ -1,12 +1,12 @@
-<!-- v1.21.2 routes: / home, /studio studio -->
-# Démarrage rapide — soundtube 1.21.2
+<!-- v1.21.3 routes: / home, /studio studio -->
+# Démarrage rapide — soundtube 1.21.3
 
 Trois étapes. Rien d’autre n’est obligatoire.
 
 ## 1. Installer
 
 ```bash
-tar xzf soundtube-1.21.2-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.21.3-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # redémarre le service soundtube
 ```
 
@@ -37,7 +37,7 @@ Utilise le script inclus (en **root**, sans `sudo` dans la commande) :
 
 ```bash
 # depuis n’importe où, avec le script déjà déployé :
-/opt/soundtube/app/scripts/update.sh /chemin/soundtube-1.21.2-patch.tar.gz
+/opt/soundtube/app/scripts/update.sh /chemin/soundtube-1.21.3-patch.tar.gz
 
 # ou plusieurs patches dans l’ordre :
 /opt/soundtube/app/scripts/update.sh /chemin/patch-a.tar.gz /chemin/patch-b.tar.gz

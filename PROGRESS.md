@@ -8,6 +8,7 @@ Heures : Europe/Paris.
 
 | Date | Jalon | État | Détail |
 |---|---|---|---|
+| 09/11/2026 22:15 | v1.21.3 : installateur agent macOS corrigé + prompt système du directeur | ✅ fait | Admin › 07 : prompt système (intégré / personnalisé 20 000 car. + contrat JSON / Modelfile), température, num_ctx, `director-prompt.json` en dataDir ; `test/v1213.js` ; `NameError: name 'true'` (booléens Python) ; `sudo python3` pour `config.json` en `--system` ; alerte jeton d’exemple ; chemin du jeton affiché ; docs NODES FR/EN (ECONNREFUSED / 401 / `config.json`) ; zips agent 1.21.3. |
 | 09/11/2026 18:50 | v1.21.2 : récupération accès admin/2FA + carte 07 | ✅ fait | Blocage 2FA = CSRF manquant à l’étape code (corrigé) ; `scripts/admin-reset.js` ; JSON d’auth tolérants ; propriétaire conservé ; clé maître protégée ; carte 07 (apiFetch) + profil dans dataDir, exemple générique ; `test/v1212.js`. |
 | 06/11/2026 13:50 | v1.21.1 : update.sh sûr + /healthz + docs API LAN-only | ✅ fait | `scripts/update.sh` vérifie avant stop, backup, trap start ; `/healthz` ; docs/OpenAPI → 404 stylé hors LAN ; `isLocal` sur `/api/me` `/api/site` ; `test/v1211.js`. |
 | 06/11/2026 13:45 | v1.21.0 : Facebook Page + X (credentials chiffrés, panneau bibliothèque, auto par style défaut off, mock) | ✅ fait | Admin › Réseaux sociaux ; `POST /api/tracks/:id/social` + confirm PUBLISH ; `SOUNDTUBE_SOCIAL_TRANSPORT=mock` ; `test/v1210.js` ; docs SOCIAL.md FR/EN. setup.html + site.css. |

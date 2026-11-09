@@ -5,9 +5,9 @@ import { mountSiteFooter } from './sitefoot.js';
 const i18n = t; // alias: track locals often shadow `t`
 import { apiFetch, refreshAuth, isLocal } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.21.2';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.21.2';
-import { initPubPanel, loadPub, publishHTML, packHTML, socialHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.21.2';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.21.3';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.21.3';
+import { initPubPanel, loadPub, publishHTML, packHTML, socialHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.21.3';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
@@ -1041,7 +1041,7 @@ await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
     const q = new URLSearchParams(location.search), tid = q.get('track');
     const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-    if (q.get('tour') === '1') import('./tour.js?v=1.21.2').then((m) => m.startTour());
+    if (q.get('tour') === '1') import('./tour.js?v=1.21.3').then((m) => m.startTour());
   }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
 }
 function updateStatus() {

@@ -50,7 +50,7 @@ function render(v) {
       <span class="node-dot" title="${lab}"></span>
       <div class="node-main"><div class="node-title"><b>${esc(n.name || n.hostname || n.url)}</b>${n.forced ? `<span class="node-tag">${t('admin.nodeForced')}</span>` : ''}${n.hasToken ? '<span class="node-tag">jeton</span>' : ''}</div>
         <div class="node-url">${esc(n.url)} · <span class="node-state">${lab}</span></div>
-        <div class="node-meta">${details}</div>${audioLine(n)}
+        <div class="node-meta">${details}</div>${n.status === 'up' && n.drawtext === false ? `<div class="node-warn">${esc(t(n.platform === 'darwin' ? 'admin.nodeNoDrawtextMac' : 'admin.nodeNoDrawtext'))}</div>` : ''}${audioLine(n)}
         <div class="node-detail" ${open.has(n.id) ? '' : 'hidden'}><div class="node-detail-head">${t('admin.nodeLastRenders')}</div>${histTable(n.history || [])}</div></div>
       <div class="node-actions">
         <label class="toggle small" title="${t('admin.nodeEnableTitle')}"><input type="checkbox" data-act="enable" ${n.enabled ? 'checked' : ''}> Actif</label>

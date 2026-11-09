@@ -156,7 +156,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // forcer l'annonce plateforme (l'agent réel sur Linux dirait linux) via monkey-patch health — on vérifie plutôt le flux Admin avec health injecté
   const port = await agent.ready;
   const h = await fetch(`http://127.0.0.1:${port}/health`).then((r) => r.json());
-  check(h.version === '1.17.0' && h.best === 'h264_videotoolbox' && /VideoToolbox/.test(h.bestLabel) && h.audio?.ok,
+  check(/^1\.(1[7-9]|[2-9]\d)\./.test(h.version) && h.best === 'h264_videotoolbox' && /VideoToolbox/.test(h.bestLabel) && h.audio?.ok,
     `agent forcé VT : ${h.bestLabel}, musique ok, v${h.version}`);
   // proxy qui réécrit platform/arch dans /health
   const proxy = http.createServer(async (req, res) => {

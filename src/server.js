@@ -28,6 +28,7 @@ import { samplesAvailable } from './engine/sampler.js';
 import { STYLES, MOODS, INSTRUMENTS, VARIANT_KEY, styleDef } from './engine/styles.js';
 import { styleDefaults18 } from './engine/flavor.js';
 import { resolveAdvancedDefaults } from './engine/advdefaults.js';
+import * as directorPrompt from './directorprompt.js';
 import { suggest as aiSuggest, cleanText, cleanTags, buildPrompt, ollamaJson, validateSuggestion } from './ai.js';
 import * as trends from './trends.js';
 import * as director from './director.js';
@@ -156,7 +157,10 @@ app.disable('x-powered-by');
 app.set('trust proxy', false);
 app.use(securityHeaders());
 app.use(attachAuth(auth));
-app.use(express.json({ limit: `${auth.security.bodyLimitKb || 64}kb` }));
+{ // v1.21.3 : le prompt système du directeur (≤ 20 000 caractères, UTF-8) a sa propre limite de corps
+  const jsonStd = express.json({ limit: `${auth.security.bodyLimitKb || 64}kb` }), jsonPrompt = express.json({ limit: '256kb' });
+  app.use((req, res, next) => (req.path === '/api/admin/director/prompt' ? jsonPrompt : jsonStd)(req, res, next));
+}
 
 /* Liveness for reverse proxies / update.sh (no auth). */
 app.get(['/healthz', '/health'], (_req, res) => {
@@ -882,7 +886,10 @@ app.post('/api/admin/trends/run', (req, res) => {
 trends.start(() => renderNodes.resolveWatchAi());
 // v1.15.0 : contexte du directeur artistique (profil de goût + dernière veille), chacun activé dans Admin
 const directorCtx = (style, s) => director.context(style, { s, report: trends.latest() });
-app.post('/api/ai/suggest', awrap(async (req, res) => res.json(await aiSuggest(renderNodes.s.ai, req.body || {}, (style) => directorCtx(style)))));
+app.post('/api/ai/suggest', awrap(async (req, res) => { const pc = directorPrompt.get(); res.json(await aiSuggest(renderNodes.s.ai, req.body || {}, (style) => directorCtx(style), pc, directorPrompt.inference(pc))); }));
+// v1.21.3 : prompt système du directeur (Admin › 07) — dataDir/director-prompt.json, local only + CSRF (comme /api/admin/*)
+app.get('/api/admin/director/prompt', (req, res) => res.json(directorPrompt.view()));
+app.put('/api/admin/director/prompt', wrap((req, res) => res.json(directorPrompt.view(directorPrompt.update(req.body || {})))));
 function directorView(style = 'frenchtouch', extra = {}) {
   director.ensureDataProfile();
   const s = director.settings(), p = director.profile(s), tr = director.trendsSummary(trends.latest(), style);
@@ -909,13 +916,14 @@ app.post('/api/admin/director/preview', awrap(async (req, res) => {
   const b = req.body || {}, s0 = director.settings(), s = { ...s0, taste: b.taste ?? s0.taste, trends: b.trends ?? s0.trends };
   const style = STYLES[b.style] ? b.style : 'frenchtouch', prompt = String(b.prompt || 'Une house filtrée pour une nuit d\'été, montées au filtre et basse ronde').slice(0, 1200);
   const opts = { prompt, style, duration: Math.min(7200, Math.max(60, +b.duration || 180)), meta: b.meta !== false, plan: false };
-  const ctx = directorCtx(style, s), base = buildPrompt(opts), sent = buildPrompt({ ...opts, context: ctx });
+  const pc = directorPrompt.get(), inf = directorPrompt.inference(pc); // v1.21.3 : mode de prompt + température / num_ctx
+  const ctx = directorCtx(style, s), base = buildPrompt(opts), sent = buildPrompt({ ...opts, context: ctx, promptCfg: pc });
   const size = (x) => ({ system: x.system.length, user: x.user.length, total: x.system.length + x.user.length, tokens: director.estTokens(x.system + x.user) });
   const out = { style, prompt, sources: { taste: ctx.taste.length, trends: ctx.trends.length, trendsDate: ctx.trendsDate, tasteTokens: director.estTokens(ctx.taste), trendsTokens: director.estTokens(ctx.trends) },
-    base: size(base), sent: size(sent), numCtx: 8192, system: sent.system, user: sent.user,
+    base: size(base), sent: size(sent), numCtx: inf.num_ctx, temperature: inf.temperature, mode: pc.mode, system: sent.system, user: sent.user,
     diff: { system: director.lineDiff(base.system, sent.system), user: director.lineDiff(base.user, sent.user) } };
   if (b.run) {
-    try { const r = await ollamaJson(renderNodes.s.ai, sent.system, sent.user); out.result = { ok: true, model: r.model, ms: r.ms, ...validateSuggestion(r.data, { ...opts, forbid: ctx.forbid }) }; }
+    try { const r = await ollamaJson(renderNodes.s.ai, sent.system, sent.user, inf); out.result = { ok: true, model: r.model, ms: r.ms, ...validateSuggestion(r.data, { ...opts, forbid: ctx.forbid }) }; }
     catch (e) { out.result = { ok: false, error: e.message }; }
   }
   res.json(out);
