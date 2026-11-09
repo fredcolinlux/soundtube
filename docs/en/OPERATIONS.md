@@ -57,6 +57,14 @@ Do not confuse the two when debugging “wrong language” reports.
 
 ## Samples
 
+- Shipped pack: `assets/samples/` (see [SAMPLES-LICENSES.md](../../SAMPLES-LICENSES.md)).
+- Personal samples (v1.21.4): read-only external folder (default `/mnt/samples`, NAS mounted on the Proxmox host, see
+  [INSTALL-MANUAL.md](./INSTALL-MANUAL.md#nas-samples-synology-smb-share--proxmox-host--ct--v1214)). Data files:
+  `/var/lib/soundtube/external-samples.json` (folder, enabled) and `external-samples-index.json` (last scan index). Automatic
+  scan at startup when the folder is readable and not indexed yet; otherwise Admin › 06c › **Rescan**. Deleting the index
+  disables the “My samples” kit until the next scan.
+- Demo tracks (v1.21.4): `/var/lib/soundtube/demo-tracks.json` (`ids`, `updatedAt`).
+
 ## Trend watch (v1.19)
 
 Admin → **PC IA**: separate **Watch** Ollama URL (optional) + model (from `/api/tags`). Empty model → fall back to the director model with a visible notice. Separate **Test watch** button. Watch calls use a generic summariser prompt and `temperature: 0.4`; the art-director path stays unchanged (`temperature: 0.7`).

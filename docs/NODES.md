@@ -97,7 +97,7 @@ Par nœud :
 - en bas de Répartition : « Où ont tourné les derniers rendus » (CT et nœuds, 30 derniers). L’historique est gardé
   dans `data/render-history.json` (300 entrées).
 
-## 6. Réinstallation de l’agent Windows (1.16.0+, zip 1.21.3 recommandé)
+## 6. Réinstallation de l’agent Windows (1.16.0+, zip 1.21.4 recommandé)
 
 Le protocole vidéo passe en version 2 et la musique demande `core/`. **Un agent 1.15 ou plus ancien reste utilisable
 pour la vidéo seulement** : Admin affiche « agent 1.15.0 : rend la vidéo seulement (réinstaller l’agent 1.16.0) ».
@@ -105,8 +105,8 @@ pour la vidéo seulement** : Admin affiche « agent 1.15.0 : rend la vidéo seul
 Sur le PC Windows, dans PowerShell **en administrateur** :
 
 ```powershell
-Expand-Archive "$env:USERPROFILE\Downloads\soundtube-node-agent-1.21.3-windows.zip" -DestinationPath "$env:USERPROFILE\Downloads\st-agent" -Force
-cd "$env:USERPROFILE\Downloads\st-agent\soundtube-node-agent-1.21.3"
+Expand-Archive "$env:USERPROFILE\Downloads\soundtube-node-agent-1.21.4-windows.zip" -DestinationPath "$env:USERPROFILE\Downloads\st-agent" -Force
+cd "$env:USERPROFILE\Downloads\st-agent\soundtube-node-agent-1.21.4"
 Set-ExecutionPolicy -Scope Process Bypass -Force
 .\install-windows.ps1
 ```
@@ -129,7 +129,7 @@ celle du CT).
 ### Installation
 
 ```bash
-cd ~/Downloads/soundtube-node-agent-1.21.3
+cd ~/Downloads/soundtube-node-agent-1.21.4
 chmod +x install-macos.sh uninstall-macos.sh
 ./install-macos.sh                         # utilisateur, pas de sudo
 ./install-macos.sh --generate-token        # avec jeton
@@ -241,9 +241,11 @@ brew install ffmpeg-full
 ```
 
 **Moteur audio** : la musique n’est envoyée qu’à un agent dont l’empreinte du moteur est **identique** à celle du CT
-(Admin → Répartition). Le moteur a changé en 1.20.5 (`7afdf699074e`) : un agent installé depuis un zip 1.19.x
-(`696de0f4125a`) affiche « Musique : non » / moteur différent. Réinstaller avec `soundtube-node-agent-1.21.3-macos.zip`
-(ou `-windows.zip`), dont `core/ENGINE.json` vaut `{ "version": "1.21.3", "hash": "7afdf699074e" }`.
+(Admin → Répartition). Le moteur a changé en 1.21.4 (`22573aa0f775`, kit « Mes samples » ; avant : `7afdf699074e` depuis 1.20.5,
+`696de0f4125a` en 1.19.x) : un agent installé depuis un zip plus ancien affiche « Musique : non » / moteur différent.
+Réinstaller avec `soundtube-node-agent-1.21.4-macos.zip` (ou `-windows.zip`), dont `core/ENGINE.json` vaut
+`{ "version": "1.21.4", "hash": "22573aa0f775" }`. Les morceaux qui utilisent le kit « Mes samples » (samples du NAS)
+sont toujours rendus sur le CT : les agents n’ont pas accès au dossier du NAS.
 
 ### Ordre vidéo et musique
 

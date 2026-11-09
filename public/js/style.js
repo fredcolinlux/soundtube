@@ -1,5 +1,5 @@
 // v1.10.0+ : page d'un style — démo anonyme 15 s (v1.20.3) ou génération complète si connecté.
-import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser, onLangChange } from './site.js?v=1.21.3';
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser, onLangChange } from './site.js?v=1.21.4';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
 await bootSite('/styles/' + id);
@@ -111,8 +111,9 @@ async function poll() {
 }
 
 function renderLib() {
-  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((tr) => trackRowHtml(tr, player, S.labels, { listenOnly: S.demo })).join('') : `<li class="tr-empty">${t('style.emptyLib', { label: esc(S.style.label) })}</li>`;
-  $('#sLibCount').textContent = S.total ? `${S.total} morceau${S.total > 1 ? 'x' : ''}` : '';
+  $('#sLib').innerHTML = S.tracks.length ? S.tracks.map((tr) => trackRowHtml(tr, player, S.labels, { listenOnly: S.demo })).join('') : `<li class="tr-empty">${S.demo ? t('style.demoLibEmpty') : t('style.emptyLib', { label: esc(S.style.label) })}</li>`;
+  // v1.21.4 : visiteur → seulement les morceaux choisis dans Admin › Morceaux de la démo (écoute seule)
+  $('#sLibCount').textContent = S.demo ? (S.total ? t('style.demoLibCount', { n: S.total }) : '') : S.total ? (S.total > 1 ? t('style.tracksCount_plural', { n: S.total }) : t('style.tracksCount', { n: S.total })) : '';
   $('#sMore').hidden = S.tracks.length >= S.total;
 }
 async function loadLib(reset) {

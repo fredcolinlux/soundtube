@@ -1,6 +1,6 @@
 {
   "name": "soundtube-node-agent",
-  "version": "1.21.3",
+  "version": "1.21.4",
   "description": "soundtube \u2014 agent de rendu musique + vid\u00e9o pour le r\u00e9seau local (moteur soundtube ; NVENC sur NVIDIA, VideoToolbox sur Apple Silicon, sinon libx264). Aucune d\u00e9pendance npm.",
   "type": "module",
   "main": "agent.mjs",

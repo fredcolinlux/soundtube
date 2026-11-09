@@ -61,6 +61,8 @@ export class JobQueue {
   route(t) {
     const N = this.nodes, P = t?.params || {}, localFree = this.localRunning < config.maxConcurrentJobs;
     if (!N || this.forceLocal.has(t.id)) return localFree ? { local: true, reason: this.forceLocal.get(t.id) ? 'fallback' : 'ct' } : null;
+    // v1.21.4 : kit « Mes samples » (dossier externe du CT) → toujours rendu sur le CT ; les agents n'ont pas ces fichiers
+    if (P.adv?.drumKit === 'user') return localFree ? { local: true, reason: 'samples-externes' } : null;
     const combo = !!t.meta?.pcCombo, long = (+P.duration || 0) >= N.s.audioMinSec;
     if (combo || long) { const n = N.audioNode(); if (n) return { node: n, reason: combo ? 'combo' : 'long' }; }
     if (localFree) return { local: true, reason: combo ? 'combo-sans-pc' : long ? 'long-sans-pc' : 'court' };
@@ -148,7 +150,7 @@ export class JobQueue {
       if (now && now.title !== t.title) await retagTrack(this.tracksDir, { ...now, files });
       const R = result.params, keep = {};
       if (now?.meta?.titleEn) Object.assign(keep, { titleEn: now.meta.titleEn, titleEnManual: !!now.meta.titleEnManual });
-      for (const k of ['autoSplit', 'animation', 'autoPack', 'ai', 'pcCombo', 'ownerId']) if (now?.meta?.[k]) keep[k] = now.meta[k]; // v1.21.2 : ownerId conservé
+      for (const k of ['autoSplit', 'animation', 'autoPack', 'ai', 'pcCombo', 'ownerId', 'extSamples']) if (now?.meta?.[k]) keep[k] = now.meta[k]; // v1.21.2 : ownerId conservé ; v1.21.4 : index des samples externes
       if (now?.meta?.regenOf) Object.assign(keep, { regenOf: now.meta.regenOf, regenVersion: now.meta.regenVersion });
       this.store.update(id, {
         status: 'done', progress: 1, stage: 'Terminé', eta: 0, params: R, meta: { ...result.meta, ...keep, render: { ...where, ms: Date.now() - t0 } }, waveform: result.waveform, files,

@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { createAudio, safeRel } from './audio.mjs';
 import { SPEC_VERSION, ENCODER_LABEL, DEFAULT_SLOTS, buildArgs, validateSpec, runFfmpeg, detectEncoders, safeName, stripFilter } from './render-core.mjs';
 
-export const AGENT_VERSION = '1.21.3';
+export const AGENT_VERSION = '1.21.4';
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 export function loadConfig(over = {}) {

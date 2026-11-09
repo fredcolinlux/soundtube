@@ -59,7 +59,7 @@ const rd = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
   const ap = await agent.ready, A = `http://127.0.0.1:${ap}`;
   try {
     const h = await fetch(A + '/health').then((r) => r.json());
-    check(h.drawtext === false && h.version === '1.21.3', `agent /health : drawtext false, version ${h.version}`);
+    check(h.drawtext === false && h.version === JSON.parse(rd('node-agent/package.json')).version, `agent /health : drawtext false, version ${h.version}`);
     const c = await fetch(A + '/jobs', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ spec }) }).then((r) => r.json());
     for (const n of c.need) await fetch(`${A}/jobs/${c.id}/files/${n}`, { method: 'PUT', body: fs.readFileSync(path.join(job, n)) });
     await fetch(`${A}/jobs/${c.id}/start`, { method: 'POST' });

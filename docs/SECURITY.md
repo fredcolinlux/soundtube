@@ -85,5 +85,14 @@ Visiteurs anonymes : `POST /api/demo/generate` force **≤ 15 s**, audio seul, r
 
 Démo = écoute seule : toute tentative de téléchargement, publication ou écriture bibliothèque sur un job démo renvoie **401**.
 
+### Morceaux de la démo et bibliothèque par compte (v1.21.4)
+
+Sans connexion, `GET /api/tracks` et `GET /api/demo/tracks` ne renvoient que les morceaux choisis dans Admin › 06b
+(≤ 10, < 5 min), sous forme réduite (titre, style, durée, lecture) ; l’audio passe par `GET /api/demo/tracks/{id}/audio`
+(MP3 en lecture, `Cache-Control: no-store`, `?download` → 401). Tout autre accès anonyme à `/api/tracks/{id}/…` ou
+`/api/jobs/{id}` → **401** ; un morceau non choisi → **404**. Comptes créateur / lecteur : uniquement leurs morceaux
+(sinon 404). Choix et dossier de samples : API admin locale + CSRF (`/api/admin/demo-tracks`, `/api/admin/samples`).
+Le dossier de samples est lu en lecture seule ; les dossiers système, l’application et le dossier de données sont refusés.
+
 ### Documentation API (v1.21.1)
 `/docs`, `/api/docs` et `/api/openapi.json` sont **réservés au LAN** (404 stylée depuis internet). L’API elle-même reste utilisable à distance avec un jeton Bearer.

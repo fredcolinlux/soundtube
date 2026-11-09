@@ -29,6 +29,21 @@ Typical base: `http://<host>:8080`. JSON bodies unless noted.
 
 `POST /api/generate` body highlights: `style`, `bpm`, `key`, `scale`, `mood`, `duration`, `wav`, `adv`, `engine` (17–21), `variety`, `mixStyles`, `seed`, `variation`, `instruments`, `title`, `title_en`, `aiPlan`, `aiMeta`, `animation`, `pcCombo`, `pack`, `split`.
 
+## Public demo & library scoping (v1.21.4)
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/api/demo/tracks` | Signed out: tracks picked by the admin (`items`, `total`, `max` = 10; `style` filter). Reduced form, `listenOnly: true`, `urls.mp3` = route below |
+| GET | `/api/demo/tracks/{id}/audio` | Audio of a picked track (inline, `no-store`, `Range`). `?download` → 401; not picked → 404 |
+| GET/PUT | `/api/admin/demo-tracks` | Admin (local + admin session + CSRF). GET: `max`, `maxSeconds` (300), `selected`, `candidates[]` (`id`, `title`, `style`, `duration`, `created_at`, `owner`, `selected`). PUT `{ "ids": [...] }`: ≤ 10 finished tracks under 5 min, otherwise 400 (offending `id`) |
+| GET/PUT | `/api/admin/samples` | Admin. External samples folder: GET = setting, folder state, counts, running scan; PUT `{ "dir": "/mnt/samples", "enabled": true }` (absolute path, no system / app / data folder → 400). New readable folder → scan started |
+| POST | `/api/admin/samples/scan` | Admin. Rescan (202; `?wait` waits for the end). Unreadable folder → 409 |
+
+Visibility rules: **signed out**, `GET /api/tracks` only returns the demo tracks and any other `/api/tracks/{id}/…` or
+`/api/jobs/{id}` route → 401 (404 if the track is not picked); **creator / viewer**: own tracks only (`meta.ownerId`), others
+→ 404; **admin**: everything. `GET /api/options` exposes `extSamples { active, counts }`; `POST /api/generate` accepts
+`adv.drumKit = "user"` (“My samples” kit, 400 when the index is inactive; always rendered locally).
+
 ## Split · video · YouTube · pack · styles · admin
 
 Same surface as the French [API.md](../API.md) tables (split, youtube, media, pack, styles animation/publish, admin nodes/AI/trends/director/channels, publish queue).

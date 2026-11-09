@@ -160,7 +160,8 @@ export function regenLine(t) {
 }
 
 /** Ligne de bibliothèque (pages de style, accueil). */
-export function trackRowHtml(t, player, labels = {}, { listenOnly = false } = {}) {
+export function trackRowHtml(t, player, labels = {}, { listenOnly: lo = false } = {}) {
+  const listenOnly = lo || !!t.listenOnly; // v1.21.4 : morceaux de la démo publique (visiteur) = écoute seule
   const on = player?.playing(t.id);
   const tags = [fmt(t.duration), t.bpm ? `${t.bpm} BPM` : '', labels.key?.[t.key] ? labels.key[t.key] : t.key, labels.mood?.[t.mood] || ''].filter(Boolean);
   const links = listenOnly ? '' : `<span class="tr-date">${dateFr(t.created_at)}</span>

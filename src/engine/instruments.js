@@ -1,7 +1,7 @@
 // Instruments synthétisés : patchs soustractifs, FM, Karplus-Strong, 808, batterie et textures.
 import { SR, oscSample, adsr, svf, onePoleLP, onePoleHP, noise } from './dsp.js';
 import { midiToFreq } from './theory.js';
-import { playSampled, isSampledPatch, sampledFallback, drumSample, drumHit, drumZone, drumLevels, PIANO_SOUNDS } from './sampler.js';
+import { playSampled, isSampledPatch, sampledFallback, drumSample, drumHit, drumZone, drumLevels, extZone, PIANO_SOUNDS } from './sampler.js';
 import { makeRng, hashSeed } from './rng.js';
 import { drum909, ride909 } from './drums909.js';
 import { drum808 } from './drums808.js';
@@ -512,6 +512,10 @@ const ACOUSTIC = {
   // jungle : break reconstruit coup par coup (aucun extrait de disque) — caisse claire rimshot accordée vers le haut
   break:   { kick: { id: 'vd_kick', pitch: 1.07, synth: 0.35 }, snare: { id: 'fs_rimshot', pitch: 1.07 }, ghost: { id: 'vd_ghost', pitch: 1.08 }, rim: { id: 'vd_xstick', pitch: 1.06 }, clap: { id: 'fs_clap' },
     hat: { id: 'vd_hat', pitch: 1.06 }, hhalf: { id: 'vd_hhalf', pitch: 1.06 }, ohat: { id: 'vd_ohat', pitch: 1.06 }, ride: { id: 'vd_ride', pitch: 1.04 }, crash: { id: 'vd_crash' } },
+  // v1.21.4 : « Mes samples » — dossier externe (NAS) indexé dans Admin ; un fichier par catégorie et par morceau (graine).
+  // Catégorie absente → élément de synthèse du style (kit « house ») ; ni kick ni caisse claire → kit entièrement synthétisé.
+  user:    { kick: { id: 'ext_kick', ext: true }, snare: { id: 'ext_snare', ext: true }, ghost: { id: 'ext_snare', ext: true, as: 'snare' }, rim: { id: 'ext_rim', ext: true }, clap: { id: 'ext_clap', ext: true },
+    hat: { id: 'ext_hat', ext: true }, ohat: { id: 'ext_ohat', ext: true }, ride: { id: 'ext_ride', ext: true }, crash: { id: 'ext_crash', ext: true } },
 };
 const LAYER_TILT = [0.8, 0.88, 0.94, 1];
 // niveau par élément (les prises acoustiques ont plus de facteur de crête que la synthèse) : rééquilibre le kit
@@ -538,7 +542,8 @@ export function acousticDrum(kit, kind, v, rr, tune) {
   const map = ACOUSTIC[kit]?.[kind]; if (!map) return null;
   const lv = drumLevels(map.id); if (!lv) return null;
   const [layer, sub] = acousticLayer(v, kind === 'ghost');
-  const z = drumZone(map.id, layer, rr, sub);
+  const z = map.ext ? extZone(map.id, tune?.extSeed ?? 0, map.as || kind) : drumZone(map.id, layer, rr, sub);
+  if (!z) return null;
   const tk = kind === 'kick' ? (tune?.kickTune ?? tune?.kick) : kind === 'snare' || kind === 'ghost' || kind === 'rim' ? tune?.snare : tune?.hat;
   const tq = Math.round(Math.max(0.96, Math.min(1.04, Math.sqrt(tk || 1))) * 100) / 100; // accord quantifié (partage du cache)
   const pitch = (map.pitch || 1) * tq;
@@ -554,7 +559,8 @@ export function acousticDrum(kit, kind, v, rr, tune) {
   const base = target / (lv.peak[top] * lg(top));
   // dans une couche, l'écart naturel entre niveaux de frappe est gardé mais adouci (racine) pour rester continu d'une couche à l'autre
   const zg = z.rms ? Math.sqrt(lv.rms[hit.layer] / z.rms) : 1;
-  const scale = Math.min(base * lg(hit.layer) * zg, 1 / z.peak) * (ACOUSTIC_TRIM[kind] || 1);
+  // v1.21.4 : samples externes (sources hétérogènes) → crête de chaque fichier ramenée sur celle de l'élément de synthèse
+  const scale = map.ext ? target / Math.max(1e-4, z.peak) : Math.min(base * lg(hit.layer) * zg, 1 / z.peak) * (ACOUSTIC_TRIM[kind] || 1);
   o = hit.data; for (let i = 0; i < o.length; i++) o[i] *= scale;
   if (map.synth && kind === 'kick') {
     // couche légère de la grosse caisse de synthèse du style (poids dans le sub, attaque)

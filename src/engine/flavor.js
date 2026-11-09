@@ -410,6 +410,8 @@ export function makeFlavor(P, S) {
     if (ADV.kickDecay != null) drumTune.kickDecay = 0.45 + 1.3 * ADV.kickDecay / 100;
     if (ADV.swing == null) swing = rt.range(pool.swing[0], pool.swing[1]);
   }
+  // v1.21.4 : kit « Mes samples » (dossier externe) — tirage des fichiers par graine, sans toucher aux autres tirages
+  if (kit === 'user') drumTune.extSeed = hashSeed(P.seed, 'extkit', P.variation || 0);
 
   const contour = r.pick(Object.keys(CONTOURS));
   const dm = cx == null ? r.range(0.75, 1.4) : (r(), 0.55 + 1.0 * cx);

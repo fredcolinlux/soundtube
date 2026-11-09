@@ -58,7 +58,7 @@ export const ADV_OPTS_EN = {
     lofihouse: 'Lo-fi house (filtered 4/4)', ambient: 'Ambient lo-fi', sad: 'Sad / rainy',
   },
   technoStyle: { detroit: 'Detroit (stabs, live 909)', minimal: 'Minimal (dry loops)', industriel: 'Industrial (hard, saturated)' },
-  drumKit: { tr808: 'TR-808 (analogue synthesis)', tr909: 'TR-909 (analogue synthesis)', lofi: 'Lo-fi', soft: 'Soft acoustic', retro: 'Retro' },
+  drumKit: { tr808: 'TR-808 (analogue synthesis)', tr909: 'TR-909 (analogue synthesis)', lofi: 'Lo-fi', soft: 'Soft acoustic', retro: 'Retro', user: 'My samples (external folder)' },
   pianoSound: {
     steinway: 'Steinway B (concert piano, CC0)', salamander: 'Salamander Grand V3 (Yamaha C5, CC-BY 3.0)',
     upright: 'Upright piano (VCSL)',
@@ -159,6 +159,7 @@ export function localizeAdvanced(ADVANCED, lang = 'fr') {
     const d = { ...def };
     if (ADV_LABEL_EN[k]) d.label = ADV_LABEL_EN[k];
     if (k === 'ambience') d.help = 'Synthesised ambience under the music. Auto: follows the selected mood.';
+    if (k === 'drumKit') d.help = 'Auto: the style’s drum machine (see “Style default”). TR-606/707/808/909 and DR-110 are synthesised in JavaScript, without samples. “My samples”: a kick, snare, clap, hats… taken from your external samples folder (Admin), one file per category and per track; a missing category is synthesised.';
     if (d.options && typeof d.options === 'object') {
       const map = { ...(ADV_OPTS_EN[k] || {}), ...(OPT_FIELD_EN[k] || {}) };
       const o = {};

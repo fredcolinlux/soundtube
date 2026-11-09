@@ -62,11 +62,14 @@ export async function ollamaJson(ai, system, user, { timeout, temperature, num_c
 }
 
 // ---------- catalogue donné au modèle
+// v1.21.4 : options jamais proposées au modèle (« Mes samples » dépend du dossier du CT ; le prompt reste celui de v1.14)
+const AI_HIDDEN = { drumKit: new Set(['user']) };
+const aiOpts = (k, d) => Object.keys(d.options).filter((o) => !AI_HIDDEN[k]?.has(o));
 export function catalogue(style) {
   const styles = Object.entries(STYLES).map(([id, s]) => `${id} — ${s.label} (${s.genre}; ${s.bpm[0]}-${s.bpm[1]} BPM; gammes ${Object.keys(s.scales).join('/')}${PLAN_SUBS[id] ? `; variante ${VARIANT_KEY[id]} ∈ ${PLAN_SUBS[id].join('|')}` : ''})`).join('\n');
   const adv = AI_ADV_KEYS.filter((k) => ADVANCED[k] && (!ADVANCED[k].styles || !style || ADVANCED[k].styles.includes(style))).map((k) => {
     const d = ADVANCED[k];
-    return d.type === 'range' ? `${k}: entier ${d.min}-${d.max}${d.unit ? ' ' + d.unit : ''} (${d.label})` : `${k}: ${Object.keys(d.options).join('|')} (${d.label})`;
+    return d.type === 'range' ? `${k}: entier ${d.min}-${d.max}${d.unit ? ' ' + d.unit : ''} (${d.label})` : `${k}: ${aiOpts(k, d).join('|')} (${d.label})`;
   }).join('\n');
   return `STYLES:\n${styles}\n\nAMBIANCES (mood): ${Object.keys(MOODS).join(', ')}\nTONALITÉS (key): auto, ${NOTE_NAMES.join(', ')}\nGAMMES (scale): auto, ${Object.keys(SCALES).join(', ')}\n\nRÉGLAGES AVANCÉS (adv, tous facultatifs ; 50 = neutre pour energy/humanize) :\n${adv}`;
 }
@@ -131,7 +134,7 @@ export function validateSuggestion(raw, { style: curStyle, duration = 180, meta 
     if (d.styles && !d.styles.includes(style)) continue;
     if (v === null || v === '' || v === 'auto') continue;
     if (d.type === 'range') { const n = Math.round(+v); if (!Number.isFinite(n)) { w.push(`${k} : valeur non numérique ignorée`); continue; } adv[k] = Math.min(d.max, Math.max(d.min, n)); }
-    else { const s = String(v).trim(); if (s in d.options) adv[k] = s; else w.push(`${k} : « ${s.slice(0, 20)} » inconnu`); }
+    else { const s = String(v).trim(); if (s in d.options && !AI_HIDDEN[k]?.has(s)) adv[k] = s; else w.push(`${k} : « ${s.slice(0, 20)} » inconnu`); }
   }
   const out = { params: { ...params, adv }, warnings: w, explanation: pub(o.explanation, 400) };
   if (meta) {

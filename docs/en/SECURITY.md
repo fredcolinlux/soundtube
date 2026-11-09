@@ -17,6 +17,15 @@ Anonymous visitors: `POST /api/demo/generate` enforces **≤ 15 s**, audio only,
 
 Demo is preview-only: any download, publish, or library write against a demo job returns **401**.
 
+### Demo tracks and per-account library (v1.21.4)
+
+Signed out, `GET /api/tracks` and `GET /api/demo/tracks` only return the tracks picked in Admin › 06b (≤ 10, < 5 min), in
+a reduced form (title, style, duration, playback); audio goes through `GET /api/demo/tracks/{id}/audio` (inline MP3,
+`Cache-Control: no-store`, `?download` → 401). Any other anonymous access to `/api/tracks/{id}/…` or `/api/jobs/{id}` →
+**401**; a track that is not picked → **404**. Creator / viewer accounts: their own tracks only (otherwise 404). Selection and
+samples folder: local admin API + CSRF (`/api/admin/demo-tracks`, `/api/admin/samples`). The samples folder is read-only;
+system folders, the app and the data dir are refused.
+
 ### Lost admin access / lost OTP (v1.21.2)
 
 On the server, as **root** (console or SSH from the LAN — refused from a public IP):

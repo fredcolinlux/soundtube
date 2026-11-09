@@ -139,7 +139,9 @@ Object.assign(ADVANCED.bassType.options, BASS_LABELS);
 for (const k of BASS_PATCHES) ADVANCED.bassPatch.options[k] = MODEL_LABELS[k] || PATCH_LABELS[k] || k;
 // v1.8.0 : boîtes à rythmes supplémentaires (synthèse JS, noms de modèles = caractère visé)
 Object.assign(ADVANCED.drumKit.options, { tr606: 'TR-606 (synthèse analogique)', tr707: 'TR-707 (numérique 6 bits imité)', dr110: 'DR-110 Dr. Rhythm (synthèse analogique)' });
-ADVANCED.drumKit.help = 'Auto : la boîte du style (voir « Défaut du style »). TR-606/707/808/909 et DR-110 sont synthétisées en JavaScript, sans échantillon.';
+// v1.21.4 : kit fait des samples de l'utilisateur (dossier externe indexé dans Admin › Samples externes)
+ADVANCED.drumKit.options.user = 'Mes samples (dossier externe)';
+ADVANCED.drumKit.help = 'Auto : la boîte du style (voir « Défaut du style »). TR-606/707/808/909 et DR-110 sont synthétisées en JavaScript, sans échantillon. « Mes samples » : un kick, une caisse claire, un clap, des charleys… tirés de ton dossier de samples externe (Admin), un fichier par catégorie et par morceau ; catégorie absente = élément synthétisé.';
 PROGRESSION_LIBRARY.forEach((p, i) => { ADVANCED.progression.options[String(i)] = progressionLabel(p); });
 function resolveAdvanced(a) {
   const out = {};

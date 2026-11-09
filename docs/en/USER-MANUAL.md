@@ -1,5 +1,5 @@
 <!-- v1.20.5 routes: / home, /studio studio -->
-# User manual — soundtube 1.18.0
+# User manual — soundtube 1.21.4
 
 The web UI is **French** and **English** (**FR | EN** in the top bar). Choice is stored in the browser (`localStorage` + cookie `soundtube_ui_lang`). YouTube title / description / tag generation keeps its existing FR+EN behaviour and is **independent** of the UI language (`/api/youtube/lang`).
 
@@ -77,6 +77,22 @@ Under **My profile** you can enable optional TOTP: a **QR code** (SVG from `/api
 ## Styles demo (signed out)
 
 Without an account, each style page offers a **15-second preview** (audio only). Demo files never join the library and are deleted automatically. **Sign in to create full tracks** opens login.
+
+Since v1.21.4, the “Library” list on a style page, when signed out, only shows **the tracks picked by the admin** (Admin › 06b, at most 10, under 5 min): listen-only, no download, no YouTube, no library actions. No selection → no track shown. Once signed in, everyone gets **their own** tracks (the admin sees the whole library).
+
+## What's new in v1.21.4
+
+- **Admin › 06b Demo tracks**: list of finished tracks under 5 minutes (filter, “Selected only”, preview, “Uncheck all”).
+  Tick up to **10** tracks, then **Save**: these are the only ones signed-out visitors see (and can play) on the Styles pages.
+  The limit is enforced in the page and by the server.
+- **Admin › 06c External samples folder**: folder path (default `/mnt/samples`, typically the NAS mounted read-only, see
+  [INSTALL-MANUAL.md](./INSTALL-MANUAL.md#nas-samples-synology-smb-share--proxmox-host--ct--v1214)), “Use these samples”
+  checkbox, **Save**, **Rescan**, per-category counts and skipped files.
+- **Create › Advanced › Drum kit › “My samples (external folder)”**: the track’s drums use your one-shots (kick, snare, clap,
+  rim, hats, ride, crash; WAV / AIFF / FLAC). One file per category is picked from the seed; anything missing is filled in by
+  the synthesised drums. Style, groove and the other instruments are unchanged. These tracks always render on the CT.
+  Details: [INSTALL-MANUAL.md](./INSTALL-MANUAL.md#how-the-engine-uses-these-samples).
+- **Per-account library**: a creator or viewer account only sees its own tracks; the admin sees everything.
 
 ## What's new in v1.21.3
 

@@ -63,7 +63,7 @@ export class DemoQueue {
     // Cheap path: force ≤ 15 s audio-only (ignore client duration / video / pack)
     const P0 = resolveParams({
       style, mood: mood || 'auto', seed, duration: 20, wav: true,
-      engine: 21, adv: (adv && typeof adv === 'object' && !Array.isArray(adv)) ? adv : {},
+      engine: 21, adv: (adv && typeof adv === 'object' && !Array.isArray(adv)) ? { ...adv, ...(adv.drumKit === 'user' ? { drumKit: null } : {}) } : {}, // v1.21.4 : jamais les samples privés en démo anonyme
     });
     P0.duration = DEMO_MAX_SEC;
     P0.wav = true;

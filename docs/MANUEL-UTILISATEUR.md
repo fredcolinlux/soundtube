@@ -1,5 +1,5 @@
 <!-- v1.20.5 routes: / home, /studio studio -->
-# Manuel utilisateur — soundtube 1.18.0
+# Manuel utilisateur — soundtube 1.21.4
 
 L’interface web est en **français** et en **anglais** (**FR | EN** dans la barre du haut). Le choix est stocké dans le navigateur (`localStorage` + cookie `soundtube_ui_lang`). La génération des titres / descriptions / tags YouTube (FR+EN) est **indépendante** de la langue d’interface (`/api/youtube/lang`).
 
@@ -71,6 +71,22 @@ Dans **Mon profil**, tu peux activer un TOTP optionnel : un **QR code** (SVG ser
 ## Démo Styles (sans compte)
 
 Sans connexion, chaque page de style propose un **aperçu de 15 secondes** (audio seul). Les fichiers démo ne rejoignent pas la bibliothèque et sont effacés automatiquement. Le bouton **Connectez-vous pour créer des morceaux complets** mène au login.
+
+Depuis la v1.21.4, la liste « Bibliothèque » d’une page de style, sans connexion, ne montre **que les morceaux choisis par l’admin** (Admin › 06b, 10 au maximum, moins de 5 min) : lecture seule, sans téléchargement, sans YouTube ni actions de bibliothèque. Aucun choix → aucune piste affichée. Une fois connecté, chacun retrouve **ses** morceaux (l’admin voit toute la bibliothèque).
+
+## Nouveautés v1.21.4
+
+- **Admin › 06b Morceaux de la démo** : liste des morceaux terminés de moins de 5 minutes (filtre, « Sélection seulement »,
+  écoute, « Tout décocher »). Coche jusqu’à **10** morceaux puis **Enregistrer** : ce sont les seuls que les visiteurs non
+  connectés voient (et peuvent écouter) sur les pages Styles. La limite est vérifiée dans la page et par le serveur.
+- **Admin › 06c Dossier de samples externes** : chemin du dossier (défaut `/mnt/samples`, typiquement le NAS monté en
+  lecture seule, voir [MANUEL-INSTALLATION.md](./MANUEL-INSTALLATION.md#samples-du-nas-partage-smb-synology--hôte-proxmox--ct--v1214)),
+  case « Utiliser ces samples », **Enregistrer**, **Re-scanner**, comptes par catégorie et fichiers ignorés.
+- **Créer › Avancé › Kit de batterie › « Mes samples (dossier externe) »** : la batterie du morceau utilise tes one-shots
+  (kick, caisse claire, clap, rim, charleys, ride, crash ; WAV / AIFF / FLAC). Un fichier par catégorie est choisi d’après la
+  graine ; ce qui manque est complété par la batterie de synthèse. Le style, le groove et les autres instruments ne changent
+  pas. Ces morceaux sont toujours rendus sur le CT. Détails : [MANUEL-INSTALLATION.md](./MANUEL-INSTALLATION.md#comment-le-moteur-utilise-ces-samples).
+- **Bibliothèque par compte** : un compte créateur ou lecteur ne voit que ses propres morceaux ; l’admin voit tout.
 
 ## Nouveautés v1.21.3
 

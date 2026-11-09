@@ -1,6 +1,6 @@
 # Render nodes: music + video (v1.19.0)
 
-A node is a LAN machine (Windows NVIDIA PC, Apple Silicon Mac, …) running the `soundtube-node` agent. Since **v1.16.0** it also renders **music** (same engine as the CT, bit-identical). **v1.17.0** adds official **macOS arm64** (VideoToolbox). Zips shipped with CT 1.19.0 are named `soundtube-node-agent-1.21.3-*.zip` (engine fingerprint still `696de0f4125a`).
+A node is a LAN machine (Windows NVIDIA PC, Apple Silicon Mac, …) running the `soundtube-node` agent. Since **v1.16.0** it also renders **music** (same engine as the CT, bit-identical). **v1.17.0** adds official **macOS arm64** (VideoToolbox). Zips shipped with CT 1.21.4 are named `soundtube-node-agent-1.21.4-*.zip` (engine fingerprint `22573aa0f775`).
 
 ## 1. Audio capability
 
@@ -35,7 +35,7 @@ Install root: `C:\ProgramData\soundtube-node`. Options: `-NoAudio`, `-AudioSlots
 ### Install
 
 ```bash
-cd ~/Downloads/soundtube-node-agent-1.21.3
+cd ~/Downloads/soundtube-node-agent-1.21.4
 chmod +x install-macos.sh uninstall-macos.sh
 ./install-macos.sh
 ./install-macos.sh --generate-token
@@ -111,9 +111,11 @@ brew install ffmpeg-full
 ```
 
 **Audio engine**: music is only sent to an agent whose engine fingerprint is **identical** to the CT's (Admin → Distribution).
-The engine changed in 1.20.5 (`7afdf699074e`): an agent installed from a 1.19.x zip (`696de0f4125a`) shows "Music: no" /
-engine mismatch. Reinstall with `soundtube-node-agent-1.21.3-macos.zip` (or `-windows.zip`), whose `core/ENGINE.json` is
-`{ "version": "1.21.3", "hash": "7afdf699074e" }`.
+The engine changed in 1.21.4 (`22573aa0f775`, “My samples” kit; before: `7afdf699074e` since 1.20.5, `696de0f4125a` in
+1.19.x): an agent installed from an older zip shows "Music: no" / engine mismatch. Reinstall with
+`soundtube-node-agent-1.21.4-macos.zip` (or `-windows.zip`), whose `core/ENGINE.json` is
+`{ "version": "1.21.4", "hash": "22573aa0f775" }`. Tracks using the “My samples” kit (NAS samples) always render on the CT:
+agents have no access to the NAS folder.
 
 ## 5. macOS Apple Silicon (summary)
 

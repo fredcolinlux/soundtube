@@ -146,6 +146,18 @@ export const openapi = {
       get: { tags: ['Admin'], summary: 'v1.19.2 : veille — réglages (crawl RSS, discover DuckDuckGo, allowPrivateSources), watchAi, historique, dernier rapport; clé YT jamais renvoyée', responses: { 200: ok('Veille', { type: 'object' }) } },
       put: { tags: ['Admin'], summary: 'Réglages veille : enabled, intervalDays, ytKey, feeds, html, crawl, discover, allowPrivateSources, perStyle, styles, keywords, resetFeeds', requestBody: { content: { 'application/json': { schema: { type: 'object' } } } }, responses: { 200: ok('Veille', { type: 'object' }), 400: ok('Invalide', { type: 'object' }) } },
     },
+    // v1.21.4 : morceaux de la démo publique et samples externes
+    '/api/demo/tracks': { get: { summary: 'v1.21.4 : sans compte, morceaux choisis par l’admin (≤ 10, < 5 min), forme réduite en écoute seule', parameters: [{ name: 'style', in: 'query', schema: { type: 'string' } }], responses: { 200: ok('Morceaux de la démo', { type: 'object' }) } } },
+    '/api/demo/tracks/{id}/audio': { get: { summary: 'v1.21.4 : audio d’un morceau de la démo (inline, no-store). ?download → 401 ; non choisi → 404', parameters: idParam, responses: { 200: { description: 'Audio' }, 401: { description: 'Téléchargement refusé' }, 404: { description: 'Non choisi' } } } },
+    '/api/admin/demo-tracks': {
+      get: { tags: ['Admin'], summary: 'v1.21.4 : morceaux éligibles (terminés, < 5 min), sélection, max 10', responses: { 200: ok('Sélection', { type: 'object' }) } },
+      put: { tags: ['Admin'], summary: 'v1.21.4 : enregistrer la sélection { ids } (≤ 10, éligibles ; CSRF)', requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { ids: { type: 'array', items: { type: 'string' } } } } } } }, responses: { 200: ok('Sélection', { type: 'object' }), 400: { description: 'Trop de morceaux / morceau inéligible' } } },
+    },
+    '/api/admin/samples': {
+      get: { tags: ['Admin'], summary: 'v1.21.4 : dossier de samples externes (lecture seule), état, comptes par catégorie, scan', responses: { 200: ok('Samples', { type: 'object' }) } },
+      put: { tags: ['Admin'], summary: 'v1.21.4 : { dir (absolu), enabled } ; nouveau dossier lisible → scan', requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { dir: { type: 'string' }, enabled: { type: 'boolean' } } } } } }, responses: { 200: ok('Samples', { type: 'object' }), 400: { description: 'Chemin refusé' } } },
+    },
+    '/api/admin/samples/scan': { post: { tags: ['Admin'], summary: 'v1.21.4 : re-scanner le dossier (202 ; ?wait = attendre la fin) ; 409 si illisible', responses: { 202: ok('Scan lancé', { type: 'object' }), 409: { description: 'Dossier illisible' } } } },
     // v1.15.0 : contexte du directeur artistique
     '/api/admin/director': {
       get: { tags: ['Admin'], summary: 'v1.15.0 : contexte du directeur — interrupteurs (taste, trends), profil de goût distillé (contexte/gout.json), références par style (refsText), texte de goût et résumé de la dernière veille tels qu’envoyés (bornés), budgets. ?style=', responses: { 200: ok('Contexte', { type: 'object' }) } },

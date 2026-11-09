@@ -48,8 +48,11 @@ import { maybeSignUrls } from './auth/bootstrap.js';
 import { msg as i18nMsg } from './i18n-server.js';
 import { DemoQueue, DEMO_MAX_SEC } from './demo.js';
 import { sendErrorPage, wantsHtml } from './http-errors.js';
+import * as demoTracks from './demotracks.js';
+import * as extSamples from './extsamples.js';
 
 const store = openStore(config.dataDir);
+extSamples.initExternalSamples(); // v1.21.4 : index des samples externes (hérité par les workers de rendu)
 const auth = new AuthStore(config.dataDir);
 setSecretCodec({ seal: (v) => auth.seal(v), open: (v) => auth.open(v) });
 setSocialSecretCodec({ seal: (v) => auth.seal(v), open: (v) => auth.open(v) });
@@ -191,6 +194,8 @@ const AUTH_ALLOW = [
   { method: 'POST', path: '/demo/generate' },
   { method: 'GET', path: '/demo/jobs/*' },
   { method: 'GET', path: '/demo/audio/*' },
+  // v1.21.4 : morceaux choisis pour la démo (Admin) — écoute seule
+  { method: 'GET', path: '/demo/tracks/*' },
 ];
 app.use('/api', (req, res, next) => {
   // Admin API : LAN + session admin (pas d’anonyme LAN)
@@ -247,6 +252,14 @@ function createJob(input, parentId = null, extraMeta = null) {
   if (input.adv !== undefined && (typeof input.adv !== 'object' || Array.isArray(input.adv))) { const e = new Error('adv doit être un objet'); e.status = 400; throw e; }
   // v1.8.0 : nouvelles générations en moteur 1.8 ; « engine » < 18 (réglages d'un ancien morceau) = moteur historique
   const P = resolveParams({ ...input, engine: input.engine ?? 21, duration, wav: input.wav === undefined ? config.keepWav : input.wav });
+  // v1.21.4 : kit « Mes samples » → index des samples externes actif obligatoire ; rendu sur le CT (les agents n'ont pas ces fichiers)
+  let extMeta = null;
+  if (extSamples.usesExternal(P)) {
+    const v = extSamples.view();
+    if (!v.active) { const e = new Error('Kit « Mes samples » : aucun sample externe indexé (Admin › Samples externes : dossier, puis Re-scanner ; il faut au moins un kick et une caisse claire ou un clap).'); e.status = 400; throw e; }
+    extMeta = { dir: v.index.dir, hash: v.index.hash, counts: v.index.counts };
+  }
+  if (extMeta) extraMeta = { ...(extraMeta || {}), extSamples: extMeta };
   const id = crypto.randomBytes(6).toString('hex');
   const custom = typeof input.title === 'string' && input.title.trim();
   const title = custom ? input.title.trim().slice(0, 120) : makeTitle(P.seed, P.variation, P.style);
@@ -311,6 +324,7 @@ app.get('/api/options', (req, res) => {
   limits: { ...LIMITS, maxDuration: Math.min(LIMITS.maxDuration, config.maxDuration) },
   advanced: localizeAdvanced(ADVANCED, lang),
   mp3: jobs.hasFfmpeg, samples: samplesAvailable(), wavDefault: config.keepWav,
+  extSamples: (() => { const v = extSamples.view(); return { active: v.active, counts: v.index?.counts || null }; })(), // v1.21.4 : kit « Mes samples »
 });
 });
 
@@ -385,6 +399,87 @@ const blockDemoId = wrap((req, res, next) => {
 app.use('/api/jobs/:id', blockDemoId);
 app.use('/api/tracks/:id', blockDemoId);
 
+/* ---- v1.21.4 : portée de la bibliothèque ----
+ * Visiteur non connecté : seulement les morceaux choisis dans Admin › Morceaux de la démo, en écoute seule.
+ * Connecté : ses propres morceaux ; admin : toute la bibliothèque. */
+const isAdminUser = (u) => u?.role === 'admin';
+const ownsTrack = (u, t) => !!u && !!t && (isAdminUser(u) || (t.meta?.ownerId && t.meta.ownerId === u.id));
+/** Propriétaire d'un morceau dérivé (variation, régénération) : celui du parent, sinon l'auteur de la requête. */
+function ownerMeta(req, parent) { const o = parent?.meta?.ownerId || req.authUser?.id; return o ? { ownerId: o } : {}; }
+const getTrack = (id) => store.get(id);
+/** Vue publique d'un morceau de démo : écoute seule (aucun lien de téléchargement, de studio ni de publication). */
+function publicTrack(t) {
+  return { id: t.id, title: t.title, title_en: titleEnOf(t), style: t.style, status: 'done', duration: t.duration, bpm: t.bpm, key: t.key, scale: t.scale, mood: t.mood,
+    created_at: t.created_at, waveform: t.waveform || null, demo: true, listenOnly: true, urls: { mp3: `/api/demo/tracks/${t.id}/audio` }, duplicates: [], regenerations: [], regen_ok: false };
+}
+function visibleTracks(req, { style, status } = {}) {
+  if (!req.authUser) return demoTracks.selected(getTrack).map(getTrack).filter((t) => !style || t.style === style).filter((t) => !status || t.status === status);
+  const all = store.list({ style, status, limit: 1e6 }).items;
+  return isAdminUser(req.authUser) ? all : all.filter((t) => ownsTrack(req.authUser, t));
+}
+const trackScope = wrap((req, res, next) => {
+  const t = store.get(req.params.id);
+  if (!req.authUser) {
+    const sel = demoTracks.isSelected(req.params.id, getTrack);
+    const card = req.method === 'GET' && (req.path === '/' || req.path === '') && req.baseUrl.startsWith('/api/tracks/');
+    if (card && sel) return res.json(publicTrack(t));
+    // fiche d'un morceau inconnu ou hors démo : 404 identique (l'existence d'un morceau privé n'est pas révélée)
+    if (card) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
+    return res.status(401).json({ error: i18nMsg(req, sel ? 'demoListenOnly' : 'authRequired') });
+  }
+  if (t && !ownsTrack(req.authUser, t)) return res.status(404).json({ error: i18nMsg(req, req.baseUrl.startsWith('/api/jobs') ? 'jobNotFound' : 'trackNotFound') });
+  next();
+});
+app.use('/api/jobs/:id', trackScope);
+app.use('/api/tracks/:id', trackScope);
+
+/** Audio d'un morceau de démo : lecture dans la page uniquement (jamais en pièce jointe). */
+app.get('/api/demo/tracks/:id/audio', wrap((req, res) => {
+  if (req.query.download != null) return res.status(401).json({ error: i18nMsg(req, 'demoListenOnly') });
+  if (!demoTracks.isSelected(req.params.id, getTrack)) return res.status(404).json({ error: i18nMsg(req, 'trackNotFound') });
+  const t = store.get(req.params.id), kind = t.files.mp3 ? 'mp3' : 'wav';
+  const file = path.join(tracksDir, t.id, t.files[kind]);
+  if (!fs.existsSync(file)) return res.status(404).json({ error: i18nMsg(req, 'fileMissing') });
+  res.set({ 'Cache-Control': 'no-store', 'Content-Type': MIME[kind], 'Content-Disposition': 'inline' });
+  res.sendFile(file, { acceptRanges: true, cacheControl: false });
+}));
+app.get('/api/demo/tracks', wrap((req, res) => {
+  const items = demoTracks.selected(getTrack).map(getTrack).filter((t) => !req.query.style || t.style === req.query.style);
+  res.json({ items: items.map(publicTrack), total: items.length, max: demoTracks.DEMO_TRACKS_MAX });
+}));
+
+/* ---- v1.21.4 : Admin › Morceaux de la démo (local + session admin + CSRF, comme tout /api/admin) ---- */
+function demoAdminView() {
+  const sel = demoTracks.readIds(), users = new Map((auth.listUsers?.() || []).map((u) => [u.id, u.username]));
+  const candidates = store.list({ status: 'done', limit: 1e6 }).items.filter(demoTracks.eligible)
+    .map((t) => ({ id: t.id, title: t.title, title_en: titleEnOf(t), style: t.style, duration: t.duration, created_at: t.created_at, owner: users.get(t.meta?.ownerId) || null, selected: sel.includes(t.id) }));
+  return { max: demoTracks.DEMO_TRACKS_MAX, maxSeconds: demoTracks.DEMO_TRACK_MAX_SEC, selected: demoTracks.selected(getTrack), candidates };
+}
+app.get('/api/admin/demo-tracks', (req, res) => res.json(demoAdminView()));
+app.put('/api/admin/demo-tracks', wrap((req, res) => {
+  try { demoTracks.save(req.body?.ids, getTrack); }
+  catch (e) { if (/^demoTracks/.test(e.message)) return res.status(e.status || 400).json({ error: i18nMsg(req, e.message), id: e.id || null }); throw e; }
+  res.json(demoAdminView());
+}));
+
+/* ---- v1.21.4 : Admin › Samples externes (dossier en lecture seule, ex. NAS monté sur /mnt/samples) ---- */
+app.get('/api/admin/samples', (req, res) => res.json(extSamples.view()));
+app.put('/api/admin/samples', wrap((req, res) => {
+  const before = extSamples.getSettings();
+  try { extSamples.updateSettings(req.body || {}); }
+  catch (e) { if (e.i18n) return res.status(400).json({ error: i18nMsg(req, e.i18n) }); throw e; }
+  const after = extSamples.getSettings();
+  if (after.enabled && after.dir !== before.dir && extSamples.dirState(after.dir).readable) extSamples.scan().catch((e) => console.error('[samples externes]', e.message));
+  res.json(extSamples.view());
+}));
+app.post('/api/admin/samples/scan', awrap(async (req, res) => {
+  const S = extSamples.getSettings();
+  if (!extSamples.dirState(S.dir).readable) return res.status(409).json({ error: i18nMsg(req, 'extDirMissing'), ...extSamples.view() });
+  const p = extSamples.scan();
+  if (req.query.wait != null) await p; // tests / CLI : attendre la fin
+  res.status(202).json(extSamples.view());
+}));
+
 app.get('/api/jobs/:id', wrap((req, res) => {
   const t = store.get(req.params.id); if (!t) return res.status(404).json({ error: i18nMsg(req, 'jobNotFound') });
   const { waveform, ...rest } = present(t); res.json(t.status === 'done' ? present(t) : rest);
@@ -393,6 +488,9 @@ app.get('/api/jobs/:id', wrap((req, res) => {
 app.get('/api/tracks', wrap((req, res) => {
   const limit = Math.min(500, Math.max(1, parseInt(req.query.limit || '100', 10)));
   const offset = Math.max(0, parseInt(req.query.offset || '0', 10));
+  // v1.21.4 : visiteur → morceaux de la démo (écoute seule) ; connecté → ses morceaux ; admin → tout
+  if (!req.authUser) { const v = visibleTracks(req, { style: req.query.style, status: req.query.status }); return res.json({ items: v.slice(offset, offset + limit).map(publicTrack), total: v.length, demo: true }); }
+  if (!isAdminUser(req.authUser)) { const v = visibleTracks(req, { style: req.query.style, status: req.query.status }); const lib = libraryIndex(); return res.json({ items: v.slice(offset, offset + limit).map((t) => present(t, lib)), total: v.length }); }
   const { items, total } = store.list({ style: req.query.style, status: req.query.status, limit, offset });
   const lib = libraryIndex(); res.json({ items: items.map((t) => present(t, lib)), total });
 }));
@@ -441,7 +539,7 @@ app.post('/api/tracks/:id/variation', wrap((req, res) => {
     p.variation = Math.max(p.variation || 0, ...siblings.map((x) => x.variation || 0)) + 1;
   } else if (mode === 'remix') { p.seed = Math.floor(Math.random() * 2 ** 31); p.variation = 0; }
   else if (mode !== 'same') return res.status(400).json({ error: 'mode doit valoir variation, remix ou same' });
-  res.status(202).json(present(createJob(p, t.id)));
+  res.status(202).json(present(createJob(p, t.id, ownerMeta(req, t))));
 }));
 
 /** v1.12.0 : un morceau peut-il être régénéré avec l'harmonie du moteur 21 ? (aucun réglage deviné) */
@@ -475,7 +573,7 @@ app.post('/api/tracks/:id/regenerate', wrap((req, res) => {
   const p = { ...settingsOf(t.params), title: `${t.title} (régénéré en v1.12.0)`.slice(0, 120) };
   if (eng >= 20) p.engine = 21; else { p.engine = eng; p.harmonyFix = true; }
   if (t.meta?.titleEn) p.title_en = `${t.meta.titleEn} (regenerated in v1.12.0)`.slice(0, 120);
-  res.status(202).json(present(createJob(p, t.id, { regenOf: t.id, regenVersion: '1.12.0' })));
+  res.status(202).json(present(createJob(p, t.id, { regenOf: t.id, regenVersion: '1.12.0', ...ownerMeta(req, t) })));
 }));
 
 const MIME = { wav: 'audio/wav', mp3: 'audio/mpeg', mid: 'audio/midi', midzip: 'application/zip', mp4: 'video/mp4', thumb: 'image/jpeg' };
@@ -951,10 +1049,10 @@ app.post('/api/admin/ai/test', awrap(async (req, res) => {
 
 // v1.10.0 : fiches de style (pages /styles et /styles/:id), texte tiré de docs/STYLES.md
 const STYLE_IDS = () => STYLE_ORDER.filter((id) => STYLES[id]);
-function styleCard(id, lang = 'fr') {
+function styleCard(id, lang = 'fr', req = null) {
   const s = STYLES[id], d = stylesDoc(lang).sections[id] || null;
   const vk = VARIANT_KEY[id], variants = vk && ADVANCED[vk] ? { key: vk, options: ADVANCED[vk].options } : null;
-  let count = 0; try { count = store.list({ style: id, status: 'done', limit: 1, offset: 0 }).total || 0; } catch {}
+  let count = 0; try { count = req && !isAdminUser(req.authUser) ? visibleTracks(req, { style: id, status: 'done' }).length : store.list({ style: id, status: 'done', limit: 1, offset: 0 }).total || 0; } catch {} // v1.21.4 : nombre visible par la personne
   const en = lang === 'en';
   const label = en && s.labelEn ? s.labelEn : s.label;
   const tagline = en && s.taglineEn ? s.taglineEn : s.tagline;
@@ -964,13 +1062,13 @@ function styleCard(id, lang = 'fr') {
 app.get('/api/styles', (req, res) => {
   const lang = uiLangFromReq(req);
   const d = stylesDoc(lang);
-  res.json({ styles: STYLE_IDS().map((id) => styleCard(id, lang)), roadmap: d.roadmap || null, ai: d.ai || null });
+  res.json({ styles: STYLE_IDS().map((id) => styleCard(id, lang, req)), roadmap: d.roadmap || null, ai: d.ai || null });
 });
 app.get('/api/styles/:id', (req, res) => {
   const id = req.params.id; if (!STYLE_IDS().includes(id)) return res.status(404).json({ error: i18nMsg(req, 'unknownStyle') });
   const lang = uiLangFromReq(req);
   const d = stylesDoc(lang).sections[id] || null;
-  res.json({ ...styleCard(id, lang), html: d?.html || '', facts: d?.facts || [], neighbours: STYLE_IDS().filter((x) => x !== id) });
+  res.json({ ...styleCard(id, lang, req), html: d?.html || '', facts: d?.facts || [], neighbours: STYLE_IDS().filter((x) => x !== id) });
 });
 // Pages de l'interface (v1.10.0) : /styles/<style> → page de style (le style est lu dans l'adresse par le navigateur)
 app.get('/styles/:id', (req, res) => {

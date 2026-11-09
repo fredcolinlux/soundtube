@@ -19,7 +19,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 console.log('— v1.19.0 —');
 
-check(engineId(path.join(ROOT, 'src')).hash === '7afdf699074e', 'empreinte moteur 7afdf699074e (moteur inchangé depuis v1.19)');
+check(engineId(path.join(ROOT, 'src')).hash === '22573aa0f775', 'empreinte moteur 22573aa0f775 (v1.21.4 : kit « Mes samples » ; 7afdf699074e de v1.19 à v1.21.3)');
 check(crawl.isPrivateHost('127.0.0.1') && crawl.isPrivateHost('10.1.2.3') && crawl.isPrivateHost('192.168.0.5') && crawl.isPrivateHost('169.254.9.1'), 'SSRF : IPs privées / link-local');
 check(!crawl.isPrivateHost('8.8.8.8'), 'SSRF : IP publique');
 let denied = false; try { await crawl.resolveSafe('127.0.0.1'); } catch { denied = true; }

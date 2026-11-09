@@ -23,12 +23,35 @@ function man() {
   return manifest;
 }
 export function samplesAvailable() { return !!man(); }
+
+// v1.21.4 : samples externes de l'utilisateur (ex. partage SMB du NAS monté en lecture seule sur /mnt/samples).
+// Index construit par src/extsamples.js (scan Admin) : { instruments: { ext_kick: { zones: [{ file: <chemin absolu>, … }] } } }.
+// Lu par chemin (SOUNDTUBE_EXT_SAMPLES_INDEX, posé par le serveur et hérité par les workers) ; relu si le fichier change.
+let extMan = null, extSig = null;
+function ext() {
+  const f = process.env.SOUNDTUBE_EXT_SAMPLES_INDEX; if (!f) return null;
+  let sig = null; try { const st = fs.statSync(f); sig = st.size + ':' + st.mtimeMs; } catch { extMan = null; extSig = null; return null; }
+  if (sig !== extSig) {
+    extSig = sig;
+    try { const j = JSON.parse(fs.readFileSync(f, 'utf8')); extMan = j && j.enabled !== false && j.instruments ? j.instruments : null; } catch { extMan = null; }
+    levelCache.forEach((_, k) => { if (k.startsWith('ext_')) levelCache.delete(k); }); present.forEach((_, k) => { if (k.startsWith('ext_')) present.delete(k); });
+  }
+  return extMan;
+}
+/** Instrument du pack (manifeste) ou externe (préfixe ext_). */
+function inst(id) {
+  if (typeof id === 'string' && id.startsWith('ext_')) { const e = ext(); return e && e[id] && e[id].zones?.length ? e[id] : null; }
+  const m = man(); return m && m.instruments[id] ? m.instruments[id] : null;
+}
+const fileOf = (file) => (path.isAbsolute(file) ? file : path.join(SAMPLE_DIR, file));
+/** v1.21.4 : samples externes disponibles (catégorie → nombre de fichiers). */
+export function extSamplesInfo() { const e = ext(); if (!e) return null; const o = {}; for (const [k, v] of Object.entries(e)) o[k.slice(4)] = v.zones.length; return o; }
 export function sampleCacheStats() { return { files: bufCache.size, mb: +(cacheBytes / 1e6).toFixed(1), capMb: CACHE_CAP / 1e6 }; }
 // Un instrument dont le dossier a été retiré du pack (ex. jrhodes/ ou salamander/ pour un pack 100 % libre) est ignoré : repli sur la synthèse.
 const present = new Map();
 export function hasInstrument(id) {
-  const m = man(); if (!(m && m.instruments[id] && m.instruments[id].zones.length)) return false;
-  if (!present.has(id)) present.set(id, fs.existsSync(path.join(SAMPLE_DIR, m.instruments[id].zones[0].file)));
+  const I = inst(id); if (!(I && I.zones.length)) return false;
+  if (!present.has(id)) present.set(id, fs.existsSync(fileOf(I.zones[0].file)));
   return present.get(id);
 }
 
@@ -41,7 +64,7 @@ function load(file, mono = false) {
   const key = file + (mono ? '#m' : '');
   let b = bufCache.get(key);
   if (b) { bufCache.delete(key); bufCache.set(key, b); return b; }
-  const r = spawnSync(FFMPEG, ['-v', 'error', '-i', path.join(SAMPLE_DIR, file), '-f', 's16le', '-ac', mono ? '1' : '2', '-ar', String(SR), 'pipe:1'], { maxBuffer: 1 << 28 });
+  const r = spawnSync(FFMPEG, ['-v', 'error', '-i', fileOf(file), '-f', 's16le', '-ac', mono ? '1' : '2', '-ar', String(SR), 'pipe:1'], { maxBuffer: 1 << 28 });
   if (r.status !== 0) throw new Error('échantillon illisible : ' + file);
   const d = new Int16Array(r.stdout.buffer.slice(r.stdout.byteOffset, r.stdout.byteOffset + r.stdout.length));
   if (mono) b = { L: d, R: d, bytes: d.byteLength };
@@ -170,10 +193,11 @@ export function playSampled(patch, midi, gateS, vel, o = {}) {
 /** Niveaux d'un instrument de percussion par couche (manifeste : rms d'attaque, crête) — sans décodage. */
 const levelCache = new Map();
 export function drumLevels(id) {
+  if (typeof id === 'string' && id.startsWith('ext_') && !inst(id)) return null; // v1.21.4 : index externe absent / désactivé
   if (levelCache.has(id)) return levelCache.get(id);
-  const m = man(); const inst = m && m.instruments[id]; if (!inst) return null;
+  const I = inst(id); if (!I) return null;
   const byL = {};
-  for (const z of inst.zones) (byL[z.layer] ||= []).push(z);
+  for (const z of I.zones) (byL[z.layer] ||= []).push(z);
   const layers = Object.keys(byL).map(Number).sort((a, b) => a - b);
   const rms = {}, peak = {};
   for (const l of layers) { rms[l] = byL[l].reduce((a, z) => a + (z.rms || z.peak), 0) / byL[l].length; peak[l] = Math.max(...byL[l].map((z) => z.peak)); }
@@ -188,11 +212,18 @@ export function drumZone(id, layer, rr, sub = 0.5) {
   const lv = drumLevels(id); if (!lv) return null;
   const below = lv.layers.filter((l) => l <= layer);
   const L = below.length ? below[below.length - 1] : lv.layers[0];
-  const pool = man().instruments[id].zones.filter((z) => z.layer === L).sort((a, b) => (a.vl || 0) - (b.vl || 0) || a.rr - b.rr);
+  const pool = inst(id).zones.filter((z) => z.layer === L).sort((a, b) => (a.vl || 0) - (b.vl || 0) || a.rr - b.rr);
   const ladder = new Set(pool.map((z) => z.vl)).size === pool.length && pool.length > 2;
   if (!ladder) return pool[rr % pool.length];
   const i = Math.max(0, Math.min(pool.length - 1, Math.round(sub * (pool.length - 1)) + (rr % 3) - 1));
   return pool[i];
+}
+/** v1.21.4 : samples externes — un fichier par catégorie et par morceau, tiré de la graine (extSeed) : kit cohérent. */
+export function extZone(id, extSeed, kind) {
+  const I = inst(id); if (!I) return null;
+  const zs = I.zones; let h = (extSeed >>> 0) ^ 0x9e3779b9;
+  for (const c of String(kind)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  return zs[h % zs.length];
 }
 /** Décode une frappe (zone du manifeste) -> Float32Array mono transposée. */
 export function drumHit(z, pitch = 1) {
@@ -205,8 +236,8 @@ export function drumHit(z, pitch = 1) {
 
 /** Échantillon de percussion mono (couche + round-robin), transposable. */
 export function drumSample(id, layer = 0, rr = 0, pitch = 1) {
-  const m = man(); if (!m || !m.instruments[id]) return null;
-  const zs = m.instruments[id].zones;
+  const I = inst(id); if (!I) return null;
+  const zs = I.zones;
   const layers = [...new Set(zs.map((z) => z.layer))].sort((a, b) => a - b);
   const want = layers[Math.min(layer, layers.length - 1)];
   const pool = zs.filter((z) => z.layer === want);

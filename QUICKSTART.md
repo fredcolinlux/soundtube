@@ -1,12 +1,12 @@
-<!-- v1.21.3 routes: / home, /studio studio -->
-# Quick start — soundtube 1.21.3
+<!-- v1.21.4 routes: / home, /studio studio -->
+# Quick start — soundtube 1.21.4
 
 Three steps. Nothing else is required.
 
 ## 1. Install
 
 ```bash
-tar xzf soundtube-1.21.3-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.21.4-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # restart the soundtube service
 ```
 
@@ -36,7 +36,7 @@ Anonymous **Styles** pages offer a **15 s audio demo** (not stored in the librar
 Use the bundled script (**root**, no `sudo` inside the command):
 
 ```bash
-/opt/soundtube/app/scripts/update.sh /path/soundtube-1.21.3-patch.tar.gz
+/opt/soundtube/app/scripts/update.sh /path/soundtube-1.21.4-patch.tar.gz
 # or several patches in order:
 /opt/soundtube/app/scripts/update.sh /path/patch-a.tar.gz /path/patch-b.tar.gz
 ```

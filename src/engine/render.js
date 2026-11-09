@@ -33,7 +33,7 @@ const PUNCH = { frenchtouch: 0.32, hiphop: 0.4, hiphop_lofi: 0.3, dnb: 0.4, tech
 const DRUM_PAN = { cowbell: 0.15, clave: -0.25, congah: 0.4, congam: 0.1, congal: -0.3, maracas: 0.35, ride: -0.3, hat: 0.25, ohat: 0.3, shaker: -0.35, rim: -0.2, tom: -0.15, crash: 0.2, tomh: -0.35, tomm: 0, toml: 0.35 };
 const DRUM_GAIN = { cowbell: 0.3, clave: 0.3, congah: 0.4, congam: 0.42, congal: 0.45, maracas: 0.26, ride: 0.24, kick: 1, snare: 0.75, clap: 0.6, hat: 0.32, ohat: 0.28, rim: 0.35, shaker: 0.3, tom: 0.7, boom: 1, crash: 0.35, tomh: 0.6, tomm: 0.62, toml: 0.65 };
 const DRUM_REV = { cowbell: 1.5, clave: 2, congah: 1.5, congam: 1.5, congal: 1.5, ride: 1.2, snare: 3, clap: 3, rim: 2, tom: 3, boom: 2, crash: 2, tomh: 2.5, tomm: 2.5, toml: 2.5 };
-const DRUM_SAT = { tr606: 1.3, tr707: 1.45, dr110: 1.35, tr808: 1.35, tr909: 1.7, lofi: 2.0, soft: 1.1, retro: 1.5, house: 1.5, techno: 1.9, chip: 1, trap: 1.7, cinema: 1.25, boombap: 1.3, dnb: 1.3, break: 1.4, hhlofi: 1.6 }; // v1.6 : kits acoustiques, saturation allégée (break 1.9 -> 1.4)
+const DRUM_SAT = { tr606: 1.3, tr707: 1.45, dr110: 1.35, tr808: 1.35, tr909: 1.7, lofi: 2.0, soft: 1.1, retro: 1.5, house: 1.5, techno: 1.9, chip: 1, trap: 1.7, cinema: 1.25, boombap: 1.3, dnb: 1.3, break: 1.4, hhlofi: 1.6, user: 1.15 }; // v1.6 : kits acoustiques, saturation allégée (break 1.9 -> 1.4)
 // passe-haut 2 pôles (Chamberlin/TPT), état conservé de bloc en bloc
 class HP2Stream {
   constructor(fc, q = 0.707) { const g = Math.tan(Math.PI * fc / SR); this.k = 1 / q; this.a1 = 1 / (1 + g * (g + this.k)); this.a2 = g * this.a1; this.a3 = g * this.a2; this.ic1 = 0; this.ic2 = 0; }

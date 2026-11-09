@@ -32,6 +32,21 @@ Base URL typique : `http://<hôte>:8080`. Corps JSON (`Content-Type: application
 
 Paramètres principaux de `POST /api/generate` : `style`, `bpm`, `key`, `scale`, `mood`, `duration`, `wav`, `adv`, `engine` (17–21), `variety`, `mixStyles`, `seed`, `variation`, `instruments`, `title`, `title_en`, `aiPlan`, `aiMeta`, `animation`, `pcCombo`, `pack`, `split`.
 
+## Démo publique & cloisonnement de la bibliothèque (v1.21.4)
+
+| Méthode | Chemin | Rôle |
+|---|---|---|
+| GET | `/api/demo/tracks` | Sans compte : morceaux choisis par l’admin (`items`, `total`, `max` = 10 ; filtre `style`). Forme réduite, `listenOnly: true`, `urls.mp3` = route ci-dessous |
+| GET | `/api/demo/tracks/{id}/audio` | Audio d’un morceau choisi (inline, `no-store`, `Range`). `?download` → 401 ; non choisi → 404 |
+| GET/PUT | `/api/admin/demo-tracks` | Admin (local + session admin + CSRF). GET : `max`, `maxSeconds` (300), `selected`, `candidates[]` (`id`, `title`, `style`, `duration`, `created_at`, `owner`, `selected`). PUT `{ "ids": [...] }` : ≤ 10 morceaux terminés de moins de 5 min, sinon 400 (`id` fautif) |
+| GET/PUT | `/api/admin/samples` | Admin. Dossier de samples externes : GET = réglage, état du dossier, comptes, scan en cours ; PUT `{ "dir": "/mnt/samples", "enabled": true }` (chemin absolu, pas de dossier système / application / données → 400). Nouveau dossier lisible → scan lancé |
+| POST | `/api/admin/samples/scan` | Admin. Re-scan (202 ; `?wait` attend la fin). Dossier illisible → 409 |
+
+Règles de visibilité : **sans compte**, `GET /api/tracks` renvoie seulement les morceaux de la démo et toute autre route
+`/api/tracks/{id}/…` ou `/api/jobs/{id}` → 401 (404 si le morceau n’est pas choisi) ; **créateur / lecteur** : uniquement ses
+morceaux (`meta.ownerId`), les autres → 404 ; **admin** : tout. `GET /api/options` expose `extSamples { active, counts }` ;
+`POST /api/generate` accepte `adv.drumKit = "user"` (kit « Mes samples », 400 si l’index est inactif ; rendu toujours local).
+
 ## Découpage
 
 | Méthode | Chemin |

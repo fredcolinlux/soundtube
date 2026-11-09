@@ -32,8 +32,9 @@ const missing = [...used].filter((k) => !fr[k]).sort();
 check(missing.length === 0, `aucune clé manquante (${missing.length}${missing.length ? ': ' + missing.slice(0, 8).join(', ') : ''})`);
 
 const fingerprint = engineId(path.join(ROOT, 'src')).hash;
-// empreinte du moteur audio depuis v1.19 (696de0f4125a en v1.17/1.18) ; v1.20 → v1.21.2 ne touchent pas au moteur
-check(fingerprint === '7afdf699074e', `empreinte moteur inchangée (${fingerprint})`);
+// empreinte du moteur audio (696de0f4125a en v1.17/1.18, 7afdf699074e de v1.19 à v1.21.3) ; v1.21.4 : kit « Mes samples »
+// (code modifié, rendus existants identiques au bit près — voir test/v1214.js)
+check(fingerprint === '22573aa0f775', `empreinte moteur inchangée (${fingerprint})`);
 
 check(fs.existsSync(path.join(ROOT, 'public/js/i18n.js')), 'public/js/i18n.js');
 check(/lang-switch/.test(fs.readFileSync(path.join(ROOT, 'public/css/app.css'), 'utf8')), 'CSS .lang-switch');
