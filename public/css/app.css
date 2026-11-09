@@ -708,7 +708,7 @@ table.hist td { padding: 6px 8px; border-bottom: 1px solid var(--edge); vertical
 .auth-drop a,.auth-drop button{display:block;width:100%;text-align:left;padding:.45rem .65rem;border:0;background:transparent;color:inherit;font:inherit;border-radius:6px;cursor:pointer;text-decoration:none}
 .auth-drop a:hover,.auth-drop button:hover{background:color-mix(in oklab,#fff 8%,transparent)}
 
-/* v1.21.1 — pied de page GitHub + version */
+/* v1.21.2 — pied de page GitHub + version */
 .foot-meta { display: inline-flex; align-items: center; gap: .55rem; margin-left: .65rem; flex-wrap: wrap; }
 .foot-ver { opacity: .7; font-variant-numeric: tabular-nums; font-size: .85em; }
 .foot-gh { display: inline-flex; align-items: center; gap: .35rem; text-decoration: none; opacity: .85; }

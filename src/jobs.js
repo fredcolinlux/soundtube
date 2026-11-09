@@ -148,7 +148,7 @@ export class JobQueue {
       if (now && now.title !== t.title) await retagTrack(this.tracksDir, { ...now, files });
       const R = result.params, keep = {};
       if (now?.meta?.titleEn) Object.assign(keep, { titleEn: now.meta.titleEn, titleEnManual: !!now.meta.titleEnManual });
-      for (const k of ['autoSplit', 'animation', 'autoPack', 'ai', 'pcCombo']) if (now?.meta?.[k]) keep[k] = now.meta[k];
+      for (const k of ['autoSplit', 'animation', 'autoPack', 'ai', 'pcCombo', 'ownerId']) if (now?.meta?.[k]) keep[k] = now.meta[k]; // v1.21.2 : ownerId conservé
       if (now?.meta?.regenOf) Object.assign(keep, { regenOf: now.meta.regenOf, regenVersion: now.meta.regenVersion });
       this.store.update(id, {
         status: 'done', progress: 1, stage: 'Terminé', eta: 0, params: R, meta: { ...result.meta, ...keep, render: { ...where, ms: Date.now() - t0 } }, waveform: result.waveform, files,

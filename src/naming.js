@@ -40,5 +40,9 @@ export function syncFiles(tracksDir, t) {
     if (from !== want[k]) { fs.renameSync(path.join(dir, from), path.join(dir, want[k])); changed = true; }
     next[k] = want[k];
   }
-  return changed || JSON.stringify(next) !== JSON.stringify(cur) ? next : null;
+  // v1.21.2 : comparaison indépendante de l'ordre des clés (sinon « N morceau(x) : fichiers renommés » à chaque démarrage
+  // sans aucun renommage) ; les clés hors KINDS (ex. fichiers annexes) sont conservées.
+  for (const [k, v] of Object.entries(cur)) if (!KINDS.includes(k)) next[k] = v;
+  const same = Object.keys(next).length === Object.keys(cur).length && Object.entries(next).every(([k, v]) => cur[k] === v);
+  return changed || !same ? next : null;
 }

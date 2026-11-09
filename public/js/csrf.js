@@ -4,6 +4,7 @@ let authUser = null;
 let authLocal = false; // hide API until /api/auth/status says local
 
 export function getCsrf() { return csrf; }
+export function setCsrf(v) { if (v) csrf = v; }
 export function getAuthUser() { return authUser; }
 export function isLocal() { return authLocal; }
 

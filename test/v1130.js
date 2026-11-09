@@ -194,7 +194,7 @@ const freePort = () => new Promise((res) => { const s = net.createServer(); s.li
   const adm = read('public/admin.html'), ya = read('public/js/ytadmin.js'), st = read('public/style.html'), sp = read('public/js/stylepublish.js'), pp = read('public/js/pubpanel.js'), app = read('public/js/app.js');
   check(adm.includes('id="youtube"') && adm.includes('type="password" id="ytSecret"') && adm.includes('type="password" id="ytToken"') && ya.includes('/api/admin/youtube/bindings'), 'Admin : section « Chaînes YouTube », secrets en champs masqués, liaisons style → chaîne');
   check(st.includes('id="publish"') && st.includes('id="pubAuto"') && sp.includes('confirm:') && st.includes('id="pubQueue"'), 'page Style : profil de publication, auto-publication avec confirmation, file');
-  check(pp.includes('Publication impossible') && pp.includes('data-act="pubgo"') && pp.includes('data-act="packgo"') && app.includes('publishHTML(t)') && app.includes('packHTML(t)'), 'panneau YouTube : formulaire de publication (bouton explicite sans jeton) et ZIP complet');
+  check((pp.includes('Publication impossible') || pp.includes('pub.impossible')) && pp.includes('data-act="pubgo"') && pp.includes('data-act="packgo"') && app.includes('publishHTML(t)') && app.includes('packHTML(t)'), 'panneau YouTube : formulaire de publication (bouton explicite sans jeton) et ZIP complet');
   check(!/\?v=1\.12\.0/.test(read('public/index.html') + st + adm + app), 'cache des pages : ?v=1.13.0');
 }
 fs.rmSync(tmp, { recursive: true, force: true });

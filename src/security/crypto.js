@@ -6,17 +6,36 @@ import path from 'node:path';
 const SCRYPT = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024, keyLen: 32 };
 const ALG = 'scrypt';
 
-export function ensureMasterKey(dataDir) {
+/**
+ * Clé maître AES-256 (secrets TOTP, jetons sociaux…) : <dataDir>/secret.key, jamais livrée dans un patch,
+ * jamais écrasée. v1.21.2 :
+ *  - migration : si absente de dataDir mais présente dans un ancien emplacement (<app>/data), elle est COPIÉE ;
+ *  - une clé existante mais illisible (≠ 32 octets) provoque une erreur explicite au lieu d'une régénération ;
+ *  - régénération uniquement si aucune donnée chiffrée n'existe ; sinon avertissement fort (journal + console).
+ */
+export function ensureMasterKey(dataDir, { legacyDirs = [], log = console } = {}) {
   fs.mkdirSync(dataDir, { recursive: true });
   const file = path.join(dataDir, 'secret.key');
   if (!fs.existsSync(file)) {
-    const key = crypto.randomBytes(32);
-    fs.writeFileSync(file, key.toString('base64'), { mode: 0o600 });
-    try { fs.chmodSync(file, 0o600); } catch {}
-  } else {
-    try { fs.chmodSync(file, 0o600); } catch {}
+    const legacy = legacyDirs.map((d) => path.join(d, 'secret.key'))
+      .find((f) => path.resolve(f) !== path.resolve(file) && fs.existsSync(f));
+    if (legacy) {
+      fs.copyFileSync(legacy, file, fs.constants.COPYFILE_EXCL);
+      try { fs.chmodSync(file, 0o600); } catch {}
+      log.warn?.(`[soundtube-auth] master key migrated from ${legacy} to ${file}`);
+    } else {
+      let encrypted = false;
+      try { encrypted = /"v1:/.test(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8')); } catch {}
+      if (encrypted) log.error?.('[soundtube-auth] secret.key MISSING while users.json holds encrypted TOTP secrets — they cannot be decrypted. Restore secret.key from a backup or run: node scripts/admin-reset.js <user> --disable-2fa');
+      const key = crypto.randomBytes(32);
+      fs.writeFileSync(file, key.toString('base64'), { mode: 0o600, flag: 'wx' });
+    }
   }
-  return Buffer.from(fs.readFileSync(file, 'utf8').trim(), 'base64');
+  try { fs.chmodSync(file, 0o600); } catch {}
+  try { if (process.getuid?.() === 0) { const d = fs.statSync(dataDir); if (d.uid !== 0) fs.chownSync(file, d.uid, d.gid); } } catch {}
+  const key = Buffer.from(fs.readFileSync(file, 'utf8').trim(), 'base64');
+  if (key.length !== 32) throw new Error(`[soundtube-auth] ${file} is not a valid 32-byte base64 key (refusing to overwrite it)`);
+  return key;
 }
 
 export async function hashPassword(password) {

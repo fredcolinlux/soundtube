@@ -77,3 +77,10 @@ Under **My profile** you can enable optional TOTP: a **QR code** (SVG from `/api
 ## Styles demo (signed out)
 
 Without an account, each style page offers a **15-second preview** (audio only). Demo files never join the library and are deleted automatically. **Sign in to create full tracks** opens login.
+
+## What's new in v1.21.2
+
+- **Tracks**: a generation started with "Split into individual tracks" opens the mix's **Tracks** panel as soon as rendering ends and follows the split; the library also refreshes by itself (every 15 s) when tracks are added elsewhere (another tab, ZIP, API).
+- **Complete ZIP**: French **and** English texts — `LISEZMOI.txt` + `README.txt`, `youtube-fr.txt` + `youtube-en.txt` (title, description, tags of the mix), and for each track `<track>.txt` + `<track>.en.txt`. With "Video per track", every track gets its MP4 video in `morceaux/`.
+- **Admin › 07 Director context**: the listening profile is shown again and "Restore shipped profile" works. The active profile is stored in the data folder (`/var/lib/soundtube/gout.json`) and survives updates; without a personal profile a generic example is loaded.
+- **Sign-in with two-factor authentication**: the "code" step works again. Lost access: see [OPERATIONS.md](OPERATIONS.md) (`scripts/admin-reset.js`).

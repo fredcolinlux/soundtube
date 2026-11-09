@@ -1,5 +1,5 @@
 import { t as tf } from './i18n.js';
-// v1.13.0 : panneau YouTube › « Publier sur YouTube » + ZIP. v1.21.1 : Facebook Page + X.
+// v1.13.0 : panneau YouTube › « Publier sur YouTube » + ZIP. v1.21.2 : Facebook Page + X.
 import { queueHtml } from './pubqueue.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const P = { pub: new Map(), pack: new Map(), draft: new Map(), soc: new Map(), socDraft: new Map(), polls: new Set() };

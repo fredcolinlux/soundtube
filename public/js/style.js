@@ -1,5 +1,5 @@
 // v1.10.0+ : page d'un style — démo anonyme 15 s (v1.20.3) ou génération complète si connecté.
-import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser, onLangChange } from './site.js?v=1.21.1';
+import { $, $$, api, esc, fmt, bootSite, mountBackground, reveal, MiniPlayer, trackRowHtml, colorOf, color2Of, STYLE_WORDS, t, refreshAuth, getAuthUser, onLangChange } from './site.js?v=1.21.2';
 
 const id = decodeURIComponent(location.pathname.split('/').filter(Boolean)[1] || '');
 await bootSite('/styles/' + id);

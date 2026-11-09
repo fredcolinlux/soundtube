@@ -6,11 +6,14 @@ Depuis la **v1.14.0**, un morceau terminé peut produire un **ZIP complet** (man
 
 ```
 nom-du-morceau/
-  LISEZMOI.txt
+  LISEZMOI.txt    # FR
+  README.txt      # EN (v1.21.2)
+  youtube-fr.txt  # titre / description / tags YouTube du mix (v1.21.2)
+  youtube-en.txt
   manifest.json
   video/          # MP4 si demandé / disponible
   mix/            # MP3, WAV, TXT métadonnées
-  morceaux/       # stems / sous-morceaux selon options
+  morceaux/       # par morceau : .mp4 (vidéo par morceau), .mp3, .wav, .txt (FR) + .en.txt (EN)
   MIDI/           # fichiers MIDI
   samples/        # stems groupés (batterie, basse, …)
 ```
@@ -29,3 +32,9 @@ nom-du-morceau/
 - Les textes `LISEZMOI` suivent la langue de contenu YouTube / options de pack (pas la langue d’UI seule).
 
 Voir aussi le découpage (`/api/tracks/{id}/split`) pour exporter chaque titre d’un mix long séparément.
+
+## v1.21.2
+
+- Textes anglais toujours produits (avec l’option TXT) : `README.txt`, `youtube-en.txt`, `morceaux/<morceau>.en.txt`.
+- Vidéos par morceau (option « Une vidéo par morceau ») : l’audio de chaque rendu est épinglé dès la mise en file — un renommage de morceau pendant l’attente ne fait plus échouer le ZIP (`ffmpeg code 254 : Error opening input file audio.wav`).
+- Test bout en bout : `npm run test:e2e`.

@@ -1,12 +1,12 @@
-<!-- v1.21.1 routes: / home, /studio studio -->
-# Démarrage rapide — soundtube 1.21.1
+<!-- v1.21.2 routes: / home, /studio studio -->
+# Démarrage rapide — soundtube 1.21.2
 
 Trois étapes. Rien d’autre n’est obligatoire.
 
 ## 1. Installer
 
 ```bash
-tar xzf soundtube-1.21.1-patch.tar.gz -C /opt/soundtube/app --no-same-owner
+tar xzf soundtube-1.21.2-patch.tar.gz -C /opt/soundtube/app --no-same-owner
 # redémarre le service soundtube
 ```
 
@@ -37,7 +37,7 @@ Utilise le script inclus (en **root**, sans `sudo` dans la commande) :
 
 ```bash
 # depuis n’importe où, avec le script déjà déployé :
-/opt/soundtube/app/scripts/update.sh /chemin/soundtube-1.21.1-patch.tar.gz
+/opt/soundtube/app/scripts/update.sh /chemin/soundtube-1.21.2-patch.tar.gz
 
 # ou plusieurs patches dans l’ordre :
 /opt/soundtube/app/scripts/update.sh /chemin/patch-a.tar.gz /chemin/patch-b.tar.gz
@@ -46,3 +46,10 @@ Utilise le script inclus (en **root**, sans `sudo` dans la commande) :
 Le script **vérifie** chaque archive (gzip, tar, layout **plat** sans préfixe `soundtube/`) **avant** d’arrêter le service, crée une sauvegarde dans `/var/backups/soundtube/`, applique, contrôle la syntaxe Node, redémarre **toujours** (reprise de la sauvegarde si l’extraction a échoué), puis attend `http://127.0.0.1:8080/healthz`.
 
 > Ne plus enchaîner à la main `systemctl stop && tar … && systemctl start` : si le `tar` échoue, le service reste arrêté (502).
+
+## Accès perdu
+
+```bash
+node /opt/soundtube/app/scripts/admin-reset.js <utilisateur> --disable-2fa --password
+```
+Root + console/LAN uniquement ; mot de passe saisi masqué ; entrée d’audit ; fonctionne service en marche.

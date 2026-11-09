@@ -118,7 +118,7 @@ const finite = (b) => { if (!b || !b.length) return false; let pk = 0; for (let 
     const r = spawnSync(pwsh, ['-NoProfile', '-Command', `$e=$null; [void][System.Management.Automation.Language.Parser]::ParseFile('${path.join(ROOT, 'node-agent/install-windows.ps1')}', [ref]$null, [ref]$e); $e.Count`], { encoding: 'utf8' });
     check(r.stdout.trim() === '0', `analyse PowerShell : ${r.stdout.trim()} erreur(s)`);
   } else console.log('—     pwsh absent : analyse PowerShell sautée');
-  check(fs.readFileSync(path.join(ROOT, 'node-agent/README.md'), 'utf8').includes('-AllowFrom 192.168.0.0/24'), 'README de l’agent : exemple -AllowFrom 192.168.0.0/24');
+  check(fs.readFileSync(path.join(ROOT, 'node-agent/README.md'), 'utf8').includes('-AllowFrom 10.0.0.0/24'), 'README de l’agent : exemple -AllowFrom 10.0.0.0/24');
 }
 
 // ---------- interface : interrupteurs « Forcer »

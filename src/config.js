@@ -1,16 +1,24 @@
 // Configuration via variables d'environnement (voir deploy/soundtube.env).
 import path from 'node:path';
 import os from 'node:os';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const env = process.env;
+// v1.21.2 : si SOUNDTUBE_DATA_DIR n'est pas défini (lancement manuel « node src/server.js » sur une install
+// systemd), on réutilise /var/lib/soundtube quand il contient déjà des comptes, plutôt que <app>/data
+// (qui créerait une seconde base de comptes et une seconde clé maître).
+function defaultDataDir() {
+  try { if (process.platform === 'linux' && fs.existsSync('/var/lib/soundtube/users.json')) return '/var/lib/soundtube'; } catch {}
+  return path.join(root, 'data');
+}
 
 export const config = {
   root,
   host: env.SOUNDTUBE_HOST || '0.0.0.0',
   port: parseInt(env.SOUNDTUBE_PORT || '8080', 10),
-  dataDir: path.resolve(env.SOUNDTUBE_DATA_DIR || path.join(root, 'data')),
+  dataDir: path.resolve(env.SOUNDTUBE_DATA_DIR || defaultDataDir()),
   maxConcurrentJobs: Math.max(1, parseInt(env.SOUNDTUBE_MAX_JOBS || String(Math.min(2, os.cpus().length)), 10)),
   maxQueue: parseInt(env.SOUNDTUBE_MAX_QUEUE || '50', 10),
   maxDuration: parseInt(env.SOUNDTUBE_MAX_DURATION || '14400', 10),

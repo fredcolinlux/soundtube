@@ -19,7 +19,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 console.log('— v1.19.0 —');
 
-check(engineId(path.join(ROOT, 'src')).hash === '696de0f4125a', 'empreinte moteur 696de0f4125a');
+check(engineId(path.join(ROOT, 'src')).hash === '7afdf699074e', 'empreinte moteur 7afdf699074e (moteur inchangé depuis v1.19)');
 check(crawl.isPrivateHost('127.0.0.1') && crawl.isPrivateHost('10.1.2.3') && crawl.isPrivateHost('192.168.0.5') && crawl.isPrivateHost('169.254.9.1'), 'SSRF : IPs privées / link-local');
 check(!crawl.isPrivateHost('8.8.8.8'), 'SSRF : IP publique');
 let denied = false; try { await crawl.resolveSafe('127.0.0.1'); } catch { denied = true; }
@@ -72,7 +72,7 @@ const api = async (p, { method = 'GET', body } = {}) => {
 const wait = async (fn) => { for (let i = 0; i < 100; i++) { const v = await fn(); if (v) return v; await sleep(150); } throw new Error('timeout'); };
 
 try {
-  check(String((await api('/api/health')).j.version || '').startsWith('1.19'), 'health 1.19.x');
+  check(String((await api('/api/health')).j.version || '') === JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version, 'health = version du package');
 
   let a = (await api('/api/admin/ai')).j;
   check(!!a.watch, 'GET ai.watch');

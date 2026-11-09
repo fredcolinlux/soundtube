@@ -5,7 +5,7 @@ import {
   ensureMasterKey, hashPassword, verifyPassword, hashToken, randomId, randomToken,
   encrypt, decrypt,
 } from '../security/crypto.js';
-import { generateSecret, verifyTotp, otpauthUrl, groupSecret, makeRecoveryCodes, consumeRecovery } from '../security/totp.js';
+import { generateSecret, verifyTotp, totpSkew, otpauthUrl, groupSecret, makeRecoveryCodes, consumeRecovery } from '../security/totp.js';
 
 const ROLES = ['admin', 'creator', 'viewer'];
 const DEFAULT_QUOTA = { generationsPerDay: 50, maxDuration: 3600 };
@@ -29,12 +29,55 @@ const DEFAULT_SEC = {
   bodyLimitKb: 64,
 };
 
+/** v1.21.2 : si le processus tourne en root (CLI, lancement manuel), le fichier garde le propriétaire du
+ * dossier de données (utilisateur « soundtube » du service) — sinon le service ne pourrait plus l'écrire. */
+export function keepOwner(file) {
+  try {
+    if (typeof process.getuid !== 'function' || process.getuid() !== 0) return;
+    const d = fs.statSync(path.dirname(file));
+    if (d.uid !== 0) fs.chownSync(file, d.uid, d.gid);
+  } catch {}
+}
 function writePrivate(file, data) {
-  const tmp = file + '.tmp';
+  const tmp = `${file}.tmp-${process.pid}`;
   fs.writeFileSync(tmp, typeof data === 'string' ? data : JSON.stringify(data, null, 2), { mode: 0o600 });
   try { fs.chmodSync(tmp, 0o600); } catch {}
+  keepOwner(tmp);
   fs.renameSync(tmp, file);
   try { fs.chmodSync(file, 0o600); } catch {}
+}
+const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+/**
+ * v1.21.2 : normalisation tolérante des fichiers d'auth (édités à la main, vides, `{}`, `null`, `[]`).
+ * Ne lève jamais : toute clé absente / mal typée reprend sa valeur par défaut.
+ */
+export function normalizeAuthData({ users, sessions, tokens, security } = {}) {
+  const ulist = Array.isArray(users?.users) ? users.users : (Array.isArray(users) ? users : []);
+  const outUsers = ulist.filter((u) => isObj(u) && u.username).map((u) => ({
+    ...u,
+    totpSecret: typeof u.totpSecret === 'string' && u.totpSecret ? u.totpSecret : null,
+    recoveryHashes: Array.isArray(u.recoveryHashes) ? u.recoveryHashes : [],
+    passkeys: Array.isArray(u.passkeys) ? u.passkeys : [],
+    disabled: !!u.disabled,
+  }));
+  const smap = isObj(sessions?.sessions) ? sessions.sessions : {};
+  const outSessions = {};
+  for (const [id, s] of Object.entries(smap)) if (isObj(s) && s.userId) outSessions[id] = s;
+  const tlist = Array.isArray(tokens?.tokens) ? tokens.tokens : (Array.isArray(tokens) ? tokens : []);
+  const sec = { ...DEFAULT_SEC, ...(isObj(security) ? security : {}) };
+  for (const k of ['trustedProxies', 'localCidrs']) sec[k] = Array.isArray(sec[k]) ? sec[k].map(String).filter(Boolean) : (typeof sec[k] === 'string' && sec[k] ? sec[k].split(/[\s,]+/).filter(Boolean) : []);
+  for (const [k, v] of Object.entries(DEFAULT_SEC)) if (typeof v === 'number') sec[k] = Number.isFinite(Number(sec[k])) && sec[k] !== null && sec[k] !== '' ? Number(sec[k]) : v;
+  for (const [k, v] of Object.entries(DEFAULT_SEC)) if (typeof v === 'boolean') sec[k] = typeof sec[k] === 'boolean' ? sec[k] : v;
+  for (const [k, v] of Object.entries(DEFAULT_SEC)) {
+    if (typeof v === 'string' && typeof sec[k] !== 'string') sec[k] = v;
+    if (isObj(v)) sec[k] = { ...v, ...(isObj(sec[k]) ? sec[k] : {}) };
+  }
+  return {
+    users: { ...(isObj(users) ? users : {}), users: outUsers },
+    sessions: { ...(isObj(sessions) ? sessions : {}), sessions: outSessions },
+    tokens: { ...(isObj(tokens) ? tokens : {}), tokens: tlist.filter(isObj) },
+    security: sec,
+  };
 }
 function readJson(file, fallback) {
   try { if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
@@ -45,26 +88,64 @@ export class AuthStore {
   constructor(dataDir) {
     this.dataDir = dataDir;
     fs.mkdirSync(dataDir, { recursive: true });
-    this.masterKey = ensureMasterKey(dataDir);
+    this.masterKey = ensureMasterKey(dataDir, { legacyDirs: [path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..', 'data')] });
     this.usersFile = path.join(dataDir, 'users.json');
     this.sessionsFile = path.join(dataDir, 'sessions.json');
     this.tokensFile = path.join(dataDir, 'api-tokens.json');
     this.secFile = path.join(dataDir, 'security.json');
     this.auditFile = path.join(dataDir, 'audit.jsonl');
-    this.users = readJson(this.usersFile, { users: [] });
-    this.sessions = readJson(this.sessionsFile, { sessions: {} });
-    this.tokens = readJson(this.tokensFile, { tokens: [] });
-    this.security = { ...DEFAULT_SEC, ...readJson(this.secFile, {}) };
+    // v1.21.2 : chargement tolérant (sessions.json = {} / vide / null, totpSecret: null, clés manquantes…)
+    const n = normalizeAuthData({
+      users: readJson(this.usersFile, null), sessions: readJson(this.sessionsFile, null),
+      tokens: readJson(this.tokensFile, null), security: readJson(this.secFile, null),
+    });
+    this.users = n.users; this.sessions = n.sessions; this.tokens = n.tokens; this.security = n.security;
+    this.loginFails = new Map(); this.csrf = new Map();
+    [this.usersFile, this.sessionsFile, this.tokensFile, this.secFile].forEach((f) => this._remember(f));
     this.challenges = new Map(); // webauthn / login pending 2fa
     this.loginFails = new Map(); // ip|user -> { n, until }
     this.csrf = new Map(); // sessionId -> token
     // migrate encrypted fields lazily
   }
 
-  saveUsers() { writePrivate(this.usersFile, this.users); }
-  saveSessions() { writePrivate(this.sessionsFile, this.sessions); }
-  saveTokens() { writePrivate(this.tokensFile, this.tokens); }
-  saveSecurity() { writePrivate(this.secFile, this.security); }
+  /* v1.21.2 : jamais d'écrasement depuis une mémoire périmée. Chaque fichier garde son empreinte disque
+   * (mtime+taille) ; si elle a changé hors du serveur (édition manuelle, scripts/admin-reset.js),
+   * le fichier est RECHARGÉ avant toute lecture (middleware) et avant toute écriture. */
+  _stamp(file) { try { const s = fs.statSync(file); return `${s.mtimeMs}:${s.size}:${s.ino}`; } catch { return 'none'; } }
+  _remember(file) { (this._stamps ||= {})[file] = this._stamp(file); }
+  _changed(file) { return (this._stamps || {})[file] !== this._stamp(file); }
+  syncFromDisk({ force = false } = {}) {
+    const files = [this.usersFile, this.sessionsFile, this.tokensFile, this.secFile];
+    if (!force && !files.some((f) => this._changed(f))) return false;
+    const n = normalizeAuthData({
+      users: readJson(this.usersFile, null), sessions: readJson(this.sessionsFile, null),
+      tokens: readJson(this.tokensFile, null), security: readJson(this.secFile, null),
+    });
+    if (force || this._changed(this.usersFile)) this.users = n.users;
+    if (force || this._changed(this.sessionsFile)) {
+      this.sessions = n.sessions;
+      for (const id of [...this.csrf.keys()]) if (!this.sessions.sessions[id]) this.csrf.delete(id);
+    }
+    if (force || this._changed(this.tokensFile)) this.tokens = n.tokens;
+    if (force || this._changed(this.secFile)) this.security = n.security;
+    files.forEach((f) => this._remember(f));
+    return true;
+  }
+  /** SIGHUP / admin-reset : relit les fichiers et efface les verrous de connexion en mémoire. */
+  reload() { this.syncFromDisk({ force: true }); this.loginFails.clear(); this.audit('auth.reload', {}); }
+  _save(file, obj, key) {
+    if (this._changed(file)) {
+      // Modifié sur disque depuis notre dernière lecture : on garde la version disque (on ne la réécrit pas).
+      this.syncFromDisk();
+      console.warn(`[soundtube-auth] ${path.basename(file)} modifié hors du serveur : rechargé, écriture en mémoire abandonnée`);
+      return false;
+    }
+    writePrivate(file, obj); this._remember(file); return true;
+  }
+  saveUsers() { return this._save(this.usersFile, this.users); }
+  saveSessions() { writePrivate(this.sessionsFile, this.sessions); this._remember(this.sessionsFile); return true; } // éphémère : synchronisé en début de requête
+  saveTokens() { return this._save(this.tokensFile, this.tokens); }
+  saveSecurity() { return this._save(this.secFile, this.security); }
 
   /** Inscription publique (si openRegistration). Rôle creator ; disabled si approval requis. */
   async registerPublic({ username, password }) {
@@ -301,16 +382,23 @@ export class AuthStore {
   }
   totpSecretOf(user) {
     if (!user.totpSecret) return null;
-    return decrypt(this.masterKey, user.totpSecret);
+    try { return decrypt(this.masterKey, user.totpSecret); }
+    catch { const e = new Error('TOTP secret undecryptable'); e.code = 'TOTP_UNDECRYPTABLE'; throw e; }
   }
+  /** v1.21.2 : code TOTP d'abord (fenêtre ±1 pas de 30 s), puis code de récupération ; un champ « récupération » prérempli n'écrase plus le code. */
   async verifyUser2fa(user, { code, recovery } = {}) {
+    const c = String(code || '').replace(/\s/g, '');
+    if (/^\d{6}$/.test(c)) {
+      const secret = this.totpSecretOf(user);
+      if (secret && verifyTotp(secret, c, 1)) return true;
+      if (secret) { const skew = totpSkew(secret, c, 10); if (skew) this.audit('totp.skew', { userId: user.id, steps: skew, hint: 'horloge du serveur décalée' }); }
+    }
     if (recovery) {
       const r = await consumeRecovery(recovery, user.recoveryHashes || []);
       if (!r.ok) return false;
-      user.recoveryHashes = r.hashes; this.saveUsers(); return true;
+      user.recoveryHashes = r.hashes; this.saveUsers(); this.audit('login.recovery_used', { userId: user.id, left: r.hashes.length }); return true;
     }
-    const secret = this.totpSecretOf(user);
-    return secret ? verifyTotp(secret, code) : false;
+    return false;
   }
 
   /* ---- quotas ---- */
@@ -428,7 +516,7 @@ export class AuthStore {
   /* ---- audit ---- */
   audit(action, detail = {}) {
     const line = JSON.stringify({ at: new Date().toISOString(), action, ...detail }) + '\n';
-    try { fs.appendFileSync(this.auditFile, line, { mode: 0o600 }); } catch {}
+    try { fs.appendFileSync(this.auditFile, line, { mode: 0o600 }); keepOwner(this.auditFile); } catch {}
   }
   readAudit({ limit = 100 } = {}) {
     try {

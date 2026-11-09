@@ -4,3 +4,7 @@ data/
 
 # Non-redistributable (CC BY-NC)
 assets/samples/jrhodes/
+
+# Profil d’écoute personnel (livré en privé, jamais publié) / personal listening profile
+contexte/gout.json
+contexte/gout.seed.json

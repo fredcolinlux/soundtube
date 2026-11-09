@@ -30,13 +30,13 @@ curl -sf "http://127.0.0.1:$PORT/.well-known/security.txt" | grep -q Contact && 
 CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/admin")
 [[ "$CODE" == "302" || "$CODE" == "303" ]] && echo "OK   /admin requires login ($CODE)" || { echo "ÉCHEC /admin expected 302 got $CODE"; fail=$((fail+1)); }
 # Studio (/) requires login for everyone (no LAN bypass). Library lives on the same page (#library).
-C=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/")
+C=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/studio")
 [[ "$C" == "302" || "$C" == "303" ]] && echo "OK   / studio gated ($C)" || { echo "ÉCHEC / studio expected 302 got $C"; fail=$((fail+1)); }
 C=$(curl -s -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:$PORT/api/generate" -H 'Content-Type: application/json' -d '{}')
 [[ "$C" == "401" || "$C" == "403" || "$C" == "302" || "$C" == "303" ]] \
   && echo "OK   /api/generate gated ($C)" || { echo "ÉCHEC /api/generate expected auth gate got $C"; fail=$((fail+1)); }
 # Public pages stay viewable without login
-for path in /accueil /styles /legal /privacy /terms /login /demarrer; do
+for path in / /styles /legal /privacy /terms /login /demarrer; do
   C=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT$path")
   [[ "$C" == "200" ]] && echo "OK   public $path ($C)" || { echo "ÉCHEC public $path $C"; fail=$((fail+1)); }
 done

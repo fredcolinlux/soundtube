@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fredcolinlux/soundtube/releases/tag/v1.21.1"><img alt="release" src="https://img.shields.io/github/v/release/fredcolinlux/soundtube?style=flat-square&color=5ef2c9"></a>
+  <a href="https://github.com/fredcolinlux/soundtube/releases/tag/v1.21.2"><img alt="release" src="https://img.shields.io/github/v/release/fredcolinlux/soundtube?style=flat-square&color=5ef2c9"></a>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D20-7dd3fc?style=flat-square">
   <img alt="license" src="https://img.shields.io/badge/licence-tous%20droits%20r%C3%A9serv%C3%A9s-c792ff?style=flat-square">
   <img alt="i18n" src="https://img.shields.io/badge/UI-FR%20%7C%20EN-f3c97a?style=flat-square">
@@ -114,6 +114,7 @@ Voir le tableau dans [README.md](README.md#manuals) — chemins `docs/` et `docs
 - Admin = LAN **et** session admin ; hors LAN → **404** brandée.
 - TOTP optionnel avec QR SVG serveur ; codes de récupération une fois.
 - Démo Styles : 15 s, rate-limit, **écoute seule** (`401` sur download/publish/library).
+- Accès perdu (OTP / mot de passe) ? Sur le serveur : `node /opt/soundtube/app/scripts/admin-reset.js <utilisateur> --disable-2fa --password` (root, console/LAN, service en marche) — voir [docs/SECURITY.md](docs/SECURITY.md).
 
 ## FAQ
 

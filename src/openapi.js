@@ -1,4 +1,5 @@
 // Spécification OpenAPI 3 de l'API REST soundtube (servie sur /api/openapi.json, UI sur /docs).
+import fs from 'node:fs';
 import { ADVANCED } from './engine/composer.js';
 import { MOODS, STYLES } from './engine/styles.js';
 
@@ -53,7 +54,7 @@ const ok = (desc, schema) => ({ description: desc, content: { 'application/json'
 export const openapi = {
   openapi: '3.0.3',
   components: { schemas: { SplitOptions } },
-  info: { title: 'soundtube API', version: '1.20.1', description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
+  info: { title: 'soundtube API', version: (() => { try { return JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version; } catch { return '0.0.0'; } })(), description: 'Génération procédurale de musique instrumentale (sans paroles) : composition algorithmique + synthèse audio en JavaScript.' },
   paths: {
 
     '/api/auth/status': { get: { summary: 'v1.20.0 : état auth (setup, session, csrf)', responses: { 200: ok('Status', { type: 'object' }) } } },
@@ -125,7 +126,7 @@ export const openapi = {
     // v1.7.0 : administration (réseau local) — nœuds de rendu vidéo, répartition, PC IA
     '/api/admin/nodes': {
       get: { tags: ['Admin'], summary: 'Nœuds de rendu (musique + vidéo) : liste, état, capacité musicale (audio), moteur, historique des rendus, seuil audioMinSec, (en ligne, encodeur, charge, latence), mode du CT, nœud forcé', responses: { 200: ok('Nœuds', { type: 'object' }) } },
-      post: { tags: ['Admin'], summary: 'Ajouter un nœud (agent soundtube-node, ex. http://192.168.1.50:8765)', requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['url'], properties: { url: { type: 'string' }, name: { type: 'string' }, token: { type: 'string', description: 'Jeton propre au nœud (sinon SOUNDTUBE_NODE_TOKEN)' }, enabled: { type: 'boolean' } } } } } }, responses: { 201: ok('Nœuds', { type: 'object' }), 400: { description: 'URL invalide' } } },
+      post: { tags: ['Admin'], summary: 'Ajouter un nœud (agent soundtube-node, ex. http://10.0.0.50:8765)', requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['url'], properties: { url: { type: 'string' }, name: { type: 'string' }, token: { type: 'string', description: 'Jeton propre au nœud (sinon SOUNDTUBE_NODE_TOKEN)' }, enabled: { type: 'boolean' } } } } } }, responses: { 201: ok('Nœuds', { type: 'object' }), 400: { description: 'URL invalide' } } },
     },
     '/api/admin/nodes/{id}': {
       patch: { tags: ['Admin'], summary: 'Modifier un nœud (nom, activé, jeton, URL ; v1.16.0 : audio = rendu de la musique autorisé)', parameters: idParam, requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' }, enabled: { type: 'boolean' }, audio: { type: 'boolean' }, token: { type: 'string' }, url: { type: 'string' } } } } } }, responses: { 200: ok('Nœuds', { type: 'object' }), 404: { description: 'Inconnu' } } },
@@ -137,7 +138,7 @@ export const openapi = {
     '/api/admin/discover': { post: { tags: ['Admin'], summary: 'Découverte UDP optionnelle des agents sur le réseau local (port 47811)', requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { targets: { type: 'array', items: { type: 'string' } }, timeout: { type: 'number' } } } } } }, responses: { 200: ok('Agents trouvés', { type: 'object' }) } } },
     '/api/admin/ai': {
       get: { tags: ['Admin'], summary: 'PC IA (Ollama) : URL et modèle enregistrés (défaut qwen3:14b)', responses: { 200: ok('IA', { type: 'object' }) } },
-      put: { tags: ['Admin'], summary: 'Enregistrer l’URL Ollama, le modèle et le délai max (timeout, 10–600 s, défaut 120)', requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { url: { type: 'string', example: 'http://192.168.1.50:11434' }, model: { type: 'string', example: 'qwen3:14b' } } } } } }, responses: { 200: ok('IA', { type: 'object' }) } },
+      put: { tags: ['Admin'], summary: 'Enregistrer l’URL Ollama, le modèle et le délai max (timeout, 10–600 s, défaut 120)', requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { url: { type: 'string', example: 'http://10.0.0.50:11434' }, model: { type: 'string', example: 'qwen3:14b' } } } } } }, responses: { 200: ok('IA', { type: 'object' }) } },
     },
     '/api/advanced/defaults': { post: { summary: 'v1.9.0 : valeurs réelles des réglages avancés pour ces paramètres et cette graine (absente = tirée et renvoyée) : ce qui est affiché est ce qui sera utilisé. Réponse { seed, engine, style, bpm, key, scale, values, exact, notes }.', requestBody: { content: { 'application/json': { schema: Params } } }, responses: { 200: ok('Valeurs', { type: 'object' }) } } },
     '/api/ai/suggest': { post: { summary: 'v1.9.0 : directeur artistique. Description d’ambiance → paramètres validés et bornés (style, mood, key, scale, bpm, adv), explication ; options meta (titres, descriptions, tags FR + EN) et plan (mix ≥ 1 h). IA Ollama du PC IA (Admin), sinon proposition locale (source: local, fallback: true, error).', requestBody: { content: { 'application/json': { schema: { type: 'object', required: ['prompt'], properties: { prompt: { type: 'string', maxLength: 1200 }, style: { type: 'string' }, duration: { type: 'number' }, meta: { type: 'boolean' }, plan: { type: 'boolean' } } } } } }, responses: { 200: ok('Proposition', { type: 'object' }), 400: ok('Description vide', { type: 'object' }) } } },

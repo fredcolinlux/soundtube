@@ -94,3 +94,13 @@ Puis **Ctrl+F5** sur Admin : pastille **v1.19.2**, section **03 Modèles IA** (D
 
 - [SECURITY.md](./SECURITY.md)
 - [EXPOSITION.md](./EXPOSITION.md)
+
+## v1.21.2
+
+```bash
+/opt/soundtube/app/scripts/update.sh /root/soundtube-1.21.2-patch.tar.gz
+curl -s http://127.0.0.1:8080/healthz   # {"ok":true,"version":"1.21.2"}
+```
+- Unité systemd : `ExecReload=/bin/kill -HUP $MAINPID` (facultatif ; `systemctl reload soundtube` relit alors les comptes). `admin-reset.js` envoie lui-même le signal.
+- Profil d'écoute : `/var/lib/soundtube/gout.json` (créé au premier affichage de la carte 07 à partir de `contexte/gout.json` s'il existe, sinon de `contexte/gout.example.json`). Pour installer un profil personnel : copier le fichier dans `/var/lib/soundtube/gout.json` (propriétaire `soundtube`) ou le coller dans la carte 07.
+- Récupération d'accès : `node /opt/soundtube/app/scripts/admin-reset.js <utilisateur> --disable-2fa --password` (root).

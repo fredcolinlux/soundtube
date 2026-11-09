@@ -40,6 +40,13 @@ export function verifyTotp(secret, code, window = 1) {
   return false;
 }
 
+/** Diagnostic : décalage (en pas de 30 s) si le code correspond hors fenêtre, sinon 0. */
+export function totpSkew(secret, code, range = 10) {
+  const now = Date.now();
+  for (let w = 2; w <= range; w++) for (const s of [w, -w]) if (totp(secret, 30, 6, now + s * 30_000) === code) return s;
+  return 0;
+}
+
 export function otpauthUrl(secret, account, issuer = 'soundtube') {
   const iss = String(issuer || 'soundtube').trim() || 'soundtube';
   return `otpauth://totp/${encodeURIComponent(iss)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(iss)}&algorithm=SHA1&digits=6&period=30`;

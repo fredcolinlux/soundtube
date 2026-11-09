@@ -71,3 +71,10 @@ Dans **Mon profil**, tu peux activer un TOTP optionnel : un **QR code** (SVG ser
 ## Démo Styles (sans compte)
 
 Sans connexion, chaque page de style propose un **aperçu de 15 secondes** (audio seul). Les fichiers démo ne rejoignent pas la bibliothèque et sont effacés automatiquement. Le bouton **Connectez-vous pour créer des morceaux complets** mène au login.
+
+## Nouveautés v1.21.2
+
+- **Morceaux** : une génération lancée avec « Découper en morceaux individuels » ouvre le panneau **Morceaux** du mix dès la fin du rendu et suit la découpe ; la bibliothèque se met aussi à jour seule (toutes les 15 s) quand des morceaux sont ajoutés ailleurs (autre onglet, ZIP, API).
+- **ZIP complet** : textes en français **et** en anglais — `LISEZMOI.txt` + `README.txt`, `youtube-fr.txt` + `youtube-en.txt` (titre, description, tags du mix), et pour chaque morceau `<morceau>.txt` + `<morceau>.en.txt`. Avec « Vidéo par morceau », chaque morceau a sa vidéo MP4 dans `morceaux/`.
+- **Admin › 07 Contexte du directeur** : le profil d'écoute s'affiche de nouveau et « Revenir au profil livré » fonctionne. Le profil actif est enregistré dans le dossier de données (`/var/lib/soundtube/gout.json`) et survit aux mises à jour ; sans profil personnel, un exemple générique est chargé.
+- **Connexion avec double authentification** : l'étape « code » fonctionne de nouveau. Accès perdu : voir [EXPLOITATION.md](EXPLOITATION.md) (`scripts/admin-reset.js`).

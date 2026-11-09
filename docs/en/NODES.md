@@ -28,7 +28,7 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 # .\install-windows.ps1 -GenerateToken -AudioSlots 2
 ```
 
-Install root: `C:\ProgramData\soundtube-node`. Options: `-NoAudio`, `-AudioSlots`, `-AllowFrom 192.168.0.0/24`, `-CtAddress`, `-GenerateToken`. Uninstall: `.\uninstall-windows.ps1`.
+Install root: `C:\ProgramData\soundtube-node`. Options: `-NoAudio`, `-AudioSlots`, `-AllowFrom 10.0.0.0/24`, `-CtAddress`, `-GenerateToken`. Uninstall: `.\uninstall-windows.ps1`.
 
 ## 6bis. macOS Apple Silicon (v1.17.0)
 
@@ -81,7 +81,7 @@ Default LaunchAgent (no elevation); `--system` → LaunchDaemon. Homebrew may in
 
 ## 6. Admin
 
-**Admin → Render nodes** → `http://192.168.1.20:8765` → optional token → **Add node**. LAN discover (UDP 47811), **Test all**, **Verify**.
+**Admin → Render nodes** → `http://10.0.0.20:8765` → optional token → **Add node**. LAN discover (UDP 47811), **Test all**, **Verify**.
 
 ## 7. Security
 

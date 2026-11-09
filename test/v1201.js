@@ -14,22 +14,22 @@ const check = (ok, msg) => { if (!ok) fail++; console.log(`${ok ? 'OK   ' : 'ÉC
 // --- unit: untrusted XFF never local
 {
   const req = {
-    socket: { remoteAddress: '192.168.0.1' },
+    socket: { remoteAddress: '10.0.0.1' },
     headers: { 'x-forwarded-for': '203.0.113.10', host: 'soundtube.example.com' },
     protocol: 'http',
   };
   const m = clientMeta(req, { trustedProxies: [] });
   check(m.untrustedForward === true, 'untrusted XFF flagged');
   check(m.local === false, 'untrusted XFF → not local (safe default)');
-  check(m.ip === '192.168.0.1', 'ip stays socket until proxy confirmed');
+  check(m.ip === '10.0.0.1', 'ip stays socket until proxy confirmed');
 }
 {
   const req = {
-    socket: { remoteAddress: '192.168.0.1' },
+    socket: { remoteAddress: '10.0.0.1' },
     headers: { 'x-forwarded-for': '203.0.113.10', host: 'soundtube.example.com', 'x-forwarded-proto': 'https' },
     protocol: 'http',
   };
-  const m = clientMeta(req, { trustedProxies: ['192.168.0.1'] });
+  const m = clientMeta(req, { trustedProxies: ['10.0.0.1'] });
   check(m.fromProxy && m.local === false, 'trusted proxy uses public client IP');
   check(m.ip === '203.0.113.10', 'client IP from XFF when trusted');
   check(m.proto === 'https', 'proto from X-Forwarded-Proto');
@@ -79,7 +79,7 @@ const req = (method, url, { headers = {}, body } = {}) => new Promise((res, rej)
 
 // Studio HTML requires login
 {
-  const r = await req('GET', '/');
+  const r = await req('GET', '/studio'); // v1.20.5 : Studio sur /studio, / = accueil public
   check(r.status === 302 && /login/.test(r.headers.location || ''), `studio redirects to login (${r.status})`);
 }
 // generate requires auth even from loopback

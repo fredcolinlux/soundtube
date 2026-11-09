@@ -5,9 +5,9 @@ import { mountSiteFooter } from './sitefoot.js';
 const i18n = t; // alias: track locals often shadow `t`
 import { apiFetch, refreshAuth, isLocal } from './csrf.js';
 import { mountAuthMenu } from './authmenu.js';
-import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.21.1';
-import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.21.1';
-import { initPubPanel, loadPub, publishHTML, packHTML, socialHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.21.1';
+import { initEditors, editorSlot, mountEditors } from './yteditor.js?v=1.21.2';
+import { initGenForm, onStyle as genStyle, showTrack as genShowTrack, genExtras, watch as watchPack } from './genform.js?v=1.21.2';
+import { initPubPanel, loadPub, publishHTML, packHTML, socialHTML, onPubInput, onPubAction } from './pubpanel.js?v=1.21.2';
 
 const $ = (s) => document.querySelector(s);
 const api = async (url, opts = {}) => {
@@ -458,7 +458,9 @@ async function pollJobs() {
     for (const id of [...state.jobs.keys()]) {
       try {
         const j = await api(`/api/jobs/${id}`); state.jobs.set(id, j);
-        if (j.status === 'done') { state.jobs.delete(id); await loadLibrary(); const t = state.tracks.find((x) => x.id === id); if (t && (!state.current || audio.paused)) play(t); toast(i18n('toast.jobReady', { title: j.title })); }
+        if (j.status === 'done') { state.jobs.delete(id); await loadLibrary(); const t = state.tracks.find((x) => x.id === id);
+          // v1.21.2 : génération avec « Découper en morceaux » : le panneau Morceaux s'ouvre et suit la découpe auto (avant : rien ne s'affichait).
+          if (t && t.meta?.autoSplit && canSplit(t) && !state.splitOpen.has(t.id)) { state.splitOpen.add(t.id); loadSplit(t.id); } if (t && (!state.current || audio.paused)) play(t); toast(i18n('toast.jobReady', { title: j.title })); }
         if (j.status === 'error') { setTimeout(() => { state.jobs.delete(id); renderJobs(); }, 8000); }
       } catch { state.jobs.delete(id); }
     }
@@ -487,6 +489,18 @@ async function loadLibrary() {
   renderLibrary(total);
 }
 $('#filterStyle').addEventListener('change', loadLibrary);
+// v1.21.2 : générations lancées ailleurs (autre onglet / appareil, API, routine, découpe ou ZIP qui ajoute des morceaux) :
+// la bibliothèque se met à jour seule (avant : seulement au rechargement de la page → carte et bouton « Morceaux » absents).
+let libSig = '';
+setInterval(async () => {
+  if (document.hidden || state.jobs.size) return;
+  try {
+    const { items, total } = await api('/api/tracks?limit=5');
+    const sig = `${total}|${items.map((x) => x.id + ':' + x.status).join(',')}`;
+    if (libSig && sig !== libSig) await loadLibrary();
+    libSig = sig;
+  } catch {}
+}, 15000);
 function sortedTracks() {
   const done = state.tracks.filter((t) => t.status === 'done');
   const k = (t) => t.created_at || t.finished_at || '';
@@ -996,7 +1010,7 @@ addEventListener('resize', () => { lastProg = -1; renderLibrary(); });
 async function boot() {
   await initI18n();
 await refreshAuth();
-// v1.21.1 — hide API docs links when not LAN
+// v1.21.2 — hide API docs links when not LAN
 if (!isLocal()) {
   for (const a of document.querySelectorAll('a[href="/docs"], a[href="/api/docs"]')) {
     const prev = a.previousSibling;
@@ -1027,7 +1041,7 @@ await mountAuthMenu(document.getElementById('topAuth')).catch(() => {});
     const q = new URLSearchParams(location.search), tid = q.get('track');
     const el = tid && document.querySelector(`.track[data-id="${CSS.escape(tid)}"]`);
     if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2400); }
-    if (q.get('tour') === '1') import('./tour.js?v=1.21.1').then((m) => m.startTour());
+    if (q.get('tour') === '1') import('./tour.js?v=1.21.2').then((m) => m.startTour());
   }).catch((e) => toast(t('err.generic', { status: e.message }), 6000));
 }
 function updateStatus() {

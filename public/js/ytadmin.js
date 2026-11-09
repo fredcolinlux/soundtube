@@ -1,4 +1,5 @@
 import { t } from './i18n.js';
+import { apiFetch } from './csrf.js';
 // v1.13.0 : Admin › Chaînes YouTube (secrets masqués : l'API ne renvoie que « présent / absent » et un masque du client ID).
 import { queueHtml, bindQueue } from './pubqueue.js';
 const $ = (s) => document.querySelector(s);

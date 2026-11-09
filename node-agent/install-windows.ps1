@@ -5,11 +5,11 @@
     Set-ExecutionPolicy -Scope Process Bypass -Force
     .\install-windows.ps1                       # sans jeton
     .\install-windows.ps1 -GenerateToken        # avec un jeton partagé généré (à recopier dans soundtube > Admin)
-    .\install-windows.ps1 -Token "monjeton" -CtAddress 192.168.1.20
-    .\install-windows.ps1 -AllowFrom 192.168.0.0/24        # CT sur un autre sous-réseau (routé) que le PC
+    .\install-windows.ps1 -Token "monjeton" -CtAddress 10.0.0.20
+    .\install-windows.ps1 -AllowFrom 10.0.0.0/24        # CT sur un autre sous-réseau (routé) que le PC
 
   Pare-feu : par défaut, accès autorisé depuis le sous-réseau local ET les plages privées
-  (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), pour qu'un CT sur 192.168.1.x joigne un PC en 192.168.2.x.
+  (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16), pour qu'un CT sur 10.0.0.x joigne un PC en 10.0.1.x.
   -AllowFrom <liste CIDR> restreint (ou élargit) ; -CtAddress <IP> (ancienne option) reste accepté.
 
   Ce que fait le script (relançable sans risque, conserve config.json) :
@@ -203,7 +203,7 @@ elseif ($CtAddress) { $list = @($CtAddress) }
 else { $list = $DefaultAllow }
 foreach ($a in $list) {
   if ($a -notmatch '^(LocalSubnet|LocalSubnet4|Any|\d{1,3}(\.\d{1,3}){3}(/\d{1,2})?|\d{1,3}(\.\d{1,3}){3}-\d{1,3}(\.\d{1,3}){3})$') {
-    Fail "-AllowFrom : entrée invalide « $a » (attendu : 192.168.0.0/24, 192.168.1.20, LocalSubnet…)"
+    Fail "-AllowFrom : entrée invalide « $a » (attendu : 10.0.0.0/24, 10.0.0.20, LocalSubnet…)"
   }
 }
 $remote = @($list | Select-Object -Unique)

@@ -883,14 +883,27 @@ trends.start(() => renderNodes.resolveWatchAi());
 // v1.15.0 : contexte du directeur artistique (profil de goût + dernière veille), chacun activé dans Admin
 const directorCtx = (style, s) => director.context(style, { s, report: trends.latest() });
 app.post('/api/ai/suggest', awrap(async (req, res) => res.json(await aiSuggest(renderNodes.s.ai, req.body || {}, (style) => directorCtx(style)))));
-function directorView(style = 'frenchtouch') {
+function directorView(style = 'frenchtouch', extra = {}) {
+  director.ensureDataProfile();
   const s = director.settings(), p = director.profile(s), tr = director.trendsSummary(trends.latest(), style);
+  const origin = director.profileOrigin();
   return { settings: { taste: s.taste, trends: s.trends, edited: !!s.refs }, budget: director.BUDGET,
     profile: p ? { source: p.source, builtAt: p.builtAt, stats: p.stats, topArtists: p.topArtists, topGenres: p.topGenres, favourites: p.favourites, sound: p.sound } : null,
-    refsText: director.formatRefs(p), taste: p ? director.tasteBlock(style, p) : '', trends: tr, style };
+    origin, generic: !!(origin.kind || '').includes('example'),
+    refsText: director.formatRefs(p), taste: p ? director.tasteBlock(style, p) : '', trends: tr, style, ...extra };
 }
 app.get('/api/admin/director', (req, res) => res.json(directorView(STYLES[req.query.style] ? req.query.style : undefined)));
-app.put('/api/admin/director', (req, res) => { director.update(req.body || {}); res.json(directorView()); });
+app.put('/api/admin/director', wrap((req, res) => {
+  const b = req.body || {};
+  const out = director.update(b);
+  const view = directorView();
+  if (b.reset) {
+    view.restore = out.restore || null;
+    if (out.restore?.generic) view.message = out.restore.message || 'Profil générique d’exemple chargé.';
+    else view.message = out.restore?.ok ? 'Profil livré rétabli.' : (out.restore?.error || 'Restauration incomplète');
+  }
+  res.json(view);
+}));
 // aperçu : prompt v1.14 (sans contexte) et prompt envoyé (avec les sources demandées), diff ligne à ligne ; run = appel réel du PC IA
 app.post('/api/admin/director/preview', awrap(async (req, res) => {
   const b = req.body || {}, s0 = director.settings(), s = { ...s0, taste: b.taste ?? s0.taste, trends: b.trends ?? s0.trends };
@@ -968,6 +981,8 @@ const swaggerSetup = swaggerUi.setup(openapi, { customSiteTitle: 'soundtube — 
 app.use('/api/docs', requireLocalDocs, swaggerUi.serve, swaggerSetup);
 app.use('/docs', requireLocalDocs, swaggerUi.serve, swaggerSetup);
 mountAuthRoutes(app, { auth, config, awrap, wrap });
+// v1.21.2 : `systemctl reload soundtube` / `kill -HUP` (envoyé par scripts/admin-reset.js) relit les fichiers d'auth.
+process.on('SIGHUP', () => { try { auth.reload(); console.log('[soundtube-auth] SIGHUP : comptes/sessions rechargés'); } catch (e) { console.error('[soundtube-auth] reload', e.message); } });
 
 // Pages Admin / studio : jamais de cache navigateur (les ?v= versionnent CSS/JS).
 app.get(['/admin', '/admin.html'], requireAdminSession, (req, res) => {

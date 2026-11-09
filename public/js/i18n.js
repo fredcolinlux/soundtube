@@ -1,4 +1,4 @@
-// v1.21.1 — i18n léger (FR/EN), sans dépendance. Repli français.
+// v1.21.2 — i18n léger (FR/EN), sans dépendance. Repli français.
 const STORAGE_KEY = 'soundtube_ui_lang';
 const COOKIE = 'soundtube_ui_lang';
 const SUPPORTED = ['fr', 'en'];

@@ -35,15 +35,22 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const p = buildProfile(csv);
   check(!JSON.stringify(p).includes('Un, deux') && p.styles.frenchtouch.refs.includes('Daft Punk') && p.sound.length < 200, 'profil : aucun titre de morceau, références French Touch, son décrit en une phrase');
 }
-// ---------- 2. profil livré (contexte/gout.json, distillé de l'export Apple Music de 1 200 pistes)
-const shipped = D.loadShipped();
+// ---------- 2. profil livré : contexte/gout.json (installation privée) ou contexte/gout.example.json (standalone public, générique)
+// v1.21.2 : aucune donnée personnelle dans les tests — on vérifie la forme du profil livré ; les contrôles de nettoyage
+// des noms utilisent un profil synthétique (test/fixtures/gout.test.json).
+const FIXTURE = JSON.parse(fs.readFileSync(path.join(ROOT, 'test/fixtures/gout.test.json'), 'utf8'));
 {
-  check(shipped && shipped.stats.tracks === 1200 && shipped.topArtists[0].name === 'Exemple Synth' && shipped.topArtists[0].plays === 120 && shipped.topGenres[0].name === 'Électronique', `profil livré : 1 200 pistes, n° 1 Exemple Synth (120 écoutes), genre n° 1 Électronique (${shipped?.stats.plays} écoutes au total)`);
-  check(fs.statSync(path.join(ROOT, 'contexte/gout.json')).size < 12000 && Object.keys(shipped.styles).every((id) => STYLES[id]), 'profil livré court (< 12 Ko) et styles connus');
-  check(JSON.stringify(shipped.styles.frenchtouch.refs) === JSON.stringify(['Daft Punk', 'Justice', 'Myd', 'Cassius', 'Mr. Oizo', 'Ed Banger']) && shipped.styles.lofi.refs.includes('Chinese Man'), 'références graines : French Touch = Ed Banger, Daft Punk, Justice, Myd, Cassius (+ Mr. Oizo) ; lo-fi = Chinese Man…');
-  const csvPath = '/workspace/apple-music-library.csv';
-  if (fs.existsSync(csvPath)) { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(shipped.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(shipped.topGenres), 'export Apple Music présent : la distillation redonne le profil livré'); }
+  const real = D.loadShipped();
+  const f = ['contexte/gout.json', 'contexte/gout.example.json'].map((x) => path.join(ROOT, x)).find((x) => fs.existsSync(x));
+  check(real && Array.isArray(real.topArtists) && real.topArtists.length > 0 && Array.isArray(real.topGenres) && real.topGenres.length > 0 && typeof real.sound === 'string', `profil livré chargé (${path.basename(f || '—')} · ${real?.source || '—'})`);
+  check(f && fs.statSync(f).size < 12000 && Object.keys(real.styles).every((id) => STYLES[id]), 'profil livré court (< 12 Ko) et styles connus');
+  check(Array.isArray(real.styles.frenchtouch?.refs) && real.styles.frenchtouch.refs.length > 0 && Array.isArray(real.styles.lofi?.refs), 'références par style (French Touch, lo-fi…)');
+  const csvPath = process.env.SOUNDTUBE_TASTE_CSV; // export de bibliothèque facultatif (jamais versionné)
+  if (csvPath && fs.existsSync(csvPath) && path.basename(f) === 'gout.json') { const again = buildProfile(fs.readFileSync(csvPath, 'utf8')); check(JSON.stringify(again.topArtists) === JSON.stringify(real.topArtists) && JSON.stringify(again.topGenres) === JSON.stringify(real.topGenres), 'export présent : la distillation redonne le profil livré'); }
 }
+const shipped = FIXTURE;
+fs.mkdirSync(process.env.SOUNDTUBE_DATA_DIR, { recursive: true });
+fs.writeFileSync(path.join(process.env.SOUNDTUBE_DATA_DIR, 'gout.json'), JSON.stringify(FIXTURE));
 // ---------- 3. budgets
 const bigReport = { at: '2026-11-02T08:00:00.000Z', source: 'rss', sourceLabel: 'Flux RSS / pages', styles: Object.fromEntries(Object.keys(STYLES).map((id) => [id, { label: STYLES[id].label,
   digest: { count: 20, topWords: Array.from({ length: 20 }, (_, i) => `motclé${i}${'x'.repeat(30)}`), medianDuration: 3700, longShare: 60, bpmMedian: 120 },
@@ -118,6 +125,7 @@ const ollama = http.createServer((req, res) => {
 }).listen(0, '127.0.0.1');
 await new Promise((r) => ollama.once('listening', r));
 const port = await freePort(), data = path.join(tmp, 'srv');
+fs.mkdirSync(data, { recursive: true }); fs.writeFileSync(path.join(data, 'gout.json'), JSON.stringify(FIXTURE));
 const srv = spawn(process.execPath, ['src/server.js'], { cwd: ROOT, env: { ...process.env, SOUNDTUBE_DATA_DIR: data, SOUNDTUBE_PORT: String(port), SOUNDTUBE_HOST: '127.0.0.1', SOUNDTUBE_YT_TRANSPORT: 'mock' }, stdio: ['ignore', 'ignore', 'pipe'] });
 let errLog = ''; srv.stderr.on('data', (d) => (errLog += d));
 const req = async (p, o = {}) => { const r = await fetch(`http://127.0.0.1:${port}${p}`, { method: o.method || 'GET', headers: o.body ? { 'content-type': 'application/json' } : {}, body: o.body ? JSON.stringify(o.body) : undefined }); return { s: r.status, j: await r.json().catch(() => null) }; };
@@ -125,7 +133,7 @@ try {
   for (let i = 0; i < 60; i++) { try { if ((await req('/api/styles')).s === 200) break; } catch { /* attente */ } await sleep(200); }
   await req('/api/admin/ai', { method: 'PUT', body: { url: `http://127.0.0.1:${ollama.address().port}`, model: 'mock:1b' } });
   let v = (await req('/api/admin/director')).j;
-  check(v.settings.taste === false && v.settings.trends === false && v.profile.topArtists[0].name === 'Exemple Synth' && v.trends === null && /^frenchtouch: Daft Punk, Justice/m.test(v.refsText), 'Admin : sources coupées par défaut, profil affiché, aucune veille, références éditables');
+  check(v.settings.taste === false && v.settings.trends === false && v.profile.topArtists[0].name === 'Daft Punk' && v.trends === null && /^frenchtouch: Daft Punk, Justice/m.test(v.refsText), 'Admin : sources coupées par défaut, profil affiché, aucune veille, références éditables');
   const body = { prompt: 'Une house filtrée pour une nuit d\'été', style: 'frenchtouch', duration: 180, meta: true };
   let r = await req('/api/ai/suggest', { method: 'POST', body });
   check(r.j.source === 'ai' && md5({ system: seen.at(-1).messages[0].content, user: seen.at(-1).messages[1].content }) === V114[0] && seen.at(-1).options.num_ctx === 8192, 'serveur, sources coupées : requête Ollama identique à v1.14.0 (num_ctx 8192)');
@@ -152,7 +160,7 @@ try {
   const spec = (await req('/api/openapi.json')).j;
   check(String(spec.info.version).split('.').map(Number).reduce((a, x) => a * 1000 + x, 0) >= 1015000 && spec.paths['/api/admin/director'] && spec.paths['/api/admin/director/preview'], 'OpenAPI 1.15.0 : routes du contexte du directeur');
   const adm = fs.readFileSync(path.join(ROOT, 'public/admin.html'), 'utf8');
-  check(/id="director"/.test(adm) && /admindirector\.js\?v=1\.1[5-9]\.\d+/.test(adm) && !/\?v=1\.14\.0/.test(adm), 'Admin : section « Contexte du directeur artistique », cache ?v=1.15.0');
+  check(/id="director"/.test(adm) && /admindirector\.js\?v=1\.(1[5-9]|[2-9]\d)\.\d+/.test(adm) && !/\?v=1\.14\.0/.test(adm), 'Admin : section « Contexte du directeur artistique », cache ?v=1.15.0');
 } finally {
   srv.kill(); ollama.close(); await sleep(300);
   if (errLog.trim()) console.log(errLog.trim().split('\n').slice(-5).join('\n'));

@@ -12,6 +12,7 @@ WorkingDirectory=/opt/soundtube/app
 EnvironmentFile=/etc/soundtube/soundtube.env
 Environment=NODE_ENV=production
 ExecStart=@NODE@ /opt/soundtube/app/src/server.js
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=3
 # Le rendu audio est gourmand en CPU : priorité légèrement abaissée

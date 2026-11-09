@@ -45,24 +45,34 @@ export function distill(text, { top = 15, topGenres = 10 } = {}) {
     playsOf: (name) => ar.get(artistKey(name))?.plays || 0, topIn: (genre, n, skip) => [...(byGenre.get(genre) || [])].sort((a, b) => b[1] - a[1]).filter(([k, v]) => !skip.has(k) && v >= 50).slice(0, n).map(([k]) => ar.get(k).name) };
 }
 
-// favoris déclarés (graine) et son recherché par style — décrit le son, jamais des titres
-export const SEED = {
-  overall: ['Depeche Mode', 'Beastie Boys', 'IAM', 'NTM', 'Scratch Bandits Crew', 'deadmau5', 'Pendulum', "L'Entourloop", 'DJ Koze', 'Bonobo', 'Chemical Brothers', 'Vitalic', 'Action Bronson', 'Biggie', 'Massive Attack', 'Air', 'Kavinsky', 'Mr. Oizo'],
+// favoris déclarés (graine) et son recherché par style — décrit le son, jamais des titres.
+// v1.21.2 : graine neutre par défaut ; une graine personnelle facultative se place dans contexte/gout.seed.json
+// (même forme que SEED, jamais versionnée — voir .gitignore).
+const GENERIC_SEED = {
+  overall: [],
   styles: {
-    frenchtouch: { refs: ['Daft Punk', 'Justice', 'Myd', 'Cassius', 'Mr. Oizo', 'Ed Banger'], sound: 'house filtrée et compressée, basses saturées, boucles disco hachées, montées au filtre, côté Ed Banger plus sale et ludique' },
-    lofi: { refs: ['Chinese Man', 'Scratch Bandits Crew', "L'Entourloop", 'Bonobo'], sound: 'boom bap poussiéreux, scratchs, cuivres et samples rétro, groove chaloupé plutôt que lo-fi plat' },
-    hiphop: { refs: ['IAM', 'NTM', 'Beastie Boys', 'Action Bronson', 'Biggie', 'Cypress Hill'], sound: 'boom bap 90 chaud, caisse claire sèche, basse ronde, boucles soul et funk, énergie de crew' },
-    trap: { refs: ['Action Bronson'], sound: 'instrumental rap moderne mais musical, 808 tenues, mélodies sombres sans surcharge de hi-hats' },
-    house: { refs: ['DJ Koze', 'deadmau5', 'Bonobo'], sound: 'house profonde et organique, groove hypnotique, accords chauds, détails ludiques et progressions longues' },
-    techno: { refs: ['Vitalic', 'Chemical Brothers', 'deadmau5'], sound: 'techno et electro puissantes, synthés analogiques agressifs, gros breakbeats, montées de rave' },
-    dnb: { refs: ['Pendulum'], sound: 'drum & bass énergique, basses lourdes, côté rock/électro, montées épiques' },
-    synthwave: { refs: ['Kavinsky', 'Depeche Mode', 'Air'], sound: 'synthés 80 sombres et mélodiques, arpèges, ambiance nocturne de film' },
-    ambient: { refs: ['Air', 'Massive Attack', 'Bonobo'], sound: 'trip-hop et ambient chaleureux, basses profondes, nappes vintage, mélancolie douce' },
-    cinematic: { refs: ['Massive Attack', 'Air'], sound: 'cinématique sombre et texturée, tension lente, couleurs trip-hop' },
-    chiptune: { refs: ['Mr. Oizo', 'Justice'], sound: 'chiptune ludique et nerveux, côté electro sale plutôt que mignon' },
+    frenchtouch: { refs: ['Daft Punk', 'Justice', 'Cassius'], sound: 'house filtrée et compressée, basses saturées, boucles disco hachées, montées au filtre' },
+    lofi: { refs: [], sound: 'boom bap poussiéreux, vinyle, accords jazz, groove chaloupé' },
+    hiphop: { refs: [], sound: 'boom bap 90 chaud, caisse claire sèche, basse ronde, boucles soul et funk' },
+    trap: { refs: [], sound: 'instrumental rap moderne mais musical, 808 tenues, mélodies sombres' },
+    house: { refs: [], sound: 'house profonde et organique, groove hypnotique, accords chauds' },
+    techno: { refs: [], sound: 'techno et electro puissantes, synthés analogiques, montées de rave' },
+    dnb: { refs: [], sound: 'drum & bass énergique, basses lourdes, montées épiques' },
+    synthwave: { refs: [], sound: 'synthés 80 mélodiques, arpèges, ambiance nocturne de film' },
+    ambient: { refs: [], sound: 'ambient chaleureux, nappes vintage, mélancolie douce' },
+    cinematic: { refs: [], sound: 'cinématique texturée, tension lente' },
+    chiptune: { refs: [], sound: 'chiptune ludique et nerveux' },
   },
-  overallSound: 'électronique et rap avant tout : French Touch, house, big beat, electro, trip-hop, boom bap français et US, avec un fond new wave sombre',
+  overallSound: 'instrumental électronique polyvalent : house, lo-fi, techno, synthwave, hip-hop instrumental',
 };
+function loadSeed() {
+  try {
+    const f = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'contexte', 'gout.seed.json');
+    const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+    return { ...GENERIC_SEED, ...j, styles: { ...GENERIC_SEED.styles, ...(j.styles || {}) } };
+  } catch { return GENERIC_SEED; }
+}
+export const SEED = loadSeed();
 
 export function buildProfile(text, source = 'Apple Music') {
   const d = distill(text), extras = { house: 'House', techno: 'Techno', dnb: 'Drum & Bass' };

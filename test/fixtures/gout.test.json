@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "profil de test synthétique (aucune donnée personnelle)",
+  "builtAt": "2026-01-01",
+  "stats": { "tracks": 100, "audioTracks": 100, "plays": 1000 },
+  "sound": "électronique filtrée, house, hip-hop instrumental",
+  "topArtists": [
+    { "name": "Daft Punk", "plays": 120, "tracks": 30 },
+    { "name": "Justice", "plays": 90, "tracks": 20 },
+    { "name": "Cassius", "plays": 60, "tracks": 15 },
+    { "name": "Mr. Oizo", "plays": 40, "tracks": 10 },
+    { "name": "Chinese Man", "plays": 30, "tracks": 8 }
+  ],
+  "topGenres": [
+    { "name": "Électronique", "plays": 600, "share": 60 },
+    { "name": "Hip-Hop/Rap", "plays": 400, "share": 40 }
+  ],
+  "favourites": [ { "name": "Daft Punk" }, { "name": "Justice" } ],
+  "styles": {
+    "frenchtouch": { "refs": ["Daft Punk", "Justice", "Myd", "Cassius", "Mr. Oizo", "Ed Banger"], "sound": "house filtrée, basse ronde" },
+    "lofi": { "refs": ["Chinese Man"], "sound": "boucles poussiéreuses" },
+    "house": { "refs": ["Cassius"], "sound": "house chaude" }
+  }
+}

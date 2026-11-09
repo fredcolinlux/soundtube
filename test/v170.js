@@ -77,7 +77,7 @@ const quiet = { error() {}, log() {} };
   const libx = RC.encoderArgs('libx264', { fps: 24, crf: 26, res: '1080p', preset: 'veryfast' }).join(' ');
   check(libx === '-c:v libx264 -preset veryfast -crf 26 -g 240 -pix_fmt yuv420p', 'libx264 : réglages identiques au CT');
   check(RC.encoderArgs('h264_nvenc', { fps: 24, crf: 26, res: '1080p' }).join(' ').includes('-c:v h264_nvenc -preset p5'), 'NVENC : preset p5, débit variable à qualité constante');
-  check(normUrl('192.168.1.50:8765') === 'http://192.168.1.50:8765' && normUrl('http://a:b@x') === null && normUrl('') === null, 'normalisation des adresses de nœud');
+  check(normUrl('10.0.0.50:8765') === 'http://10.0.0.50:8765' && normUrl('http://a:b@x') === null && normUrl('') === null, 'normalisation des adresses de nœud');
 }
 
 // ---------- nœuds simulés
@@ -212,8 +212,8 @@ if (!process.argv.includes('--no-api')) {
   const wait = async (fn, ms = 180000) => { const t0 = Date.now(); for (;;) { const v = await fn(); if (v) return v; if (Date.now() - t0 > ms) throw new Error('délai dépassé'); await sleep(400); } };
   try {
     await wait(async () => (await fetch(B + '/api/options').catch(() => null))?.ok, 20000);
-    const page = await fetch(B + '/admin').then((r) => r.text()), idx = await fetch(B + '/').then((r) => r.text());
-    check(page.includes('Nœuds de rendu') && page.includes('PC IA (Ollama)') && idx.includes('href="/admin"'), 'page Admin servie, lien « Admin » dans la barre du haut');
+    const page = await fetch(B + '/admin').then((r) => r.text()), idx = await fetch(B + '/studio').then((r) => r.text()); // v1.20.5 : Studio sur /studio
+    check(page.includes('Nœuds de rendu') && (page.includes('PC IA (Ollama)') || page.includes('Modèles IA')) && idx.includes('href="/admin"'), 'page Admin servie, lien « Admin » dans la barre du haut');
     let r = await api('/api/admin/nodes');
     check(r.s === 200 && r.j.nodes.length === 0 && r.j.localMode === 'fallback', 'GET /api/admin/nodes : aucun nœud, CT en secours');
     r = await api('/api/admin/nodes', { method: 'POST', body: JSON.stringify({ url: uAg.replace('http://', ''), name: 'PC test' }) });

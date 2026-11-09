@@ -123,3 +123,13 @@ Hard-refresh Admin: pill **v1.19.2**, section **03 AI models** (Director | Watch
 ## v1.20.0 — Security & public exposure
 
 See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).
+
+## v1.21.2
+
+```bash
+/opt/soundtube/app/scripts/update.sh /root/soundtube-1.21.2-patch.tar.gz
+curl -s http://127.0.0.1:8080/healthz   # {"ok":true,"version":"1.21.2"}
+```
+- systemd unit: `ExecReload=/bin/kill -HUP $MAINPID` (optional; `systemctl reload soundtube` then reloads accounts). `admin-reset.js` sends the signal itself.
+- Listening profile: `/var/lib/soundtube/gout.json` (created the first time card 07 is shown, from `contexte/gout.json` if present, otherwise `contexte/gout.example.json`). To install a personal profile, copy it to `/var/lib/soundtube/gout.json` (owner `soundtube`) or paste it into card 07.
+- Access recovery: `node /opt/soundtube/app/scripts/admin-reset.js <user> --disable-2fa --password` (root).

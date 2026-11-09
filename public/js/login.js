@@ -1,6 +1,6 @@
-import { bootSite, mountBackground, t } from './site.js?v=1.21.1';
+import { bootSite, mountBackground, t } from './site.js?v=1.21.2';
 import { applyDom } from './i18n.js';
-import { apiFetch, refreshAuth } from './csrf.js';
+import { apiFetch, refreshAuth, setCsrf } from './csrf.js';
 
 mountBackground();
 await bootSite('/login');
@@ -28,6 +28,7 @@ $('#loginForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({ username: $('#user').value.trim(), password: $('#pass').value }) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || t('err.generic', { status: r.status }));
+    setCsrf(j.csrf); // v1.21.2 : jeton de la session partielle (2FA) — sans lui, /api/auth/2fa renvoyait 403 CSRF
     if (j.needs2fa) { $('#loginForm').hidden = true; $('#totpForm').hidden = false; $('#pkBtn').hidden = !j.passkeys; return; }
     location.replace(next);
   } catch (err) { show($('#msg'), err.message); }

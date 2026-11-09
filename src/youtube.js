@@ -10,7 +10,7 @@ import { config } from './config.js';
 import { STYLES, MOODS, AMBIENCES } from './engine/styles.js';
 import { SCALES, NOTE_NAMES_FR } from './engine/theory.js';
 import { meterInfo } from './engine/composer.js';
-import { fileNames } from './naming.js';
+import { fileNames, syncFiles } from './naming.js';
 import { brandText, DEFAULT_BRAND } from './brand.js';
 import { computeItems, waveBars, normalizeDesign } from '../public/js/layout.js';
 import { getMedia, frameTime } from './media.js';
@@ -260,8 +260,17 @@ export async function makeThumbnail(t, outFile, resolution = '720p', { brand = b
  */
 export async function makeVideo(t, audioFile, outFile, onProgress, { resolution = DEFAULT_RESOLUTION, brand = brandText(), design, lang = 'fr', frameAt = null, exec = null } = {}) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'st-video-'));
+  let pinned = null;
   try {
+    if (!fs.existsSync(audioFile)) { const e = new Error(`Audio introuvable : ${path.basename(audioFile)}`); e.code = 'AUDIO_MISSING'; throw e; }
     const job = await prepareVideo(t, audioFile, tmp, { resolution, brand, design, lang, frameAt });
+    // v1.21.2 : l'audio est « épinglé » tout de suite dans le dossier du job (lien physique, sinon copie). Avant, il n'était lié
+    // qu'au moment où un emplacement de rendu se libérait (parfois des minutes plus tard, file de 10+ vidéos de morceaux) ;
+    // si le morceau avait été renommé entre-temps (titre FR/EN, migration des noms), le lien pointait dans le vide →
+    // « ffmpeg code 254 : Error opening input file audio.wav: No such file or directory ».
+    // Lien physique à côté de l'audio (même volume : pas de copie de plusieurs Go dans /tmp), supprimé à la fin.
+    { const a = job.info.audioName, pin = path.join(path.dirname(audioFile), `.pin-${process.pid}-${Date.now().toString(36)}${path.extname(audioFile)}`);
+      try { fs.linkSync(audioFile, pin); pinned = pin; job.files[a] = pin; } catch { /* volume sans liens physiques : chemin d'origine */ } }
     if (frameAt != null) { // aperçu : une image, toujours sur le CT
       materialize(tmp, job.files);
       await run([...job.spec.inputs, '-filter_complex', job.spec.graph, '-map', '[v]', '-ss', job.frameSs, '-frames:v', '1', path.resolve(outFile)], { cwd: tmp });
@@ -269,13 +278,14 @@ export async function makeVideo(t, audioFile, outFile, onProgress, { resolution 
     }
     const r = await (exec || localExec)({ ...job, dir: tmp, outFile, onProgress });
     return { ...job.info, encoder: r?.encoder || 'libx264', node: r?.node || null };
-  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); if (pinned) fs.rmSync(pinned, { force: true }); }
 }
 
 /** Copie / lie les fichiers du job dans son dossier (noms relatifs du spec). */
 export function materialize(dir, files) {
   for (const [name, src] of Object.entries(files)) {
     const dst = path.join(dir, name); if (path.resolve(src) === path.resolve(dst) || fs.existsSync(dst)) continue;
+    if (!fs.existsSync(src)) throw new Error(`Fichier du rendu introuvable : ${name} (${path.basename(src)})`); // jamais de lien symbolique cassé
     try { fs.symlinkSync(path.resolve(src), dst); } catch { fs.copyFileSync(src, dst); }
   }
 }
@@ -351,6 +361,16 @@ export async function prepareVideo(t, audioFile, tmp, { resolution = DEFAULT_RES
 
 
 
+/** v1.21.2 : fichier audio réellement présent d'un morceau (WAV puis MP3) ; répare `files` si un renommage l'a désynchronisé. */
+export function audioOf(store, tracksDir, id) {
+  const t = store.get(id); if (!t) return null;
+  const dir = path.join(tracksDir, id), ok = (f) => f && fs.existsSync(path.join(dir, f));
+  if (ok(t.files?.wav)) return t.files.wav;
+  try { const f = syncFiles(tracksDir, t); if (f) { store.update(id, { files: f }); if (ok(f.wav)) return f.wav; if (ok(f.mp3)) return f.mp3; } } catch {}
+  if (ok(t.files?.mp3)) return t.files.mp3;
+  try { const any = fs.readdirSync(dir).filter((f) => /\.(wav|mp3)$/i.test(f) && !/\.part|^\./.test(f)).sort((a, b) => (/\.wav$/i.test(b) ? 1 : 0) - (/\.wav$/i.test(a) ? 1 : 0)); return any[0] || null; } catch { return null; }
+}
+
 /**
  * File d'attente des vidéos ; état en mémoire. Les vidéos partent en parallèle sur les nœuds de rendu du réseau local
  * (RenderNodes : PC NVENC d'abord), le CT servant de secours. Sans nœud configuré : une vidéo à la fois sur le CT, comme avant.
@@ -369,10 +389,10 @@ export class VideoQueue {
     try {
       const t = this.store.get(id); if (!t) throw new Error('Morceau introuvable');
       const dir = path.join(this.tracksDir, id), N = fileNames(t);
-      const src = t.files?.wav || t.files?.mp3; if (!src) throw new Error('Aucun fichier audio');
+      const src = audioOf(this.store, this.tracksDir, id); if (!src) throw new Error('Aucun fichier audio');
       let t0 = Date.now(), where = null;
       const exec = (job) => this.nodes.run({ ...job, title: t.title, trackId: id }, localExec, { onSlot: (w) => { where = w; t0 = Date.now(); Object.assign(st, { status: 'running', progress: 0, node: w.name, nodeUrl: w.node, encoder: w.encoder, retry: w.retry ? w.lastError : (st.fallback || null) }); } });
-      const r = await makeVideo(t, path.join(dir, src), path.join(dir, N.mp4), (p) => { st.progress = p; st.eta = p > 0.01 ? (Date.now() - t0) / 1000 * (1 - p) / p : null; }, { resolution: st.resolution, brand: st.brand, design: st.design, lang: st.lang, exec });
+      const r = await makeVideo(this.store.get(id) || t, path.join(dir, src), path.join(dir, N.mp4), (p) => { st.progress = p; st.eta = p > 0.01 ? (Date.now() - t0) / 1000 * (1 - p) / p : null; }, { resolution: st.resolution, brand: st.brand, design: st.design, lang: st.lang, exec });
       this.finish(id, st, t, r, t0, where);
     } catch (e) { console.error('[vidéo]', id, e.message); Object.assign(st, { status: 'error', error: String(e.message).slice(0, 500) }); }
   }

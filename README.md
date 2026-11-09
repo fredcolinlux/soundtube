@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/fredcolinlux/soundtube/releases/tag/v1.21.1"><img alt="release" src="https://img.shields.io/github/v/release/fredcolinlux/soundtube?style=flat-square&color=5ef2c9"></a>
+  <a href="https://github.com/fredcolinlux/soundtube/releases/tag/v1.21.2"><img alt="release" src="https://img.shields.io/github/v/release/fredcolinlux/soundtube?style=flat-square&color=5ef2c9"></a>
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D20-7dd3fc?style=flat-square">
   <img alt="license" src="https://img.shields.io/badge/license-ARR-c792ff?style=flat-square">
   <img alt="i18n" src="https://img.shields.io/badge/UI-FR%20%7C%20EN-f3c97a?style=flat-square">
@@ -125,6 +125,7 @@ flowchart LR
 - Optional **TOTP** with server-side SVG QR (`/api/me/totp/qr.svg`), recovery codes once.
 - Styles **demo**: 15 s cap, rate-limit, preview-only (`401` on download/publish/library for demo ids).
 - CSP / COOP / COEP / HSTS-ready headers; secrets sealed at rest.
+- Locked out (lost OTP / password)? On the server: `node /opt/soundtube/app/scripts/admin-reset.js <user> --disable-2fa --password` (root, console/LAN only, works with the service running) — see [docs/en/SECURITY.md](docs/en/SECURITY.md).
 
 ## FAQ
 
@@ -149,5 +150,5 @@ Download **standalone** and **patch** archives from
 ➡️ **[GitHub Releases](https://github.com/fredcolinlux/soundtube/releases)**
 
 ```
-soundtube @ v1.21.1
+soundtube @ v1.21.2
 ```

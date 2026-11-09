@@ -104,8 +104,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- 4. zip macOS : présence des scripts, pas des .ps1 ; empreinte core =
 {
-  const zip = path.join(ROOT, '..', 'soundtube-node-agent-1.17.0-macos.zip');
-  if (!fs.existsSync(zip)) {
+  const zip = path.join(tmp, 'soundtube-node-agent-macos.zip'); // v1.21.2 : toujours construit depuis l'arbre courant
+  {
     const r = spawnSync('sh', [path.join(ROOT, 'tools/build-node-agent.sh'), 'macos', zip], { encoding: 'utf8' });
     check(r.status === 0, `construction du zip macOS${r.stderr ? ' — ' + r.stderr.slice(0, 200) : ''}`);
   }
@@ -115,7 +115,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   check(fs.existsSync(path.join(root, 'install-macos.sh')) && fs.existsSync(path.join(root, 'uninstall-macos.sh')), 'zip macOS : install + uninstall');
   check(!fs.existsSync(path.join(root, 'install-windows.ps1')), 'zip macOS : pas de script Windows');
   const eng = JSON.parse(fs.readFileSync(path.join(root, 'core/ENGINE.json'), 'utf8'));
-  check(eng.hash === CT_ENGINE.hash && eng.version === '1.17.0', `core/ du zip : ${eng.version} · ${eng.hash} = CT`);
+  check(eng.hash === CT_ENGINE.hash && eng.version === CT_ENGINE.version, `core/ du zip : ${eng.version} · ${eng.hash} = CT`);
 }
 
 // ---------- 5. départage musique : charge puis vitesse mesurée
@@ -187,7 +187,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     'docs/NODES.md : section macOS (install, launchd, pare-feu, VideoToolbox)');
   const readmeFr = fs.readFileSync(path.join(ROOT, 'README.fr.md'), 'utf8');
   const readmeEn = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
-  check(/Nouveautés v1\.17\.0/.test(readmeFr) || /Nouveautés v1\.17\.0/.test(readmeEn) || /What.?s new in v1\.17\.0/i.test(readmeEn),
+  check(/Nouveautés v1\.17\.0/.test(readmeFr) || /Nouveautés v1\.17\.0/.test(readmeEn) || /What.?s new in v1\.17\.0/i.test(readmeEn) || /^## 1\.17\.0/m.test(fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8')),
     'README : Nouveautés v1.17.0');
 }
 

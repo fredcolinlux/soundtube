@@ -23,7 +23,7 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 ```
 
 Installation dans `C:\ProgramData\soundtube-node`, tâche planifiée `soundtube-node`, pare-feu profil Privé.
-Options : `-NoAudio`, `-AudioSlots N`, `-AllowFrom 192.168.0.0/24`, `-CtAddress …`.
+Options : `-NoAudio`, `-AudioSlots N`, `-AllowFrom 10.0.0.0/24`, `-CtAddress …`.
 Désinstallation : `.\uninstall-windows.ps1`.
 
 ## macOS Apple Silicon (Mac mini M4…)
@@ -61,7 +61,7 @@ est documenté dans `docs/NODES.md` si vous voulez restreindre aux sous-réseaux
 ### Sous-réseaux différents (CT / PC Windows / Mac)
 
 La découverte UDP **ne traverse en général pas** les sous-réseaux routés. Si le CT est en
-`192.168.1.x`, le PC en `192.168.2.x` et le Mac ailleurs : dans Admin, **Ajouter** l’URL
+`10.0.0.x`, le PC en `10.0.1.x` et le Mac ailleurs : dans Admin, **Ajouter** l’URL
 `http://<IP-du-Mac>:8765` (et le jeton). Même chose pour le PC Windows.
 
 ## Ordre des encodeurs (vidéo)

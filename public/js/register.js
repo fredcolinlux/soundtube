@@ -1,4 +1,4 @@
-import { bootSite, mountBackground, t } from './site.js?v=1.21.1';
+import { bootSite, mountBackground, t } from './site.js?v=1.21.2';
 import { applyDom } from './i18n.js';
 import { apiFetch, refreshAuth } from './csrf.js';
 

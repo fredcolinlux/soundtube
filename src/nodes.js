@@ -30,7 +30,7 @@ export function normUrl(u) {
   if (!x.hostname || x.username || x.password || x.pathname.length > 1 || x.search || !/^([a-z0-9-]+\.)*[a-z0-9-]+$|^\[[0-9a-f:.]+\]$/i.test(x.hostname)) return null;
   return `${x.protocol}//${x.host}`.toLowerCase();
 }
-// URL du PC IA : comme normUrl, mais accepte un chemin (proxy inverse, ex. http://192.0.2.10:8080/ollama)
+// URL du PC IA : comme normUrl, mais accepte un chemin (proxy inverse, ex. http://10.0.0.150:8080/ollama)
 export function normAiUrl(u) {
   let s = String(u || '').trim(); if (!s) return null;
   if (!/^https?:\/\//i.test(s)) s = 'http://' + s;
@@ -93,7 +93,7 @@ export class RenderNodes {
   // ---------- liste des nœuds
   st(id) { if (!this.state.has(id)) this.state.set(id, { up: null, latency: null, health: null, error: null, checkedAt: null, running: 0, failures: 0, jobs: 0, lastJob: null }); return this.state.get(id); }
   add({ url, name = '', enabled = true, token = '' }) {
-    const u = normUrl(url); if (!u) throw err('URL invalide (ex. http://192.168.1.50:8765)');
+    const u = normUrl(url); if (!u) throw err('URL invalide (ex. http://10.0.0.50:8765)');
     if (this.s.nodes.some((n) => n.url === u)) throw err('Ce nœud est déjà dans la liste', 409);
     const n = { id: crypto.randomBytes(4).toString('hex'), url: u, name: String(name).slice(0, 60), enabled: !!enabled, token: String(token || ''), audio: true };
     this.s.nodes.push(n); this.save(); this.check(n).then(() => this.changed()); return n;
@@ -281,7 +281,7 @@ export class RenderNodes {
   // ---------- PC IA (Ollama) : réglage enregistré + test de connexion
   setAI({ url, model, timeout } = {}) {
     if (timeout !== undefined) { const t = Math.round(+timeout); if (!Number.isFinite(t) || t < 10 || t > 600) throw err('Délai IA : entre 10 et 600 s'); this.s.ai.timeout = t; }
-    if (url !== undefined) { if (url && !normAiUrl(url)) throw err('URL Ollama invalide (ex. http://192.168.1.60:11434 ou http://proxy:port/chemin)'); this.s.ai.url = url ? normAiUrl(url) : ''; }
+    if (url !== undefined) { if (url && !normAiUrl(url)) throw err('URL Ollama invalide (ex. http://10.0.0.60:11434 ou http://proxy:port/chemin)'); this.s.ai.url = url ? normAiUrl(url) : ''; }
     if (model !== undefined) { const m = String(model || '').trim(); if (m && !/^[\w.:/-]{1,80}$/.test(m)) throw err('Nom de modèle invalide'); this.s.ai.model = m || DEFAULT_AI.model; }
     this.save(); return this.s.ai;
   }

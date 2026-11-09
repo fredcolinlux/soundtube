@@ -164,7 +164,7 @@ Il n’y a **pas** d’équivalent simple à `-AllowFrom` (CIDR). Le **jeton** r
 
 ### Réseau multi-sous-réseaux
 
-Exemple : CT en `192.168.1.x`, PC Windows en `192.168.2.x` (routé), Mac sur un troisième sous-réseau.
+Exemple : CT en `10.0.0.x`, PC Windows en `10.0.1.x` (routé), Mac sur un troisième sous-réseau.
 
 1. La **découverte UDP** (port 47811) reste en général **dans le sous-réseau** : le bouton « Rechercher sur le
    réseau » peut ne rien trouver.

@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "source": "exemple générique (aucun export Apple Music)",
+  "builtAt": "2026-11-06",
+  "stats": {
+    "tracks": 0,
+    "audioTracks": 0,
+    "plays": 0
+  },
+  "sound": "instrumental électronique polyvalent : house chaude, lo-fi poussiéreux, techno hypnotique, synthwave nocturne — sans références à un catalogue personnel",
+  "topArtists": [
+    {
+      "name": "Artiste A",
+      "plays": 0
+    },
+    {
+      "name": "Artiste B",
+      "plays": 0
+    },
+    {
+      "name": "Artiste C",
+      "plays": 0
+    }
+  ],
+  "topGenres": [
+    {
+      "name": "Électronique",
+      "share": 30,
+      "plays": 0
+    },
+    {
+      "name": "House",
+      "share": 20,
+      "plays": 0
+    },
+    {
+      "name": "Ambient",
+      "share": 15,
+      "plays": 0
+    }
+  ],
+  "favourites": [
+    {
+      "name": "Artiste A"
+    },
+    {
+      "name": "Artiste B"
+    }
+  ],
+  "styles": {
+    "frenchtouch": {
+      "refs": [
+        "Exemple Filter",
+        "Exemple Disco"
+      ],
+      "sound": "house filtrée, basse ronde, boucles disco"
+    },
+    "lofi": {
+      "refs": [
+        "Exemple Boom Bap"
+      ],
+      "sound": "vinyle, Rhodes, swing léger"
+    },
+    "house": {
+      "refs": [
+        "Exemple Deep"
+      ],
+      "sound": "groove hypnotique, accords chauds"
+    },
+    "techno": {
+      "refs": [
+        "Exemple 909"
+      ],
+      "sound": "hypnose, 909, acid discret"
+    },
+    "synthwave": {
+      "refs": [
+        "Exemple Neon"
+      ],
+      "sound": "arpèges 80, ambiance nocturne"
+    },
+    "ambient": {
+      "refs": [
+        "Exemple Pad"
+      ],
+      "sound": "nappes, espace, lenteur"
+    },
+    "hiphop": {
+      "refs": [
+        "Exemple MPC"
+      ],
+      "sound": "boom-bap, poussière"
+    },
+    "trap": {
+      "refs": [
+        "Exemple 808"
+      ],
+      "sound": "808 tenues, mélodies sombres"
+    },
+    "dnb": {
+      "refs": [
+        "Exemple Break"
+      ],
+      "sound": "breaks, reese"
+    },
+    "cinematic": {
+      "refs": [
+        "Exemple Score"
+      ],
+      "sound": "tension lente, cordes"
+    },
+    "chiptune": {
+      "refs": [
+        "Exemple 8bit"
+      ],
+      "sound": "arpèges console, ludique"
+    }
+  }
+}

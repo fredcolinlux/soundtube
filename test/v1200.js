@@ -16,8 +16,8 @@ let fail = 0;
 const check = (ok, msg) => { if (!ok) fail++; console.log(`${ok ? 'OK   ' : 'ÉCHEC'} ${msg}`); return ok; };
 
 const ver = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf8').trim();
-check(ver === '1.20.1', `VERSION ${ver}`);
-check(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version === '1.20.1', 'package.json version');
+check(/^1\.(2\d|[3-9]\d)\.\d+$/.test(ver), `VERSION ${ver}`); // ≥ 1.20 (contrôle d'origine : 1.20.1)
+check(JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version === ver, 'package.json version');
 
 // Files exist
 for (const f of [
@@ -34,7 +34,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'public')).filter((x) => x.endsWi
   const html = fs.readFileSync(path.join(ROOT, 'public', f), 'utf8');
   const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>/gi)];
   check(inline.length === 0, `${f}: pas de script inline (${inline.length})`);
-  check(html.includes('?v=1.20.1') || f === 'favicon.svg', `${f} cache-bust`);
+  check(html.includes(`?v=${ver}`) || f === 'favicon.svg', `${f} cache-bust`);
 }
 
 check(CSP.includes("script-src 'self'") && CSP.includes("frame-ancestors 'none'"), 'CSP strict');
@@ -42,7 +42,7 @@ check(CSP.includes("script-src 'self'") && CSP.includes("frame-ancestors 'none'"
 // IP helpers
 check(isPrivateIp('192.168.1.1') && isPrivateIp('10.0.0.5') && isPrivateIp('127.0.0.1'), 'RFC1918');
 check(!isPrivateIp('8.8.8.8'), 'public IP');
-check(ipInCidr('192.168.0.42', '192.168.0.0/24'), 'CIDR match');
+check(ipInCidr('10.0.0.67', '10.0.0.0/24'), 'CIDR match');
 
 // Crypto
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'st-auth-'));
@@ -84,13 +84,13 @@ const fakeReq = {
 const meta = clientMeta(fakeReq, auth.security);
 check(meta.ip === '203.0.113.9' && meta.proto === 'https' && !meta.local, 'trusted XFF');
 
-const localReq = { socket: { remoteAddress: '192.168.0.42' }, headers: {}, protocol: 'http' };
+const localReq = { socket: { remoteAddress: '10.0.0.67' }, headers: {}, protocol: 'http' };
 check(clientMeta(localReq, auth.security).local, 'LAN local');
 
 // Anonymisation patterns must not be in public docs as real domain hardcoded permanently —
-// (example may appear in EXPOSITION as example placeholder — check deploy snippets use example.com)
+// (deploy snippets must only use example.com-style placeholders)
 const npm = fs.readFileSync(path.join(ROOT, 'deploy/npm-admin-block.conf'), 'utf8');
-check(!/personal-domain\.invalid/.test(npm), 'NPM snippet sans domaine perso');
+check(!/server_name\s+(?!.*example)[a-z0-9-]+\.[a-z]{2,}/i.test(npm), 'NPM snippet sans domaine perso');
 check(/location \^~ \/admin/.test(npm), 'NPM bloque /admin');
 
 console.log(fail ? fail + ' échec(s)' : 'v1.20.1 : OK');

@@ -1,5 +1,42 @@
 # Journal des versions
 
+## 1.21.2 — 2026-11-09
+
+**EN summary** — Admin card 07 (listening profile) shows again and "Restore shipped profile" works (missing `apiFetch` import); profile lives in the data dir, generic example in the standalone. Auth files are loaded schema-tolerantly (`sessions.json` = `{}` no longer crashes login) and never overwritten from stale memory. 2FA step fixed (CSRF token of the partial session), ±1 step TOTP, clock-skew audit. New `scripts/admin-reset.js <user> [--disable-2fa] [--password]` (root, hidden prompt, works with the service running, audit entry). Studio opens the **Tracks** panel after a generation with auto-split. Complete ZIP: English texts (README.txt, youtube-en.txt, per-track `.en.txt`) and per-track videos fixed (audio pinned at queue time; `ffmpeg code 254 … audio.wav` gone). Full `npm test` green again; e2e test `npm run test:e2e`.
+
+### Accès admin / 2FA
+- **Cause du blocage** : après activation du TOTP, l’étape « code » de `/login` renvoyait toujours `403 Jeton CSRF invalide` (jeton de la session partielle ignoré par `login.js`). Corrigé : jeton repris côté client + en-tête `X-CSRF-Token` renvoyé par login/setup/2FA.
+- Code TOTP vérifié avant le code de récupération (champ prérempli ne bloque plus), fenêtre ±1 pas conservée, décalage d’horloge journalisé (`totp.skew`).
+- Secret indéchiffrable → message clair (plus de 500 opaque). Échecs 2FA journalisés `Failed 2fa for …` (filtre fail2ban mis à jour).
+- `scripts/admin-reset.js <user> [--disable-2fa] [--password] [--no-restart]` : root + console/LAN uniquement, mot de passe saisi masqué (TTY), réactive le compte, révoque les sessions, audit `admin.cli_reset`, redémarre le service.
+- Chargement tolérant de `users.json`, `sessions.json`, `api-tokens.json`, `security.json` (vides, `{}`, `null`, clés manquantes — corrige le 500 au login avec `sessions.json` = `{}`).
+- Fichiers écrits par root (CLI, lancement manuel) : propriétaire du dossier de données conservé (`soundtube`), mode 0600.
+- Clé maître : jamais régénérée si illisible, migrée depuis `<app>/data/` si besoin ; sans `SOUNDTUBE_DATA_DIR`, `/var/lib/soundtube` est préféré s’il contient des comptes.
+
+- **Plus d’écrasement depuis la mémoire** : le serveur relit `users.json` / `sessions.json` / `api-tokens.json` / `security.json` dès qu’ils changent sur disque (édition manuelle, `admin-reset.js`) et n’écrit jamais par-dessus une version plus récente. `admin-reset.js` fonctionne **service en marche** (écriture atomique + SIGHUP ; `--restart` pour redémarrer). `ExecReload` ajouté à l’unité systemd.
+
+### ZIP complet / vidéos de morceaux
+- **Cause du « ffmpeg code 254 : Error opening input file audio.wav »** : le fichier audio n’était lié dans le dossier du rendu qu’au moment où un emplacement se libérait (parfois des minutes après la mise en file). Un renommage entre-temps (titre modifié, alignement des noms) laissait un lien cassé → vidéo en échec → ZIP en échec, donc **aucune vidéo de morceau**. Corrigé : audio épinglé dès la préparation (lien physique), fichier réel retrouvé/réparé si `files` est désynchronisé, plus jamais de lien symbolique cassé (erreur explicite).
+- **Textes anglais dans le ZIP** (n’existaient pas) : `README.txt` (EN) à côté de `LISEZMOI.txt`, `youtube-en.txt` / `youtube-fr.txt` (titre, description, tags du mix), et pour chaque morceau `<morceau>.en.txt` en plus de `<morceau>.txt` ; `title_en` + `txtEn` dans `manifest.json`.
+- Message « N morceau(x) : fichiers renommés » qui s’affichait à chaque démarrage sans renommage réel (comparaison dépendante de l’ordre des clés) : corrigé.
+- `meta.ownerId` conservé après le rendu.
+
+### Studio
+- **Cause du panneau « Morceaux » absent** : après une génération avec « Découper en morceaux », la découpe automatique tournait côté serveur mais le Studio ne rouvrait ni ne suivait le panneau, et la bibliothèque n'était rechargée qu'à la fin du rendu audio (pas à la fin de la découpe). Corrigé : le panneau Morceaux du mix s'ouvre dès la fin du rendu et suit la découpe.
+- La bibliothèque se rafraîchit seule (toutes les 15 s, onglet visible) quand une génération, une découpe ou un ZIP ajoute des morceaux hors de cet onglet : la carte et le bouton « Morceaux » apparaissent sans recharger la page.
+- `test/v1212-e2e.js` (`npm run test:e2e`, ~10 min) : mix > 30 min → ZIP complet (vidéo par morceau, textes FR + EN), course renommage/file vidéo, Studio headless (bouton et liste « Morceaux »).
+
+### Directeur — carte 07
+- Carte « Profil d’écoute » vide et bouton « Revenir au profil livré » cassé : import `apiFetch` manquant (idem `ytadmin.js`), erreurs affichées.
+- Profil actif dans `/var/lib/soundtube/gout.json` (survit aux patchs) ; repli sur l’exemple générique `contexte/gout.example.json`.
+- Le profil personnel `contexte/gout.json` n’est plus publié (gitignore).
+- `test/v1212.js`.
+
+### Mise à jour / tests
+- `scripts/update.sh` refuse une archive contenant des données d'exécution (`data/`, `secret.key`, `users.json`, `sessions.json`, `api-tokens.json`).
+- `/api/openapi.json` : version lue dans `package.json` (était figée à 1.20.1).
+- Anciens tests (écrits avant l'authentification v1.20) : préchargement `test/helpers/autologin.mjs` (session admin de test) ; contrôles périmés mis à jour (routes `/` et `/studio`, libellés i18n, empreinte moteur, version) ; plus aucune donnée personnelle dans les tests (profil synthétique `test/fixtures/gout.test.json`). `npm test` passe en entier. `test/v1205-i18n.js` (scan DOM anglais strict) échouait déjà en 1.21.1 — libellés FR restants dans l'UI anglaise du Studio/Admin — il est sorti de `npm test` et se lance avec `npm run test:i18n-dom` en attendant leur traduction.
+
 ## 1.21.1 — 2026-11-06
 
 ### Safe updates

@@ -54,6 +54,10 @@ verify_flat_tar() {
     die "archive has nested 'soundtube/' prefix (not a flat patch): $f
   Apply a flat archive (files at archive root: package.json, src/, public/, …)."
   fi
+  # v1.21.2 : never ship runtime data / keys in a patch (secret.key, users.json… live in the data dir)
+  if printf '%s\n' "$list" | grep -qE '(^|/)(secret\.key|users\.json|sessions\.json|api-tokens\.json)$|^(\./)?data/.'; then
+    die "archive contains runtime data (data/, secret.key, users.json…) — refusing: $f"
+  fi
   # must contain a recognisable app root marker
   if ! printf '%s\n' "$list" | grep -qE '^(./)?(package\.json|src/server\.js|VERSION)$'; then
     die "archive does not look like a soundtube app tree (missing package.json / src/server.js / VERSION): $f"

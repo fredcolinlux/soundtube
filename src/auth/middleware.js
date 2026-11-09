@@ -45,6 +45,7 @@ export function clearSessionCookie(res, https) {
 export function attachAuth(auth) {
   return async (req, res, next) => {
     try {
+      try { auth.syncFromDisk(); } catch {} // v1.21.2 : éditions manuelles / admin-reset prises en compte à chaud
       req.clientMeta = clientMeta(req, auth.security);
       try {
         const hints = observeProxyHints(req, auth.security);

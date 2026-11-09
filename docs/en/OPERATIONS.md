@@ -83,3 +83,29 @@ Extract **flat** into `/opt/soundtube/app`. Check `grep aiWatchCard public/admin
 ## v1.20.0 — Security & public exposure
 
 See [SECURITY.md](./SECURITY.md) and [EXPOSURE.md](./EXPOSURE.md).
+
+## v1.21.2 — updating, access recovery, diagnostics
+
+### Updating
+```bash
+/opt/soundtube/app/scripts/update.sh /root/soundtube-1.21.2-patch.tar.gz
+```
+The script checks the archive (flat, no `data/`, `secret.key` or `users.json`) **before** stopping the service, backs up `/opt/soundtube/app`, extracts, syntax-checks and **always** restarts the service, then waits for `/healthz`.
+Data (`/var/lib/soundtube`: accounts, `secret.key`, listening profile `gout.json`, tracks) is never touched by a patch.
+
+### Lost admin access (password / OTP)
+```bash
+cd /opt/soundtube/app
+node scripts/admin-reset.js <user> --disable-2fa --password   # as root
+```
+- `--password`: new password asked twice, hidden input (TTY required, ≥ 10 characters).
+- `--disable-2fa`: removes TOTP, recovery codes and passkeys.
+- Always: account re-enabled, its sessions closed, an `admin.cli_reset` line in `audit.jsonl`, files kept owned by the `soundtube` user (mode 0600).
+- Works with the service **running** (atomic write + `SIGHUP`: the service reloads accounts and clears lockouts) or **stopped**. `--restart` restarts the service instead.
+- Do not edit `users.json` / `sessions.json` by hand. If you do, the service now reloads the changed file instead of overwriting it from memory, and an empty or `{}` `sessions.json` is accepted.
+
+### TOTP
+±1 step window (30 s). A code rejected but valid with a larger offset is logged as `totp.skew`: check the server clock (`timedatectl`). `secret.key` is never regenerated when present; without it TOTP secrets cannot be read → `admin-reset.js --disable-2fa`.
+
+### Per-track videos / complete ZIP
+`[paquet] … ffmpeg code 254 : Error opening input file audio.wav` should no longer appear: the audio is pinned when the video is queued and the real file is found again after a rename. End-to-end test: `npm run test:e2e` (~10 min).

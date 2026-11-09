@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0b1022">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css?v=1.21.1">
+  <link rel="stylesheet" href="/css/app.css?v=1.21.2">
 </head>
 <body>
   <canvas id="bgCanvas" class="bg-canvas" aria-hidden="true"></canvas>
@@ -46,7 +46,7 @@
       <div id="discovered" class="nodes-found" hidden></div>
       <div class="panel">
         <div class="grid-3 admin-add">
-          <div class="field"><label for="nodeUrl">Adresse du nœud</label><input type="text" id="nodeUrl" placeholder="http://192.168.1.50:8765" autocomplete="off" spellcheck="false"></div>
+          <div class="field"><label for="nodeUrl">Adresse du nœud</label><input type="text" id="nodeUrl" placeholder="http://10.0.0.50:8765" autocomplete="off" spellcheck="false"></div>
           <div class="field"><label for="nodeName">Nom <span class="opt">facultatif</span></label><input type="text" id="nodeName" placeholder="PC RTX 5070 Ti" autocomplete="off"></div>
           <div class="field"><label for="nodeToken">Jeton <span class="opt">facultatif, si l’agent en demande un</span></label><input type="text" id="nodeToken" placeholder="laisser vide si aucun" autocomplete="off" spellcheck="false"></div>
         </div>
@@ -96,7 +96,7 @@
         <article class="ai-card" id="aiDirectorCard">
           <h3 data-i18n="admin.aiDirector">Directeur artistique</h3>
           <p class="hint" data-i18n="admin.aiDirectorHint">Modèle utilisé pour « Proposer » sur la page Générer. Choisi dans la liste /api/tags — jamais de nom en dur.</p>
-          <div class="field"><label for="aiUrl" data-i18n="admin.aiUrl">Adresse Ollama</label><input type="text" id="aiUrl" placeholder="http://192.168.1.50:11434" spellcheck="false" list="aiModelHints"></div>
+          <div class="field"><label for="aiUrl" data-i18n="admin.aiUrl">Adresse Ollama</label><input type="text" id="aiUrl" placeholder="http://10.0.0.50:11434" spellcheck="false" list="aiModelHints"></div>
           <div class="field"><label for="aiModel" data-i18n="admin.aiModel">Modèle</label><input type="text" id="aiModel" placeholder="choisi dans Admin (liste /api/tags)" spellcheck="false" list="aiModelsList"><datalist id="aiModelsList"></datalist></div>
           <div class="field"><label for="aiTimeout" data-i18n="admin.aiTimeout">Délai max d’une réponse (s)</label><input type="number" id="aiTimeout" min="10" max="600" step="10" placeholder="120"></div>
           <div class="row"><button class="btn btn-primary" id="aiSave" type="button" data-i18n="admin.save">Enregistrer</button><button class="btn" id="aiTest" type="button" data-i18n="admin.testDirector">Tester le directeur</button></div>
@@ -290,7 +290,7 @@
 
       <div class="grid-3" id="secSimple">
         <div class="field span-2"><label for="secDomain" data-i18n="admin.sec.domain">Domaine public</label><input id="secDomain" placeholder="soundtube.example.com" spellcheck="false"></div>
-        <div class="field span-2"><label for="secProxies" data-i18n="admin.sec.proxies">IP du reverse proxy (une par ligne)</label><textarea id="secProxies" rows="2" spellcheck="false" placeholder="192.168.0.1"></textarea></div>
+        <div class="field span-2"><label for="secProxies" data-i18n="admin.sec.proxies">IP du reverse proxy (une par ligne)</label><textarea id="secProxies" rows="2" spellcheck="false" placeholder="10.0.0.1"></textarea></div>
         <div class="field span-2"><label class="toggle"><input type="checkbox" id="secOpenReg"><span data-i18n="admin.sec.openReg">Inscriptions ouvertes</span></label>
           <p class="hint" data-i18n="admin.sec.openRegHint">Par défaut fermées. Si activé, la page /register permet de créer un compte « creator ».</p></div>
         <div class="field span-2"><label class="toggle"><input type="checkbox" id="secRegApproval"><span data-i18n="admin.sec.regApproval">Validation admin avant activation</span></label></div>
@@ -348,11 +348,11 @@
     </footer>
   </main>
   <div class="toast" id="toast" hidden></div>
-  <script type="module" src="/js/admin.js?v=1.21.1"></script>
-  <script type="module" src="/js/ytadmin.js?v=1.21.1"></script>
-  <script type="module" src="/js/adminmedia.js?v=1.21.1"></script>
-  <script type="module" src="/js/admindirector.js?v=1.21.1"></script>
-  <script type="module" src="/js/adminauth.js?v=1.21.1"></script>
-  <script type="module" src="/js/adminsocial.js?v=1.21.1"></script>
+  <script type="module" src="/js/admin.js?v=1.21.2"></script>
+  <script type="module" src="/js/ytadmin.js?v=1.21.2"></script>
+  <script type="module" src="/js/adminmedia.js?v=1.21.2"></script>
+  <script type="module" src="/js/admindirector.js?v=1.21.2"></script>
+  <script type="module" src="/js/adminauth.js?v=1.21.2"></script>
+  <script type="module" src="/js/adminsocial.js?v=1.21.2"></script>
 </body>
 </html>

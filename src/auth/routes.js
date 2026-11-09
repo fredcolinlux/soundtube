@@ -46,7 +46,7 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
       e.n += 1; regHits.set(ip, e);
       if (u.pendingApproval) return res.status(201).json({ ok: true, pendingApproval: true });
       const { session, csrf } = auth.createSession(auth.getUser(u.id), { ip, ua: req.headers['user-agent'] });
-      setSessionCookie(res, session.id, cookieOpts(req));
+      setSessionCookie(res, session.id, cookieOpts(req)); res.set('x-csrf-token', csrf);
       res.status(201).json({ ok: true, pendingApproval: false, csrf, user: auth.publicUser(auth.getUser(u.id)) });
     } catch (err) {
       e.n += 1; regHits.set(ip, e);
@@ -61,7 +61,7 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
     const u = await auth.createUser({ username, password, role: 'admin' });
     const { session, csrf } = auth.createSession(auth.getUser(u.id), { ip: req.clientMeta.ip, ua: req.headers['user-agent'] });
     auth.touchLogin(auth.getUser(u.id));
-    setSessionCookie(res, session.id, cookieOpts(req));
+    setSessionCookie(res, session.id, cookieOpts(req)); res.set('x-csrf-token', csrf);
     auth.audit('setup', { userId: u.id, ip: req.clientMeta.ip });
     res.status(201).json({ user: u, csrf });
   }));
@@ -71,7 +71,7 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
     const u = await auth.authenticatePassword(username, password, req.clientMeta.ip);
     const needs2fa = !!(u.totpSecret || (u.passkeys || []).length);
     const { session, csrf } = auth.createSession(u, { ip: req.clientMeta.ip, ua: req.headers['user-agent'], pending2fa: needs2fa });
-    setSessionCookie(res, session.id, cookieOpts(req));
+    setSessionCookie(res, session.id, cookieOpts(req)); res.set('x-csrf-token', csrf);
     if (!needs2fa) {
       auth.touchLogin(u);
       auth.audit('login.ok', { userId: u.id, ip: req.clientMeta.ip });
@@ -84,13 +84,18 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
     if (!req.session?.pending2fa) return res.status(400).json({ error: msg(req, 'no2fa') });
     const u = auth.getUser(req.session.userId);
     if (!u) return res.status(401).json({ error: msg(req, 'sessionInvalid') });
-    const ok = await auth.verifyUser2fa(u, { code: req.body?.code, recovery: req.body?.recovery });
+    let ok = false;
+    try { ok = await auth.verifyUser2fa(u, { code: req.body?.code, recovery: req.body?.recovery }); }
+    catch (e) {
+      auth.audit('login.2fa_error', { userId: u.id, ip: req.clientMeta.ip, error: String(e.message).slice(0, 120) });
+      return res.status(500).json({ error: e.code === 'TOTP_UNDECRYPTABLE' ? 'Secret TOTP illisible (clé maître changée ?) — voir « node scripts/admin-reset.js <user> --disable-2fa » / TOTP secret unreadable (master key changed?) — see scripts/admin-reset.js' : e.message });
+    }
     if (!ok) {
       auth.audit('login.2fa_fail', { userId: u.id, ip: req.clientMeta.ip });
-      console.warn(`[soundtube-auth] Failed password for ${u.username} from ${req.clientMeta.ip}`);
+      console.warn(`[soundtube-auth] Failed 2fa for ${u.username} from ${req.clientMeta.ip}`);
       return res.status(401).json({ error: msg(req, 'invalidCode') });
     }
-    req.session.pending2fa = false; auth.saveSessions();
+    req.session.pending2fa = false; auth.saveSessions(); res.set('x-csrf-token', auth.ensureCsrf(req.session.id));
     auth.touchLogin(u);
     auth.audit('login.ok', { userId: u.id, ip: req.clientMeta.ip, via: '2fa' });
     res.json({ user: auth.publicUser(u), csrf: auth.ensureCsrf(req.session.id), ok: true });
@@ -212,7 +217,7 @@ export function mountAuthRoutes(app, { auth, config, awrap, wrap }) {
     });
     cred.counter = v.counter; auth.saveUsers(); auth.challenges.delete(key);
     const { session, csrf } = auth.createSession(u, { ip: req.clientMeta.ip, ua: req.headers['user-agent'] });
-    auth.touchLogin(u); setSessionCookie(res, session.id, cookieOpts(req));
+    auth.touchLogin(u); setSessionCookie(res, session.id, cookieOpts(req)); res.set('x-csrf-token', csrf);
     auth.audit('login.ok', { userId: u.id, ip: req.clientMeta.ip, via: 'passkey' });
     res.json({ user: auth.publicUser(u), csrf, ok: true });
   }));

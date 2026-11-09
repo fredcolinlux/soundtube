@@ -47,6 +47,23 @@ function pieceTrack(t, p, total, mode) {
   meta.titleEn = p.title_en; meta.seconds = p.duration;
   return { id: `${t.id}-${p.n}`, title: p.title, style: P.style || t.style, params: P, meta, duration: p.duration, seed: P.seed, bpm: P.bpm, key: P.key, scale: P.scale, mood: P.mood, files: {} };
 }
+const SCALE_EN = { major: 'major', minor: 'minor', dorian: 'Dorian', phrygian: 'Phrygian', lydian: 'Lydian', mixolydian: 'Mixolydian', harmonicMinor: 'harmonic minor', harmonic_minor: 'harmonic minor', locrian: 'Locrian', pentatonic: 'pentatonic' };
+const PROG_LABEL_EN = { A: 'Verse', B: 'Chorus', bridge: 'Bridge' };
+const chordLinesEn = (meta) => chordLines(meta).map((l) => l.replace(/^(Couplet|Refrain|Pont) :/, (_, k) => `${PROG_LABEL_EN[{ Couplet: 'A', Refrain: 'B', Pont: 'bridge' }[k]]}:`));
+/** v1.21.2 : fiche texte anglaise d'un morceau (même contenu que la fiche FR, description YouTube EN). */
+export function pieceTextEn(pt, info, piece) {
+  const S = pt.style || '', M = musicOf(pt.params, pt), key = M.key ? `${M.key} ${SCALE_EN[M.scale] || M.scale || ''}`.trim() : '?';
+  return [`Title: ${pt.meta?.titleEn || titleEnOf(pt) || pt.title}`, ...(pt.title && pt.title !== pt.meta?.titleEn ? [`Title (French): ${pt.title}`] : []),
+    `Style: ${S}`, `Tempo: ${M.bpm ?? '?'} BPM`, `Key: ${key}`, `Seed: ${M.seed ?? '?'}${M.variation ? ` (variation ${M.variation})` : ''}`, `Engine: ${M.engine ?? '?'}`,
+    `Position in the mix: ${hms(piece.start)} – ${hms(piece.end)} (length ${hms(piece.duration)})`, '',
+    'Chord progression:', ...(chordLinesEn(pt.meta).map((l) => '  ' + l)), '', '--- YouTube description ---', '', `YouTube title: ${info.title}`, '', info.description, '', `Tags: ${info.tags.join(', ')}`, ''].join('\n');
+}
+/** v1.21.2 : titre / description / tags YouTube du mix entier, dans une langue. */
+function youtubeText(info, lang) {
+  return lang === 'en'
+    ? [`YouTube title: ${info.title}`, '', info.description, '', `Tags: ${info.tags.join(', ')}`, ''].join('\n')
+    : [`Titre YouTube : ${info.title}`, '', info.description, '', `Tags : ${info.tags.join(', ')}`, ''].join('\n');
+}
 /** Fiche texte d'un morceau : titre, style, tempo, tonalité, graine, progression d'accords, description YouTube. */
 export function pieceText(pt, info, piece) {
   const S = STYLES[pt.style]?.label || pt.style, M = musicOf(pt.params, pt);
@@ -134,10 +151,13 @@ export async function buildPack(t, opts, deps) {
       if (deps.hasFfmpeg !== false) files.mp3 = await add(`morceaux/${base}.mp3`, path.join(mdir, base + '.mp3'));
       if (O.wav) files.wav = await add(`morceaux/${base}.wav`, path.join(mdir, base + '.wav'));
       else fs.rmSync(path.join(mdir, base + '.wav'), { force: true });
-      if (O.txt) files.txt = addData(`morceaux/${base}.txt`, pieceText(pt, youtubeInfo(pt, deps.brand, 'fr'), p));
+      if (O.txt) {
+        files.txt = addData(`morceaux/${base}.txt`, pieceText(pt, youtubeInfo(pt, deps.brand, 'fr'), p));
+        files.txtEn = addData(`morceaux/${base}.en.txt`, pieceTextEn(pt, youtubeInfo(pt, deps.brand, 'en'), p)); // v1.21.2 : fiche anglaise
+      }
       if (O.midi && p.files.midi) { files.midi = []; for (const m of p.files.midi) files.midi.push(await add(`morceaux/${m.name}`, path.join(mdir, m.name))); }
       if (stems) { files.samples = []; for (const g of stems.groups) if (!(p.silent || []).includes(g)) files.samples.push(await add(`morceaux/samples/${base} - ${g}.wav`, path.join(mdir, 'samples', `${base} - ${g}.wav`))); }
-      pieces.push({ n: p.n, title: p.title, title_en: p.title_en, base, start: +p.start.toFixed(2), end: +p.end.toFixed(2), duration: +p.duration.toFixed(2), ...musicOf(pt.params, src), chords: chordLines(pt.meta), files, ...(p.silent?.length ? { silentSamples: p.silent } : {}) });
+      pieces.push({ n: p.n, title: p.title, title_en: p.title_en || titleEnOf(pt), base, start: +p.start.toFixed(2), end: +p.end.toFixed(2), duration: +p.duration.toFixed(2), ...musicOf(pt.params, src), chords: chordLines(pt.meta), files, ...(p.silent?.length ? { silentSamples: p.silent } : {}) });
     }
     if (!O.midi) fs.rmSync(path.join(mdir, 'MIDI'), { recursive: true, force: true });
     if (O.midi && av.kind === 'chapters') notes.push('MIDI par morceau : seulement pour un mix DJ (le MIDI complet est dans mix/).');
@@ -147,10 +167,12 @@ export async function buildPack(t, opts, deps) {
   if (missing.length) { const e = new Error(`Fichier(s) demandé(s) absent(s) : ${missing.slice(0, 4).join(', ')}${missing.length > 4 ? '…' : ''}`); e.missing = missing; throw e; }
   // 8. manifeste + lisez-moi
   const manifest = { version: PACK_VERSION, generator: 'soundtube', created: new Date().toISOString(), options: O,
-    source: { id: t.id, title: t.title, duration: +(+t.duration).toFixed(2), ...src, mix: t.meta?.mix?.decks?.length >= 2, split: split ? av.kind : null, splitMode: split ? O.mode : null },
+    source: { id: t.id, title: t.title, title_en: titleEnOf(t) || null, duration: +(+t.duration).toFixed(2), ...src, mix: t.meta?.mix?.decks?.length >= 2, split: split ? av.kind : null, splitMode: split ? O.mode : null },
     video, videoResolution: video ? t.meta?.youtube?.videoResolution || null : null, mix, ...(stems ? { samples: stems } : {}), ...renderInfo(t), notes, pieces };
   addData('manifest.json', JSON.stringify(manifest, null, 2));
   addData('LISEZMOI.txt', readme(t, manifest));
+  addData('README.txt', readmeEn(t, manifest)); // v1.21.2 : lisez-moi anglais
+  if (O.txt) { addData('youtube-fr.txt', youtubeText(youtubeInfo(t, deps.brand, 'fr'), 'fr')); addData('youtube-en.txt', youtubeText(youtubeInfo(t, deps.brand, 'en'), 'en')); }
   fs.writeFileSync(path.join(out, '.entries.json'), JSON.stringify({ options: O, pieces: pieces.length, entries }));
   manifest.entries = entries; onP(1, 'Terminé');
   return manifest;
@@ -180,6 +202,21 @@ function readme(t, m) {
       ...P.filter((p) => p.silentSamples?.length).map((p) => `Morceau ${p.base} : pas de sample « ${p.silentSamples.join(' », « ')} » (groupe silencieux dans ce morceau).`)] : []),
     ...(m.notes.length ? ['', 'Remarques :', ...m.notes.map((n) => '  - ' + n)] : []),
     '', 'Morceaux :', ...P.map((p) => `${String(p.n).padStart(2, '0')}. ${p.title}  [${hms(p.start)} – ${hms(p.end)}]  ${STYLES[p.style]?.label || p.style || ''} · ${p.bpm ?? '?'} BPM · ${p.keyLabel || '?'} · graine ${p.seed ?? '?'}`), ''].join('\n');
+}
+function readmeEn(t, m) {
+  const O = m.options, split = !!m.source.split, P = m.pieces;
+  const kinds = split ? [O.pieceVideo && 'MP4 video', 'MP3', O.wav && 'WAV', O.txt && 'TXT (FR + EN)'].filter(Boolean).join(', ') : '';
+  return [`${titleEnOf(t) || t.title} — soundtube package`, '', 'Original music generated by soundtube (no protected samples).', '',
+    'Layout:', `${slugify(t.title) || 'soundtube'}/`,
+    '├─ README.txt / LISEZMOI.txt   this file (EN / FR)',
+    '├─ manifest.json       tempo, key, seed, style, engine and files of every track',
+    ...(O.txt ? ['├─ youtube-en.txt / youtube-fr.txt   YouTube title, description and tags of the full mix'] : []),
+    m.video ? `├─ video/              the long video (${path.basename(m.video)}${m.videoResolution ? ', ' + m.videoResolution : ''})` : '├─ video/              (video not requested)',
+    `${split ? '├' : '└'}─ mix/                the full mix: MP3${m.mix.wav ? ' + WAV' : ''}${m.mix.mid ? ' + MIDI' : ''}`,
+    ...(split ? [`└─ morceaux/           ${P.length} tracks "01 - Title": ${kinds}`, ...(O.txt ? ['   ├─ <track>.txt / <track>.en.txt   track sheet + YouTube description (FR / EN)'] : []),
+      ...(m.samples ? [`   └─ samples/         stems per track: "01 - Title - ${m.samples.groups.join(' / ')}.wav"`] : [])] : []),
+    '', split ? `Split mode: ${O.mode}.` : 'Single track: no morceaux/ folder (files are in mix/).',
+    '', 'Tracks:', ...P.map((p) => `${String(p.n).padStart(2, '0')}. ${p.title_en || p.title}  [${hms(p.start)} – ${hms(p.end)}]  ${p.style || ''} · ${p.bpm ?? '?'} BPM · seed ${p.seed ?? '?'}`), ''].join('\n');
 }
 /** Paquet déjà prêt sur le disque (après un redémarrage) : { options, pieces, entries } ou null. */
 export function readPack(tracksDir, id) { try { return JSON.parse(fs.readFileSync(path.join(packDir(tracksDir, id), '.entries.json'), 'utf8')); } catch { return null; } }

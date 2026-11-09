@@ -70,7 +70,7 @@ const zipRead = (file, name) => spawnSync('unzip', ['-p', file, name], { encodin
   const M = await buildPack(t, O, deps);
   const names = M.entries.map((e) => e.name), R = 'nuit-test/';
   const top = [...new Set(names.map((n) => n.slice(R.length).split('/')[0]))].sort();
-  check(names.every((n) => n.startsWith(R)) && JSON.stringify(top) === JSON.stringify(['LISEZMOI.txt', 'manifest.json', 'mix', 'morceaux', 'video']), `racine : ${top.join(', ')}`);
+  check(names.every((n) => n.startsWith(R)) && ['LISEZMOI.txt', 'manifest.json', 'mix', 'morceaux', 'video'].every((x) => top.includes(x)) && top.every((x) => ['LISEZMOI.txt', 'README.txt', 'manifest.json', 'mix', 'morceaux', 'video', 'youtube-en.txt', 'youtube-fr.txt'].includes(x)), `racine : ${top.join(', ')}`);
   const P = M.pieces, b1 = P[0].base;
   check(P.length === 2 && /^01 - /.test(b1) && /^02 - /.test(P[1].base), `morceaux nommés « 01 - Titre » : ${P.map((p) => p.base).join(' | ')}`);
   const need = (p) => ['mp4', 'mp3', 'wav', 'txt'].map((x) => `${R}morceaux/${p.base}.${x}`);
@@ -152,9 +152,11 @@ const freePort = () => new Promise((ok) => { const s = net.createServer(); s.lis
 // ---------- 5. interface
 {
   const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
-  const idx = read('public/index.html'), gf = read('public/js/genform.js'), adm = read('public/admin.html'), pp = read('public/js/pubpanel.js'), app = read('public/js/app.js');
-  check(idx.includes('id="animPick"') && idx.includes('id="packOpts"') && gf.includes('Fond du style') && gf.includes('/admin#media') && adm.includes('id="media"'), 'formulaire : choix de l\'animation (avec lien Admin si vide), bloc paquet ; Admin → Animations');
-  check(gf.includes('long à rendre, 720p par défaut') && pp.includes('long à rendre, 720p par défaut') && app.includes('genExtras()'), 'vidéo par morceau : avertissement honnête (long, 720p par défaut)');
+  const idx = read('public/index.html'), gf = read('public/js/genform.js'), adm = read('public/admin.html'), pp0 = read('public/js/pubpanel.js'), app = read('public/js/app.js'), fr = read('public/i18n/fr.json');
+  // v1.20 : libellés passés dans les locales (i18n) — on cherche dans le code + fr.json
+  const gfI = gf + fr, pp = pp0 + fr;
+  check(idx.includes('id="animPick"') && idx.includes('id="packOpts"') && gfI.includes('Fond du style') && gf.includes('/admin#media') && adm.includes('id="media"'), 'formulaire : choix de l\'animation (avec lien Admin si vide), bloc paquet ; Admin → Animations');
+  check(gfI.includes('long à rendre, 720p par défaut') && pp.includes('long à rendre, 720p par défaut') && app.includes('genExtras()'), 'vidéo par morceau : avertissement honnête (long, 720p par défaut)');
   check(!/\?v=1\.13\.0/.test(idx + adm + app + read('public/index.html')), 'cache des pages : ?v=1.14.0');
 }
 fs.rmSync(tmp, { recursive: true, force: true });
